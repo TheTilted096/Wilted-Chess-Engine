@@ -469,13 +469,23 @@ void Position::makeRMove(Move m){
     uint8_t typeEnded = m.tpnd();
 
     bool capturing = m.capt();
-    uint8_t captureType = m.cptp();
+    //uint8_t captureType = m.cptp();
 
     bool passed = m.epcp();
 
+    //Branchless Capture Code
+    /*
     uint8_t target = (endsquare + passed * ((toMove << 4) - 8));
     pieces[captureType] ^= capturing * (1ULL << target);
     sides[!toMove] ^= capturing * (1ULL << target);
+    */
+
+    if (capturing){
+        uint8_t target = (endsquare + passed * ((toMove << 4) - 8));
+        pieces[m.cptp()] ^= (1ULL << target);
+        sides[!toMove] ^= (1ULL << target);
+    }
+    
 
     sides[toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
     pieces[typeMoved] ^= (1ULL << startsquare);
@@ -546,7 +556,7 @@ void Position::unmakeRMove(Move m){
     uint8_t typeEnded = m.tpnd();
 
     bool capturing = m.capt();
-    uint8_t captureType = m.cptp();
+    //uint8_t captureType = m.cptp();
 
     bool passed = m.epcp();
 
@@ -554,9 +564,17 @@ void Position::unmakeRMove(Move m){
     pieces[typeMoved] ^= (1ULL << startsquare);
     pieces[typeEnded] ^= (1ULL << endsquare);
 
+    /*Branchless Capture Code
     uint8_t target = (endsquare + passed * ((!toMove << 4) - 8));
     pieces[captureType] ^= capturing * (1ULL << target);
     sides[toMove] ^= capturing * (1ULL << target);
+    */
+    
+    if (capturing){
+        uint8_t target = (endsquare + passed * ((!toMove << 4) - 8));
+        pieces[m.cptp()] ^= (1ULL << target);
+        sides[toMove] ^= (1ULL << target);
+    }
 
     thm--;
 
