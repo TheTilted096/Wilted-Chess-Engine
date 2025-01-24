@@ -55,7 +55,7 @@ class Position : public Bitboards{
 
         //piece-square tables
 
-        Bitboard cm;
+        //Bitboard cm;
 
         Position();
 

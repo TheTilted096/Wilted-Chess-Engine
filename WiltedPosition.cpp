@@ -73,12 +73,13 @@ Position::Position(){
 }
 
 bool Position::isAttacked(int sq, bool s){
+    /*
     Bitboard inc;
 
     inc = plt[!s][sq] & pieces[5] & sides[s];
     inc |= KnightAttacks[sq] & pieces[4] & sides[s];
 
-    Bitboard occ = sides[0] | sides[1] | (1ULL << sq);
+    Bitboard occ = sides[0] | sides[1]; // | (1ULL << sq);
     Bitboard bpst = bishopAttack(sq, occ);
 
     inc |= bpst & (pieces[3] | pieces[1]) & sides[s];
@@ -91,6 +92,25 @@ bool Position::isAttacked(int sq, bool s){
 
     //cm = inc;
     
+    return inc;
+    */
+
+    Bitboard inc;
+
+    inc = plt[!s][sq] & pieces[5] & sides[s];
+    if (inc){ return true; }
+
+    inc = KnightAttacks[sq] & pieces[4] & sides[s];
+    if (inc){ return true; }
+
+    Bitboard occ = sides[0] | sides[1];
+    inc = bishopAttack(sq, occ) & (pieces[3] | pieces[1]) & sides[s];
+    if (inc){ return true; }
+    
+    inc = rookAttack(sq, occ) & (pieces[2] | pieces[1]) & sides[s];
+    if (inc){ return true; }
+
+    inc = KingAttacks[sq] & pieces[0] & sides[s];
     return inc;
 }
 
@@ -162,6 +182,7 @@ int Position::generateMoves(int ply){
     Bitboard dpshtrgt = ((pshtrgt << 8) >> (toMove << 4)) & ~occ & (0xFF000000ULL << (toMove << 3)); //two-square pushes
 
     //Pawn Captures
+    /*
     while (pcs){
         f = __builtin_ctzll(pcs);
 
@@ -203,7 +224,81 @@ int Position::generateMoves(int ply){
 
         pcs ^= (1ULL << f);       
     }
+    */
 
+   	Bitboard pawnopps = opps | ((ep[thm] != 255) * (1ULL << ep[thm])); //maybe ep[thm] + 1 = 0?
+
+	Bitboard leftcap = (((pcs & 0xFEFEFEFEFEFEFEFEULL) << 7) >> (toMove << 4)) & pawnopps;
+	Bitboard rightcap = (((pcs & 0x7F7F7F7F7F7F7F7FULL) << 9) >> (toMove << 4)) & pawnopps;
+
+	while (rightcap){
+		f = __builtin_ctzll(rightcap);
+
+		moves[ply][tgm].info = f - 9 + (toMove << 4);
+		moves[ply][tgm].info |= (f << 6);
+		
+		cc = pieceAt(f);
+		moves[ply][tgm].info |= (cc << 12);
+		moves[ply][tgm].info |= ((cc == 13) << 24); //ep capture;
+
+		moves[ply][tgm].info |= (5U << 15); //type moved
+
+		bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
+		if (prmt){
+			uint32_t tmp = moves[ply][tgm].info;
+
+			moves[ply][tgm].info = tmp | (1U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (2U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (3U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (4U << 18);
+		} else {
+			moves[ply][tgm].info |= (5U << 18);
+		}
+
+		rightcap ^= (1ULL << f);
+		tgm++;
+	}
+
+	while (leftcap){
+		f = __builtin_ctzll(leftcap);
+
+		moves[ply][tgm].info = f - 7 + (toMove << 4);
+		moves[ply][tgm].info |= (f << 6);
+		
+		cc = pieceAt(f);
+		moves[ply][tgm].info |= (cc << 12);
+		moves[ply][tgm].info |= ((cc == 13) << 24); //ep capture;
+
+		moves[ply][tgm].info |= (5U << 15); //type moved
+
+		bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
+		if (prmt){
+			uint32_t tmp = moves[ply][tgm].info;
+
+			moves[ply][tgm].info = tmp | (1U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (2U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (3U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (4U << 18);
+		} else {
+			moves[ply][tgm].info |= (5U << 18);
+		}
+
+		leftcap ^= (1ULL << f);
+		tgm++;
+	}
+	
     //pawn pushes and double-pushes
     while (pshtrgt){
         f = __builtin_ctzll(pshtrgt);
@@ -486,7 +581,6 @@ void Position::makeRMove(Move m){
         sides[!toMove] ^= (1ULL << target);
     }
     
-
     sides[toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
     pieces[typeMoved] ^= (1ULL << startsquare);
     pieces[typeEnded] ^= (1ULL << endsquare);
@@ -499,23 +593,13 @@ void Position::makeRMove(Move m){
     //Adjust Castling Rights
     cr[thm] = cr[thm - 1]; //castling rights preserved at first
 
+    /* First Implementation
     if (typeMoved == 0){ //King Move Nullifies
         cr[thm] &= (0xF3 >> (toMove << 1));
     }
 
-    /*
-    uint8_t csq = (cf[0] & 0xF) + 56 * toMove; //kingside
-    if ((startsquare == csq) or (endsquare == csq)){
-        cr[thm] &= (0xFB >> (toMove << 1));
-    }
-
-    csq = (cf[1] & 0xF) + 56 * toMove; //queenside
-    if ((startsquare == csq) or (endsquare == csq)){
-        cr[thm] &= (0xF7 >> (toMove << 1));
-    }
-    */
-
     uint8_t csq = (cf[0] & 0xF) + 56 * toMove; //our kingside square
+
     if (startsquare == csq){
         cr[thm] &= (0xFB >> (toMove << 1));
     }
@@ -532,20 +616,61 @@ void Position::makeRMove(Move m){
     if (endsquare == (csq ^ 56)){
         cr[thm] &= (0xF7 >> (!toMove << 1));
     }
+    */
+   
+    //perhaps shortcircit if castling rights are gone
+    //* Else-If Style Castling
+    /*
+    uint8_t cksq = cf[0] ^ (56 * toMove);
+    uint8_t cqsq = cf[1] ^ (56 * toMove);
+
+    if (typeMoved == 0){
+        cr[thm] &= (0xF3 >> (toMove << 1));
+    } else if (startsquare == cksq){
+        cr[thm] &= (0xFB >> (toMove << 1));
+    } else if (startsquare == cqsq){
+        cr[thm] &= (0xF7 >> (toMove << 1));
+    }
+
+    if (endsquare == (cksq ^ 56)){
+        cr[thm] &= (0xFB >> (!toMove << 1));
+    } else if (endsquare == (cqsq ^ 56)){
+        cr[thm] &= (0xF7 >> (!toMove << 1));
+    }
+    */    
+
+    /* Branchless Castling Code
+    uint8_t cup[2] = {0, 0}; //black, white
+
+    cup[toMove] = 3 * (typeMoved == 0);
+    
+    uint8_t cksq = (cf[0] & 0xF) ^ (56 * toMove); 
+    uint8_t cqsq = (cf[1] & 0xF) ^ (56 * toMove);
+    cup[toMove] |= (startsquare == cksq);
+    cup[toMove] |= ((startsquare == cqsq) << 1);
+
+    cup[!toMove] |= (endsquare == (cksq ^ 56));
+    cup[!toMove] |= ((endsquare == (cqsq ^ 56)) << 1);
+
+    cr[thm] &= ~(cup[1] | (cup[0] << 2));
+    */
+
+    if (cr[thm] != 0){
+        cr[thm] &= ~(crc[startsquare] | crc[endsquare]);
+    }
 
     //castling
     //still have to play Rh1-f1 or Ra1-d1
     uint8_t cat = m.cstl(); //valued 1 K or 2 Q
     if (cat){
-        startsquare = (cf[cat - 1] & 0xF) + 56 * toMove;
-        endsquare = (cf[cat - 1] >> 4) + 56 * toMove;
+        startsquare = cf[cat - 1] + 56 * toMove;
+        endsquare = 7 - (cat << 1) + 56 * toMove;
 
         sides[toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
         pieces[2] ^= ((1ULL << startsquare) | (1ULL << endsquare)); //move the rook
     }
 
-    toMove ^= 1;
-    
+    toMove ^= 1;   
 }
 
 void Position::unmakeRMove(Move m){
@@ -580,8 +705,8 @@ void Position::unmakeRMove(Move m){
 
     uint8_t cat = m.cstl();
     if (cat){
-        startsquare = (cf[cat - 1] >> 4) + 56 * !toMove;
-        endsquare = (cf[cat - 1] & 0xF) + 56 * !toMove;
+        startsquare = cf[cat - 1] + 56 * !toMove;
+        endsquare = 7 - (cat << 1) + 56 * !toMove;
 
         sides[!toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
         pieces[2] ^= ((1ULL << startsquare) | (1ULL << endsquare)); //move the rook
@@ -646,8 +771,8 @@ uint64_t Position::perft(int depth, int ply){
         
         
         if (ply == 0){
-            std::cout << ply << ": " << moves[ply][i].toStr() << ": " 
-                << moves[ply][i].info << ": " << next << '\n';
+            std::cout << /*ply << ": " <<*/ moves[ply][i].toStr() << ": " 
+                /*<< moves[ply][i].info << ": "*/ << next << '\n';
 
             //print();
         }

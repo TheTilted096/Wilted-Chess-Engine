@@ -232,13 +232,13 @@ void Bitboards::readFen(std::string fen){
             sq += ind;
             continue;
         }
-        if ((ind >= 9) and (ind <= 14)){
+        if ((ind >= 9) and (ind < 15)){
             pieces[ind - 9] |= (1ULL << sq);
             sides[0] |= (1ULL << sq);
             sq++;
             continue;
         }
-        if ((ind >= 15) and (ind <= 20)){
+        if ((ind >= 15) and (ind < 21)){
             pieces[ind - 15] |= (1ULL << sq);
             sides[1] |= (1ULL << sq);
             sq++;
