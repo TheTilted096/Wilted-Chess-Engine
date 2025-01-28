@@ -64,7 +64,47 @@ int main(int argc, char* argv[]){
         }
 
         if (command.substr(0, 2) == "go"){
-            engine.search();
+            std::stringstream srprm(command);
+
+            std::string ourTime = engine.toMove ? "wtime" : "btime";
+            std::string ourInc = engine.toMove ? "winc" : "binc";
+
+            uint32_t ttb = 0xFFFFFFFFU; //assume absurdly large time
+            uint32_t tti = 0U; //increment 0 unless specified
+            int tdb = 47;
+            uint64_t mnb = ~0ULL;
+
+            //bool mtovr = false; //don't support movetime
+
+            while (!srprm.eof()){
+                srprm >> param;
+                if (param == ourTime){
+                    srprm >> param;
+                    ttb = stoi(param);
+                }
+                if (param == ourInc){
+                    srprm >> param;
+                    tti = stoi(param);
+                }
+                if (param == "depth"){
+                    srprm >> param;
+                    tdb = std::min(47, stoi(param)); //cap search depth for some reason
+                }
+                if (param == "nodes"){
+                    srprm >> param;
+                    mnb = stoi(param);
+                }
+                /*
+                if (param == "movetime"){
+                    mtovr = true;
+                    srprm >> param;
+                    ttb = stoi(param);
+                }
+                */
+            }
+
+            engine.timeMan(ttb, tti);
+            engine.search(tdb, mnb, true);    
         }
 
         if (command == "printpieces"){

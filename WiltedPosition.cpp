@@ -205,9 +205,6 @@ class Position : public Bitboards{
 
         void sendMove(std::string);
 
-        //void makeMove(Move&);
-        //void unmakeMove(Move&); //figure out overloading?
-
 
 };
 

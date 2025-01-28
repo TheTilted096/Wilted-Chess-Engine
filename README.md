@@ -4,4 +4,7 @@ A very *wilted* chess engine.
 
 # Features
 
-Basic Alphabeta Depth 4
+Basic Iterative Deepening Search
+Soft/Hard Time Management
+
+Randomly Generated PSQTs
