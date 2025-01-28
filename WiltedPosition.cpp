@@ -1,19 +1,61 @@
 /*
+Class Definition of Position
+Intermediate Object
+
+Contains static evaluation and advanced makeMove
+
+*/
+
+#include "WiltedBitboards.cpp"
+
+class Move{
+    public:
+        uint32_t info;
+
+        Move();
+        Move(const uint32_t&);
+        //Move(uint32_t&);
+        Move(const Move&);
+
+        std::string toStr();
+        void print();
+
+        int stsq();
+        int edsq();
+        bool capt();
+        int cptp();
+        int tpmv();
+        bool prmt();
+        int tpnd();
+
+        int cstl();
+        bool dpsh();
+        bool epcp();
+
+        //operator overload OR
+        //void operator|=(const uint32_t&);
+        //void operator=(const uint32_t&);
+
+        //ton of other things
+        
+};
+
+/*
 Function Definitions for Position Class
 
 TheTilted096, 12-19-24
 Wilted Engine
 */
 
-#include "WiltedPosition.h"
-
 Move::Move(){
     info = 0;
 }
 
-Move::Move(uint32_t& m){
+Move::Move(const uint32_t& m){
     info = m;
 }
+
+Move::Move(const Move& m){ info = m.info; }
 
 inline bool Move::prmt(){ return (((info >> 15) & 7U) != ((info >> 18) & 7U)); }
 
@@ -68,8 +110,114 @@ inline void Move::operator=(const uint32_t& t){
 }
 */
 
+class Position : public Bitboards{
+    public:
+        Move moves[64][96];
+
+        int scores[2];//, eScores[2];
+        //int mobil[2], eMobil[2];
+        //int gamePhase;
+
+        //total game phase
+        //phases, material values
+
+        static constexpr int material[6] = {0, 900, 500, 350, 300, 100};
+
+        //mobilities
+
+        //Bitboard atktbl[2][5];
+
+        uint64_t nodes;
+        
+        //piece-square tables
+
+        int mps[6][64] = 
+        {{6, 21, 0, 30, 24, 10, 20, 8, 
+        -24, -31, 11, -3, 39, 24, 10, -32, 
+        -34, -13, -23, -39, 5, -5, 22, -6, 
+        36, -7, 29, 4, -24, -12, -9, 26, 
+        -39, 23, 17, 38, -38, -26, -17, -5, 
+        0, 2, -1, -4, 38, 10, -30, -5, 
+        -16, 37, 9, -12, 15, -34, 13, 26, 
+        -27, -1, 18, 2, -23, -15, -4, -33},
+
+        {-77, -27, 49, -64, 32, 67, -43, -39, 
+        -90, -35, 5, 5, -88, -8, -48, 66, 
+        42, -45, -16, 23, -22, -42, -89, 89, 
+        47, 84, 39, -81, 69, -65, -49, 84, 
+        53, -32, -61, 46, -9, -90, 46, -83, 
+        77, 27, 50, -47, 81, 29, -4, -19, 
+        24, 55, 49, 36, -71, -12, 36, -27, 
+        8, -61, 37, 59, 75, -48, 31, 25},
+
+        {-44, -19, 33, -8, -7, 17, 29, -36, 
+        -7, -43, 46, -33, 35, 0, -10, -34, 
+        -25, 20, -1, 36, 32, 37, -41, 18, 
+        40, -6, 33, 24, 39, -26, 38, 44, 
+        30, 25, 12, -40, 18, -5, 46, 20, 
+        -16, -44, -32, -10, 26, 40, -16, 13, 
+        29, 0, -43, -4, -11, -38, -13, 11, 
+        32, 6, -41, 2, 15, 6, 13, -19},
+
+        {-8, -33, 20, 29, -20, -29, -24, 25, 
+        12, 14, -29, -30, 11, -35, 14, 17, 
+        -21, -4, -32, -1, 26, -16, 19, 3, 
+        21, -30, 4, -30, 5, -15, -3, 9, 
+        27, 30, 15, -19, -1, 13, -15, 19, 
+        -3, 10, 25, -1, 1, -2, -26, 2, 
+        -2, -4, 0, -16, 5, -32, -28, 2, 
+        -31, 19, 27, -18, -1, -16, 2, 12},
+
+        {25, 20, 9, -8, 25, 18, -6, 16, 
+        -8, 20, 19, 24, -9, 26, 25, 22, 
+        -8, 29, -28, -17, -11, -10, 22, 14, 
+        0, 22, 11, 14, 28, -12, 28, 0, 
+        18, -22, -11, -11, -11, 23, 4, 0, 
+        -13, 29, 7, 15, -19, 0, -8, -7, 
+        9, 23, 7, -21, 22, 25, -8, -5, 
+        23, 20, 7, -19, -8, -26, 16, 22},
+
+        {0, 0, 0, 0, 0, 0, 0, 0,
+        1, -6, -8, -10, 4, -7, -1, -9, 
+        -1, 4, 2, 9, 1, 8, -10, 8, 
+        -2, 7, 8, 4, 4, -10, 3, -7, 
+        -3, -5, -6, 0, -6, 2, 7, -4, 
+        -1, 0, -8, -5, -4, -10, 8, 2, 
+        -9, -4, -6, 6, 7, 2, 2, 9, 
+        0, 0, 0, 0, 0, 0, 0, 0}};
+
+        Position();
+
+        bool isAttacked(int, bool);
+        bool isChecked(bool);
+        bool notValid(Move);
+
+        int evaluate();
+        int evaluateScratch();
+
+        int generateMoves(int);
+        //int generateCaptures(int);
+
+        uint64_t perft(int, int);
+
+        template <bool> void makeMove(Move);
+        template <bool> void unmakeMove(Move);
+
+        void sendMove(std::string);
+
+        //void makeMove(Move&);
+        //void unmakeMove(Move&); //figure out overloading?
+
+
+};
+
 Position::Position(){
-    //nothing for now
+    for (int i = 0; i < 6; i++){
+        for (int j = 0; j < 64; j++){
+            mps[i][j] += material[i];
+        }
+    }
+    nodes = 0ULL;
 }
 
 bool Position::isAttacked(int sq, bool s){
@@ -556,7 +704,7 @@ int Position::generateMoves(int ply){
     return tgm;
 }
 
-void Position::makeRMove(Move m){
+template <bool ev> void Position::makeMove(Move m){
     uint8_t startsquare = m.stsq();
     uint8_t endsquare = m.edsq();
 
@@ -568,92 +716,42 @@ void Position::makeRMove(Move m){
 
     bool passed = m.epcp();
 
-    //Branchless Capture Code
-    /*
-    uint8_t target = (endsquare + passed * ((toMove << 4) - 8));
-    pieces[captureType] ^= capturing * (1ULL << target);
-    sides[!toMove] ^= capturing * (1ULL << target);
-    */
-
     if (capturing){
         uint8_t target = (endsquare + passed * ((toMove << 4) - 8));
-        pieces[m.cptp()] ^= (1ULL << target);
+        uint8_t captureType = m.cptp();
+        pieces[captureType] ^= (1ULL << target);
         sides[!toMove] ^= (1ULL << target);
+
+        if (ev){
+            int csb = mps[captureType][endsquare ^ (toMove * 56)];
+            scores[!toMove] -= csb;
+        }
     }
     
     sides[toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
     pieces[typeMoved] ^= (1ULL << startsquare);
     pieces[typeEnded] ^= (1ULL << endsquare);
 
+    if (ev){
+        int psb = mps[typeEnded][endsquare ^ (!toMove * 56)] - mps[typeMoved][startsquare ^ (!toMove * 56)];
+        scores[toMove] += psb;
+    }
+
     thm++;
+    nodes++;
 
     //En Passant Square Update
     ep[thm] = m.dpsh() * (endsquare - 7 + (toMove << 4)) - 1;
 
+    //chm[thm] = !(capturing or (typeMoved == 5)) * (chm[thm - 1] + 1);
+    if (capturing or (typeMoved == 5)){
+        chm[thm] = 0;
+    } else {
+        chm[thm] = chm[thm - 1] + 1;
+    }
+
     //Adjust Castling Rights
     cr[thm] = cr[thm - 1]; //castling rights preserved at first
-
-    /* First Implementation
-    if (typeMoved == 0){ //King Move Nullifies
-        cr[thm] &= (0xF3 >> (toMove << 1));
-    }
-
-    uint8_t csq = (cf[0] & 0xF) + 56 * toMove; //our kingside square
-
-    if (startsquare == csq){
-        cr[thm] &= (0xFB >> (toMove << 1));
-    }
-
-    if (endsquare == (csq ^ 56)){
-        cr[thm] &= (0xFB >> (!toMove << 1));
-    }
-
-    csq = (cf[1] & 0xF) + 56 * toMove; //queenside
-    if (startsquare == csq){
-        cr[thm] &= (0xF7 >> (toMove << 1));
-    }
-
-    if (endsquare == (csq ^ 56)){
-        cr[thm] &= (0xF7 >> (!toMove << 1));
-    }
-    */
-   
-    //perhaps shortcircit if castling rights are gone
-    //* Else-If Style Castling
-    /*
-    uint8_t cksq = cf[0] ^ (56 * toMove);
-    uint8_t cqsq = cf[1] ^ (56 * toMove);
-
-    if (typeMoved == 0){
-        cr[thm] &= (0xF3 >> (toMove << 1));
-    } else if (startsquare == cksq){
-        cr[thm] &= (0xFB >> (toMove << 1));
-    } else if (startsquare == cqsq){
-        cr[thm] &= (0xF7 >> (toMove << 1));
-    }
-
-    if (endsquare == (cksq ^ 56)){
-        cr[thm] &= (0xFB >> (!toMove << 1));
-    } else if (endsquare == (cqsq ^ 56)){
-        cr[thm] &= (0xF7 >> (!toMove << 1));
-    }
-    */    
-
-    /* Branchless Castling Code
-    uint8_t cup[2] = {0, 0}; //black, white
-
-    cup[toMove] = 3 * (typeMoved == 0);
-    
-    uint8_t cksq = (cf[0] & 0xF) ^ (56 * toMove); 
-    uint8_t cqsq = (cf[1] & 0xF) ^ (56 * toMove);
-    cup[toMove] |= (startsquare == cksq);
-    cup[toMove] |= ((startsquare == cqsq) << 1);
-
-    cup[!toMove] |= (endsquare == (cksq ^ 56));
-    cup[!toMove] |= ((endsquare == (cqsq ^ 56)) << 1);
-
-    cr[thm] &= ~(cup[1] | (cup[0] << 2));
-    */
 
     if (cr[thm] != 0){
         cr[thm] &= ~(crc[startsquare] | crc[endsquare]);
@@ -668,12 +766,17 @@ void Position::makeRMove(Move m){
 
         sides[toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
         pieces[2] ^= ((1ULL << startsquare) | (1ULL << endsquare)); //move the rook
+
+        if (ev){
+            int psb = mps[2][endsquare ^ (56 * !toMove)] - mps[2][startsquare ^ (56 * !toMove)];
+            scores[toMove] += psb;
+        }
     }
 
     toMove ^= 1;   
 }
 
-void Position::unmakeRMove(Move m){
+template <bool ev> void Position::unmakeMove(Move m){
     uint8_t startsquare = m.stsq();
     uint8_t endsquare = m.edsq();
 
@@ -689,16 +792,22 @@ void Position::unmakeRMove(Move m){
     pieces[typeMoved] ^= (1ULL << startsquare);
     pieces[typeEnded] ^= (1ULL << endsquare);
 
-    /*Branchless Capture Code
-    uint8_t target = (endsquare + passed * ((!toMove << 4) - 8));
-    pieces[captureType] ^= capturing * (1ULL << target);
-    sides[toMove] ^= capturing * (1ULL << target);
-    */
+    if (ev){
+        int psb = mps[typeEnded][endsquare ^ (toMove * 56)] - mps[typeMoved][startsquare ^ (toMove * 56)];
+        scores[!toMove] -= psb;
+    }
     
     if (capturing){
         uint8_t target = (endsquare + passed * ((!toMove << 4) - 8));
-        pieces[m.cptp()] ^= (1ULL << target);
+        uint8_t captureType = m.cptp();
+
+        pieces[captureType] ^= (1ULL << target);
         sides[toMove] ^= (1ULL << target);
+
+        if (ev){
+            int csb = mps[captureType][endsquare ^ (!toMove * 56)];;
+            scores[toMove] += csb;
+        }
     }
 
     thm--;
@@ -710,6 +819,11 @@ void Position::unmakeRMove(Move m){
 
         sides[!toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
         pieces[2] ^= ((1ULL << startsquare) | (1ULL << endsquare)); //move the rook
+
+        if (ev){
+            int psb = mps[2][endsquare ^ (56 * toMove)] - mps[2][startsquare ^ (56 * toMove)];
+            scores[!toMove] -= psb;
+        }
     }
 
     toMove ^= 1;
@@ -723,58 +837,19 @@ uint64_t Position::perft(int depth, int ply){
 
     int v = generateMoves(ply);
     for (int i = 0; i < v; i++){
-        
-        //if (ply == 0){ std::cout << "\n\n";}
-        
-        //if (ply == 0){
-        //    std::cout << "Making: " << ply << ' ' << moves[ply][i].toStr() << ": " 
-        //        << moves[ply][i].info << '\n';
-        //}
-        
-        /*
-        if (moves[ply][i].toStr() == "e1g1" and (ply == 0)){
-            print();
-        }
-        */
-        makeRMove(moves[ply][i]);
-        /*
-        if (moves[ply][i].toStr() == "e1g1" and (ply == 0)){
-            print();
-        }
-        */
-        
-        //std::cout << "EP Square: " << (int) ep[thm] << '\n';
-
-        //std::cout << "Checking Legality\n";
+        makeMove<false>(moves[ply][i]);
 
         if (notValid(moves[ply][i])){
-            //if (ply == 0) { 
-                //std::cout << "Legality Prune\n"; 
-                //print();
-            //    printAsBitboard(cm);
-            //}
-            unmakeRMove(moves[ply][i]);
+            unmakeMove<false>(moves[ply][i]);
             continue;
         }
 
         uint64_t next = perft(depth -1, ply + 1);
 
-        //if (ply < 2){
-        //    std::cout << "UNmaking: " << moves[ply][i].toStr() << ": " 
-        //        << moves[ply][i].info << '\n';
-        //}
-        unmakeRMove(moves[ply][i]);
+        unmakeMove<false>(moves[ply][i]);
 
-        //if (moves[ply][i].toStr() == "e1g1"){
-        //    print();
-        //}
-        
-        
         if (ply == 0){
-            std::cout << /*ply << ": " <<*/ moves[ply][i].toStr() << ": " 
-                /*<< moves[ply][i].info << ": "*/ << next << '\n';
-
-            //print();
+            std::cout << moves[ply][i].toStr() << ": " << next << '\n';
         }
         
 
@@ -788,12 +863,62 @@ uint64_t Position::perft(int depth, int ply){
     return pnodes;
 }
 
+void Position::sendMove(std::string str){
+    int nc = generateMoves(0);
+
+    for (int i = 0; i < nc; i++){
+        if (moves[0][i].toStr() == str){
+            //std::cout << "moves[0][i]: " << moves[0][i].info << '\n';
+            makeMove<false>(moves[0][i]); //make without incremental eval
+
+            //in parsing the tail, start over if there is a reset
+            //note that this is special here. in perft, for example, this fails. 
+
+            if (chm[thm] == 0){
+                chm[0] = chm[thm];
+                ep[0] = ep[thm];
+                cr[0] = cr[thm];
+                thm = 0;
+            }
+            return;
+        }
+    }
+}
+
+int Position::evaluate(){
+    return scores[toMove] - scores[!toMove];
+}
+
+int Position::evaluateScratch(){
+    scores[0] = 0;
+    scores[1] = 0;
+
+    Bitboard pcs;
+    int f;
+
+    for (int i = 0; i < 6; i++){
+        pcs = sides[1] & pieces[i]; //white defined as original
+        while (pcs){
+            f = __builtin_ctzll(pcs);
+
+            scores[1] += mps[i][f];
+
+            pcs ^= (1ULL << f);
+        }
+
+        pcs = sides[0] & pieces[i];
+        while (pcs){
+            f = __builtin_ctzll(pcs);
+
+            scores[0] += mps[i][f ^ 56];
+
+            pcs ^= (1ULL << f);
+        }
+    }
 
 
-
-
-
-
+    return scores[toMove] - scores[!toMove];
+}
 
 
 
