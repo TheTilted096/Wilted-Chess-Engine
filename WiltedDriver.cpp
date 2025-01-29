@@ -39,6 +39,7 @@ int main(int argc, char* argv[]){
 
         if (command.substr(0, 17) == "position startpos"){
             engine.setStartPos();
+            engine.beginZobrist();
 
             if (command.length() > 25){
                 std::stringstream extraMoves(command.substr(24));
@@ -54,6 +55,8 @@ int main(int argc, char* argv[]){
             int ms = command.find("moves");
 
             engine.readFen(command.substr(13, ms - 13));
+
+            engine.beginZobrist();
             
             std::stringstream extraMoves(command.substr(ms + 6));
 
@@ -164,8 +167,58 @@ int main(int argc, char* argv[]){
             std::cout << "scores[1]: " << engine.scores[1] << '\n';
             std::cout << "scores[0]: " << engine.scores[0] << '\n';
             */
-        }
-    
+       
+            /* Zobrist Key Generation
+            std::mt19937_64 twist{0x9558D232B73B6B00};
+
+            std::ofstream zfile("randKeys.txt");
+
+            zfile << std::hex;
+            zfile << "uint64_t zpk[2][6][64] =\n{";
+
+            //zfile << "0x" << std::uppercase << twist() << "ULL" << std::nouppercase << ", ";
+            for (int i = 0; i < 2; i++){
+                zfile << '{';
+                for (int j = 0; j < 6; j++){
+                    zfile << '{';
+                    for (int k = 0; k < 64; k++){
+                        zfile << "0x" << std::uppercase << twist() << "ULL" << std::nouppercase << ", ";
+                        if (k % 4 == 3){
+                            zfile << '\n';
+                        }
+                    }
+                    zfile << "},\n\n";
+                }
+                zfile << '}';
+            }
+
+            zfile << "\n\nuint64_t zck[16] = \n{";
+
+            for (int i = 0; i < 16; i++){
+                zfile << "0x" << std::uppercase << twist() << "ULL" << std::nouppercase << ", ";
+                if (i % 4 == 3){
+                    zfile << '\n';
+                }
+            }
+
+            zfile << "\n\nuint64_t zek[8] = \n{";
+            for (int i = 0; i < 8; i++){
+                zfile << "0x" << std::uppercase << twist() << "ULL" << std::nouppercase << ", ";
+                if (i % 4 == 3){
+                    zfile << '\n';
+                }
+            }
+
+            zfile << "\n\nuint64_t ztk = ";
+            zfile << "0x" << std::uppercase << twist() << "ULL" << std::nouppercase << ";";
+            */
+       
+            //engine.showZobrist();   
+
+            //engine.quiesce(-30000, 30000, 0);
+            //engine.print();
+           
+        }   
     }
     
 

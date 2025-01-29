@@ -196,7 +196,7 @@ class Position : public Bitboards{
         int evaluateScratch();
 
         int generateMoves(int);
-        //int generateCaptures(int);
+        int generateCaptures(int);
 
         uint64_t perft(int, int);
 
@@ -325,51 +325,6 @@ int Position::generateMoves(int ply){
 
     Bitboard pshtrgt = ((pcs << 8) >> (toMove << 4)) & ~occ;
     Bitboard dpshtrgt = ((pshtrgt << 8) >> (toMove << 4)) & ~occ & (0xFF000000ULL << (toMove << 3)); //two-square pushes
-
-    //Pawn Captures
-    /*
-    while (pcs){
-        f = __builtin_ctzll(pcs);
-
-        mvst = plt[toMove][f] & (opps | ((ep[thm] != 255) * (1ULL << ep[thm]))); //add ep square to pawn caps
-
-        while (mvst){
-            p = __builtin_ctzll(mvst);
-
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-
-            cc = pieceAt(p);
-            moves[ply][tgm].info |= (cc << 12); //captured type
-            moves[ply][tgm].info |= ((cc == 13) << 24); //ep capture
-
-            moves[ply][tgm].info |= (5U << 15); //type moved
-
-            bool prmt = ((1ULL << p) & 0xFF000000000000FF); //cast promotion mask to bool
-            if (prmt){
-                uint32_t tmp = moves[ply][tgm].info;
-
-                moves[ply][tgm].info = tmp | (1U << 18);
-                tgm++;
-
-                moves[ply][tgm].info = tmp | (2U << 18);
-                tgm++;
-
-                moves[ply][tgm].info = tmp | (3U << 18);
-                tgm++;
-
-                moves[ply][tgm].info = tmp | (4U << 18);
-            } else {
-                moves[ply][tgm].info |= (5U << 18);
-            }
-
-            mvst ^= (1ULL << p);
-            tgm++;
-        }
-
-        pcs ^= (1ULL << f);       
-    }
-    */
 
    	Bitboard pawnopps = opps | ((ep[thm] != 255) * (1ULL << ep[thm])); //maybe ep[thm] + 1 = 0?
 
@@ -701,6 +656,261 @@ int Position::generateMoves(int ply){
     return tgm;
 }
 
+int Position::generateCaptures(int ply){
+    int tgm = 0;
+    Bitboard mvst, pcs, xset;
+    Bitboard occ = sides[0] | sides[1];
+    Bitboard ours = sides[toMove];
+    Bitboard opps = sides[!toMove];
+
+    int f, p, cc;
+
+    //Pawns
+
+    pcs = pieces[5] & ours;
+
+    //Bitboard pshtrgt = ((pcs << 8) >> (toMove << 4)) & ~occ;
+    //Bitboard dpshtrgt = ((pshtrgt << 8) >> (toMove << 4)) & ~occ & (0xFF000000ULL << (toMove << 3)); //two-square pushes
+
+   	Bitboard pawnopps = opps | ((ep[thm] != 255) * (1ULL << ep[thm])); //maybe ep[thm] + 1 = 0?
+
+	Bitboard leftcap = (((pcs & 0xFEFEFEFEFEFEFEFEULL) << 7) >> (toMove << 4)) & pawnopps;
+	Bitboard rightcap = (((pcs & 0x7F7F7F7F7F7F7F7FULL) << 9) >> (toMove << 4)) & pawnopps;
+
+	while (rightcap){
+		f = __builtin_ctzll(rightcap);
+
+		moves[ply][tgm].info = f - 9 + (toMove << 4);
+		moves[ply][tgm].info |= (f << 6);
+		
+		cc = pieceAt(f);
+		moves[ply][tgm].info |= (cc << 12);
+		moves[ply][tgm].info |= ((cc == 13) << 24); //ep capture;
+
+		moves[ply][tgm].info |= (5U << 15); //type moved
+
+		bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
+		if (prmt){
+			uint32_t tmp = moves[ply][tgm].info;
+
+			moves[ply][tgm].info = tmp | (1U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (2U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (3U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (4U << 18);
+		} else {
+			moves[ply][tgm].info |= (5U << 18);
+		}
+
+		rightcap ^= (1ULL << f);
+		tgm++;
+	}
+
+	while (leftcap){
+		f = __builtin_ctzll(leftcap);
+
+		moves[ply][tgm].info = f - 7 + (toMove << 4);
+		moves[ply][tgm].info |= (f << 6);
+		
+		cc = pieceAt(f);
+		moves[ply][tgm].info |= (cc << 12);
+		moves[ply][tgm].info |= ((cc == 13) << 24); //ep capture;
+
+		moves[ply][tgm].info |= (5U << 15); //type moved
+
+		bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
+		if (prmt){
+			uint32_t tmp = moves[ply][tgm].info;
+
+			moves[ply][tgm].info = tmp | (1U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (2U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (3U << 18);
+			tgm++;
+
+			moves[ply][tgm].info = tmp | (4U << 18);
+		} else {
+			moves[ply][tgm].info |= (5U << 18);
+		}
+
+		leftcap ^= (1ULL << f);
+		tgm++;
+	}
+	
+    //pawn pushes and double-pushes
+    /*
+    while (pshtrgt){
+        f = __builtin_ctzll(pshtrgt);
+        moves[ply][tgm].info = f - 8 + (toMove << 4); //start
+        moves[ply][tgm].info |= (f << 6); //end
+
+        moves[ply][tgm].info |= (5U << 15); //type moved
+
+        bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
+        if (prmt){
+            uint32_t tmp = moves[ply][tgm].info;
+
+            moves[ply][tgm].info = tmp | (1U << 18);
+            tgm++;
+
+            moves[ply][tgm].info = tmp | (2U << 18);
+            tgm++;
+
+            moves[ply][tgm].info = tmp | (3U << 18);
+            tgm++;
+
+            moves[ply][tgm].info = tmp | (4U << 18);
+        } else {
+            moves[ply][tgm].info |= (5U << 18);
+        }
+
+        pshtrgt ^= (1ULL << f);
+        tgm++;
+    }
+    */
+
+    //Knights
+    pcs = pieces[4] & ours;
+    while (pcs){
+        f = __builtin_ctzll(pcs);
+
+        mvst = KnightAttacks[f] & ~ours;
+        xset = mvst & opps;
+        mvst ^= xset;
+
+        while (xset){
+            p = __builtin_ctzll(xset);
+            moves[ply][tgm].info = f;
+            moves[ply][tgm].info |= (p << 6);
+            
+            cc = pieceAt(p);
+            moves[ply][tgm].info |= (cc << 12);
+
+            moves[ply][tgm].info |= (4U << 15);
+            moves[ply][tgm].info |= (4U << 18);
+
+            tgm++;
+            xset ^= (1ULL << p);
+        }
+
+        pcs ^= (1ULL << f);
+    }
+
+    //Bishops
+    pcs = pieces[3] & ours;
+    while (pcs){
+        f = __builtin_ctzll(pcs);
+
+        mvst = bishopAttack(f, occ) & ~ours;
+        xset = mvst & opps;
+        mvst ^= xset;
+
+        while (xset){
+            p = __builtin_ctzll(xset);
+            moves[ply][tgm].info = f;
+            moves[ply][tgm].info |= (p << 6);
+            
+            cc = pieceAt(p);
+            moves[ply][tgm].info |= (cc << 12);
+
+            moves[ply][tgm].info |= (3U << 15);
+            moves[ply][tgm].info |= (3U << 18);
+
+            tgm++;
+            xset ^= (1ULL << p);
+        }
+
+        pcs ^= (1ULL << f);
+    }
+
+    //Rooks
+    pcs = pieces[2] & ours;
+    while (pcs){
+        f = __builtin_ctzll(pcs);
+
+        mvst = rookAttack(f, occ) & ~ours;
+        xset = mvst & opps;
+        mvst ^= xset;
+
+        while (xset){
+            p = __builtin_ctzll(xset);
+            moves[ply][tgm].info = f;
+            moves[ply][tgm].info |= (p << 6);
+            
+            cc = pieceAt(p);
+            moves[ply][tgm].info |= (cc << 12);
+
+            moves[ply][tgm].info |= (2U << 15);
+            moves[ply][tgm].info |= (2U << 18);
+
+            tgm++;
+            xset ^= (1ULL << p);
+        }
+
+        pcs ^= (1ULL << f);
+    }
+
+    //Queens
+    pcs = pieces[1] & ours;
+    while (pcs){
+        f = __builtin_ctzll(pcs);
+
+        mvst = (bishopAttack(f, occ) | rookAttack(f, occ)) & ~ours;
+        xset = mvst & opps;
+        mvst ^= xset;
+
+        while (xset){
+            p = __builtin_ctzll(xset);
+            moves[ply][tgm].info = f;
+            moves[ply][tgm].info |= (p << 6);
+            
+            cc = pieceAt(p);
+            moves[ply][tgm].info |= (cc << 12);
+
+            moves[ply][tgm].info |= (1U << 15);
+            moves[ply][tgm].info |= (1U << 18);
+
+            tgm++;
+            xset ^= (1ULL << p);
+        }
+
+        pcs ^= (1ULL << f);
+    }
+
+    //King
+    pcs = pieces[0] & ours;
+    f = __builtin_ctzll(pcs);
+
+    mvst = KingAttacks[f] & ~ours;
+    xset = mvst & opps;
+    mvst ^= xset;
+
+    while (xset){
+        p = __builtin_ctzll(xset);
+        moves[ply][tgm].info = f;
+        moves[ply][tgm].info |= (p << 6);
+        
+        cc = pieceAt(p);
+        moves[ply][tgm].info |= (cc << 12);
+
+        //moves[ply][tgm].info |= (0U << 15);
+        //moves[ply][tgm].info |= (0U << 18);
+
+        tgm++;
+        xset ^= (1ULL << p);
+    }
+
+    return tgm;
+}
+
 template <bool ev> void Position::makeMove(Move m){
     uint8_t startsquare = m.stsq();
     uint8_t endsquare = m.edsq();
@@ -713,11 +923,15 @@ template <bool ev> void Position::makeMove(Move m){
 
     bool passed = m.epcp();
 
+    uint64_t zFactor = ztk;
+
     if (capturing){
         uint8_t target = (endsquare + passed * ((toMove << 4) - 8));
         uint8_t captureType = m.cptp();
         pieces[captureType] ^= (1ULL << target);
         sides[!toMove] ^= (1ULL << target);
+
+        zFactor = zpk[!toMove][captureType][target]; //when capturing, remove the target piece
 
         if (ev){
             int csb = mps[captureType][endsquare ^ (toMove * 56)];
@@ -728,6 +942,9 @@ template <bool ev> void Position::makeMove(Move m){
     sides[toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
     pieces[typeMoved] ^= (1ULL << startsquare);
     pieces[typeEnded] ^= (1ULL << endsquare);
+
+    zFactor ^= zpk[toMove][typeMoved][startsquare]; //replace zobrist keys of piece
+    zFactor ^= zpk[toMove][typeEnded][endsquare];
 
     if (ev){
         int psb = mps[typeEnded][endsquare ^ (!toMove * 56)] - mps[typeMoved][startsquare ^ (!toMove * 56)];
@@ -740,6 +957,11 @@ template <bool ev> void Position::makeMove(Move m){
     //En Passant Square Update
     ep[thm] = m.dpsh() * (endsquare - 7 + (toMove << 4)) - 1;
 
+    zFactor ^= (m.dpsh() * zek[endsquare & 7]); //file of en-passant square
+    if (ep[thm - 1] != 255){
+        zFactor ^= zek[ep[thm - 1] & 7]; // remove previous ep square
+    }
+
     //chm[thm] = !(capturing or (typeMoved == 5)) * (chm[thm - 1] + 1);
     if (capturing or (typeMoved == 5)){
         chm[thm] = 0;
@@ -751,7 +973,12 @@ template <bool ev> void Position::makeMove(Move m){
     cr[thm] = cr[thm - 1]; //castling rights preserved at first
 
     if (cr[thm] != 0){
-        cr[thm] &= ~(crc[startsquare] | crc[endsquare]);
+        uint8_t change = crc[startsquare] | crc[endsquare];
+        if (change){
+            cr[thm] &= ~change;
+            zFactor ^= zck[cr[thm - 1]]; //if castling exists, xor old state
+            zFactor ^= zck[cr[thm]]; //xor in new state
+        }
     }
 
     //castling
@@ -764,11 +991,16 @@ template <bool ev> void Position::makeMove(Move m){
         sides[toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
         pieces[2] ^= ((1ULL << startsquare) | (1ULL << endsquare)); //move the rook
 
+        zFactor ^= zpk[toMove][2][startsquare]; //move the rook from start and end
+        zFactor ^= zpk[toMove][2][endsquare];
+
         if (ev){
             int psb = mps[2][endsquare ^ (56 * !toMove)] - mps[2][startsquare ^ (56 * !toMove)];
             scores[toMove] += psb;
         }
     }
+
+    zhist[thm] = zhist[thm - 1] ^ zFactor;
 
     toMove ^= 1;   
 }
@@ -875,6 +1107,7 @@ void Position::sendMove(std::string str){
                 chm[0] = chm[thm];
                 ep[0] = ep[thm];
                 cr[0] = cr[thm];
+                zhist[0] = zhist[thm];
                 thm = 0;
             }
             return;

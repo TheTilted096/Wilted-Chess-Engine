@@ -8,17 +8,26 @@ TheTilted096 12-18-24
 
 #include "WiltedPosition.cpp"
 
-/*
 class TTentry{
     public:
-        uint64_t data;
-        
-        Hash eHash;
-        Hash* zref;
+        uint64_t data; //move 0-31, score 32-47, depth 
+        uint64_t hash;
+        uint64_t* zref; //reference list
 
+        int eScore();
+        int enType();
+        int eDepth();
+        Move eMove();
+        //Move eMove;
+
+        TTentry();
+        void setRef(uint64_t*);
+        void update(int, int, int, Move, int);
+        void reset();
+        //void print();
 };
 
-*/
+
 
 class Engine : public Position{
     public:
@@ -28,6 +37,8 @@ class Engine : public Position{
         //uint64_t nodesForever;
 
         //Tranposition Table
+        TTentry* ttable;
+
         //Killer Moves
 
         bool timeKept;
@@ -36,12 +47,13 @@ class Engine : public Position{
         std::chrono::_V2::steady_clock::time_point moment;
 
         Engine();
+        ~Engine();
 
         void forceStop();
         int64_t timeTaken();
         void timeMan(uint32_t, uint32_t);
 
-        //int quiesce(int, int, int);
+        int quiesce(int, int, int);
         int alphabeta(int, int, int, int);
         int search(int, uint64_t, bool);
 
@@ -55,11 +67,21 @@ Engine::Engine(){
     hardTime = ~0U; softTime = ~0U;
 
     //init transposition table
+    /*
+    ttable = new TTentry[0x100000]; // (1 << 20)
+    for (int i = 0; i < 0x100000; i++){
+        ttable[i].setRef(zhist);
+    }
+    */
 
     //LMR Coefs
 
     //just ucinewgame
     newGame();
+}
+
+Engine::~Engine(){
+    delete[] ttable;
 }
 
 void Engine::forceStop(){
@@ -84,18 +106,75 @@ void Engine::timeMan(uint32_t base, uint32_t inc){
     hardTime = base / 10 + 9 * inc / 10;
 }
 
+int Engine::quiesce(int alpha, int beta, int ply){
+    /*
+    Check Insufficient Material
+    */
+    int score = evaluate();
+
+    int bestScore = score;
+
+    if (ply > 15){ //cap to prevent segfaults
+        return score;
+    }
+
+    if (score >= beta){
+        return score;
+    }
+    if (alpha < score){
+        alpha = score;
+    }
+
+    int lply = 48 + ply;
+    int moveCount = generateCaptures(lply);
+
+    for (int i = 0; i < moveCount; i++){
+        makeMove<true>(moves[lply][i]);
+
+        forceStop();
+
+        if (isChecked(!toMove)){
+            unmakeMove<true>(moves[lply][i]);
+            continue;
+        }
+
+        score = -quiesce(-beta, -alpha, ply + 1);
+        unmakeMove<true>(moves[lply][i]);
+
+        if (score >= beta){
+            return score;
+        }
+        if (score > alpha){
+            alpha = score;
+        }
+        if (score > bestScore){
+            bestScore = score;
+        }
+    }
+
+    return bestScore;
+}
+
 int Engine::alphabeta(int alpha, int beta, int depth, int ply){
     int score = -29000;
     int bestScore = -29000;
 
-    //3-fold 
+    //3-fold
+    int repeats = countReps(ply);
+    if (repeats > 2){
+        return 0;
+    } 
 
     //50-move rule
+    if (chm[thm] >= 100){
+        return 0;
+    }
 
     //insufficient material
 
     if (depth == 0){
-        return evaluate();
+        return quiesce(alpha, beta, 0);
+        //return evaluate();
     }
 
     //Mate Distance Pruning
@@ -158,6 +237,7 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
     }
 
     if (score == -29000){
+        //print();
         //maybe make this branchless
         if (inCheck){ return ply - 29000; } //dying
         return 0; //draw
@@ -202,6 +282,7 @@ int Engine::search(int mdepth, uint64_t maxNodes, bool output){
 
         for (int i = 1; i <= mdepth; i++){ //iterative deepening search
             searchScore = alphabeta(-30000, 30000, i, 0);
+            
 
             currentBest = bestMove; //each complete depth saves best move and score
             if (output){ std::cout << "info depth " << i << " nodes " << nodes << " score cp " << searchScore << std::endl; }
@@ -243,6 +324,10 @@ int Engine::search(int mdepth, uint64_t maxNodes, bool output){
 
 void Engine::newGame(){
     setStartPos();
+
+    //erase history, killers, TT
+
+    beginZobrist();
 }
 
 
