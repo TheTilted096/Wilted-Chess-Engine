@@ -54,6 +54,7 @@ class Engine : public Position{
         void timeMan(uint32_t, uint32_t);
 
         void scoreMoves(int, int);
+        void scoreQMoves(int, int);
         void sortMoves(int, int);
 
         int quiesce(int, int, int);
@@ -124,6 +125,14 @@ void Engine::scoreMoves(int ply, int nc){
     }
 }
 
+void Engine::scoreQMoves(int ply, int nc){
+    for (int i = 0; i < nc; i++){
+
+        mprior[ply][i] = (1 << 16) + moves[ply][i].tpmv() - (moves[ply][i].cptp() << 4);
+
+    }
+}
+
 void Engine::sortMoves(int ply, int nc){
     int keyVal;
     Move keyMove;
@@ -166,8 +175,8 @@ int Engine::quiesce(int alpha, int beta, int ply){
     int lply = 48 + ply;
     int moveCount = generateCaptures(lply);
 
-    scoreMoves(ply, moveCount);
-    sortMoves(ply, moveCount);
+    scoreQMoves(lply, moveCount);
+    sortMoves(lply, moveCount);
 
     for (int i = 0; i < moveCount; i++){
         makeMove<true>(moves[lply][i]);
