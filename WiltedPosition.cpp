@@ -36,6 +36,8 @@ class Move{
         //void operator|=(const uint32_t&);
         //void operator=(const uint32_t&);
 
+        bool operator==(const Move&);
+
         //ton of other things
         
 };
@@ -98,6 +100,10 @@ std::string Move::toStr(){
 
 void Move::print(){
     std::cout << info << '\n';
+}
+
+bool Move::operator==(const Move& m){
+    return (m.info == info);
 }
 
 /*
@@ -924,7 +930,7 @@ template <bool ev> void Position::makeMove(Move m){
 
     bool passed = m.epcp();
 
-    uint64_t zFactor = ztk;
+    Hash zFactor = ztk;
 
     if (capturing){
         uint8_t target = (endsquare + passed * ((toMove << 4) - 8));

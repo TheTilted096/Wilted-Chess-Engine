@@ -10,24 +10,60 @@ TheTilted096 12-18-24
 
 class TTentry{
     public:
-        uint64_t data; //move 0-31, score 32-47, depth 
-        uint64_t hash;
-        uint64_t* zref; //reference list
+        uint64_t data; //move 0-31, score 32-47, depth 48-53, nodetype 54-55, flag 56, age(?)
+        Hash hash;
 
         int eScore();
         int enType();
         int eDepth();
+        Hash eHash();
         Move eMove();
         //Move eMove;
 
         TTentry();
-        void setRef(uint64_t*);
-        void update(int, int, int, Move, int);
+        void update(int, int, int, Move, Hash);
         void reset();
         //void print();
 };
 
+TTentry::TTentry(){
+    reset();
+}
 
+void TTentry::update(int scr, int ntype, int dep, Move m, Hash h){
+    data = m.info;
+    data |= (((uint64_t) ((int16_t) (scr))) << 32);
+    data |= (((uint64_t) dep) << 48);
+    data |= (((uint64_t) ntype) << 54);
+
+    data &= ~(1ULL << 56);
+
+    hash = h;
+}
+
+int TTentry::eScore(){
+    return ((int) ((int16_t) ((data >> 32) & 0xFFFF)));
+}
+
+int TTentry::enType(){
+    return ((data >> 54) & 0x3);
+}
+
+int TTentry::eDepth(){
+    return ((data >> 48) & 0x3F);
+}
+
+Move TTentry::eMove(){
+    return Move(data & 0xFFFFFFFF);
+}
+
+void TTentry::reset(){
+    data = (1ULL << 56);
+}
+
+Hash TTentry::eHash(){
+    return hash;
+}
 
 class Engine : public Position{
     public:
@@ -37,7 +73,7 @@ class Engine : public Position{
         //uint64_t nodesForever;
 
         //Tranposition Table
-        //TTentry* ttable;
+        TTentry* ttable;
 
         //Killer Moves
 
@@ -47,14 +83,15 @@ class Engine : public Position{
         std::chrono::_V2::steady_clock::time_point moment;
 
         Engine();
-        //~Engine();
+        ~Engine();
 
         void forceStop();
         int64_t timeTaken();
         void timeMan(uint32_t, uint32_t);
 
-        void scoreMoves(int, int);
+        void scoreMoves(int, int, Move);
         void scoreQMoves(int, int);
+
         void sortMoves(int, int);
 
         int quiesce(int, int, int);
@@ -71,12 +108,7 @@ Engine::Engine(){
     hardTime = ~0U; softTime = ~0U;
 
     //init transposition table
-    /*
     ttable = new TTentry[0x100000]; // (1 << 20)
-    for (int i = 0; i < 0x100000; i++){
-        ttable[i].setRef(zhist);
-    }
-    */
 
     //LMR Coefs
 
@@ -84,11 +116,9 @@ Engine::Engine(){
     newGame();
 }
 
-/*
 Engine::~Engine(){
-    //delete[] ttable;
+    delete[] ttable;
 }
-*/
 
 void Engine::forceStop(){
     if (timeKept and (nodes % 2048 == 0)){
@@ -109,12 +139,17 @@ int64_t Engine::timeTaken(){
 void Engine::timeMan(uint32_t base, uint32_t inc){
     timeKept = ~base;
     softTime = base / 40 + inc / 2;
-    hardTime = base / 10 + 9 * inc / 10;
+    hardTime = std::min(base, base / 10 + 9 * inc / 10);
 }
 
-void Engine::scoreMoves(int ply, int nc){
+void Engine::scoreMoves(int ply, int nc, Move ttm){
     for (int i = 0; i < nc; i++){
         //TT Move, Killers
+
+        if (moves[ply][i] == ttm){
+            mprior[ply][i] = (1 << 30);
+            continue;
+        }
 
         if (moves[ply][i].capt()){ //captures
             mprior[ply][i] = (1 << 16) + moves[ply][i].tpmv() - (moves[ply][i].cptp() << 4);
@@ -230,6 +265,16 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
     //Mate Distance Pruning
 
     //Transposition Table Probing
+    int ttindex = zhist[thm] & 0xFFFFF;
+    //int ttdepth = ttable[ttindex].eDepth();
+    Move ttmove;
+
+    if (ttable[ttindex].eHash() == zhist[thm]){
+        score = ttable[ttindex].eScore();
+        ttmove = ttable[ttindex].eMove();
+
+        //implement TT Cutoffs later...
+    }
 
     //RFP
 
@@ -241,8 +286,11 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
     bool inCheck = isChecked(toMove);
 
     //Move Scoring/Ordering
-    scoreMoves(ply, moveCount);
+    scoreMoves(ply, moveCount, ttmove);
     sortMoves(ply, moveCount);
+
+    bool isAllNode = true; //used for TT updating
+    Move localBestMove;
 
     for (int i = 0; i < moveCount; i++){
         makeMove<true>(moves[ply][i]);
@@ -265,14 +313,16 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
 
         if (score >= beta){
             //TT update in cut node
+            ttable[ttindex].update(score, 2, depth, moves[ply][i], zhist[thm]);
 
             //Killers and History
 
             return score;
         }
 
-        if (score > alpha){
+        if (score > alpha){ //PV Node
             //No longer all node
+            isAllNode = false;
 
             alpha = score;
         }
@@ -283,7 +333,7 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
             }
 
             //local best move
-
+            localBestMove = moves[ply][i];
             bestScore = score;
         }
     }
@@ -295,6 +345,7 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
         return 0; //draw
     }
 
+    ttable[ttindex].update(bestScore, 1 + 2 * isAllNode, depth, localBestMove, zhist[thm]);
 
     return bestScore;
 }

@@ -22,4 +22,4 @@ pre2 - iterative deepening, time management
 
 pre3 - zobrist hashing, qsearch
 
-pre4 - MVVLVA and transposition table
+pre4 - MVVLVA and TT Move

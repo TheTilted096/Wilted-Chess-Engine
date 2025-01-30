@@ -20,6 +20,7 @@ Contains board representation and elementary makeMove
 #include <string>
 
 typedef uint64_t Bitboard;
+typedef uint64_t Hash;
 
 class Bitboards{
     public:
@@ -233,10 +234,10 @@ class Bitboards{
         uint8_t cr[128]; //last 4 bits q k Q K
         uint8_t ep[128];
 
-        uint64_t zhist[128];
+        Hash zhist[128];
 
         //zobrist history and keys
-        static constexpr uint64_t zpk[2][6][64] =
+        static constexpr Hash zpk[2][6][64] =
         {{{0x2160BAA77317BB5CULL, 0xC186DC9E498A889AULL, 0xD03760D35345B01EULL, 0xE49BEFB1100DCFAEULL, 
         0xFBB9DE5E55909842ULL, 0x8FD9B930F35E625EULL, 0x5AEE8334E2AB5369ULL, 0x2B57D1C981225BFBULL, 
         0x8615BD79E5249815ULL, 0x7D68660FB67927E4ULL, 0x4F8D3C59E74DC8DULL, 0x19207F2EEC25039AULL, 
@@ -443,17 +444,17 @@ class Bitboards{
         0x9547D6DB3560B6ECULL, 0xEFB21F585FF9EAC7ULL, 0x528FFDEBE412C7C3ULL, 0x989CFA5B1BD641CULL, 
         0x39B5F0A496BF5234ULL, 0x273F6A36C76FC491ULL, 0x4FA627801BF18D41ULL, 0xF689E1191A6C28A1ULL}}};
 
-        static constexpr uint64_t zck[16] = 
+        static constexpr Hash zck[16] = 
         {0x37C87F5EDEC3C89CULL, 0x71761AD96A10C0ULL, 0x8CBC2AE5FADDB1C6ULL, 0x2CA535819B8C853ULL, 
         0xFC410D7590448ABCULL, 0xA917CAC2508D50BCULL, 0xFB7B5E9277D4D338ULL, 0x7FD622FECEA1BCA9ULL, 
         0x742170973C80ABC7ULL, 0xBBBABCCAE4B0E0F7ULL, 0x547256CADE8A236FULL, 0xB05CC3586B162FE0ULL, 
         0x1506C66F33719134ULL, 0xF44A1DD3F29EDD2ULL, 0xF468F5E983E98CA6ULL, 0x9F1A85F11B1758A3ULL};
 
-        static constexpr uint64_t zek[8] = 
+        static constexpr Hash zek[8] = 
         {0x8A72FAE15A6CEEBFULL, 0xB8A0DD95FAEEED12ULL, 0x4FF90C9E32240495ULL, 0x5C44B7AE72DA80A9ULL, 
         0xE433521DB961BECEULL, 0x745F7A44232CE9A8ULL, 0x98A4CADFC53E0D3CULL, 0xF8631D6D7E0DE2CBULL}; 
 
-        static constexpr uint64_t ztk = 0xDE9BA87421240D54ULL;
+        static constexpr Hash ztk = 0xDE9BA87421240D54ULL;
 
         //FEN-related parsing
         static constexpr char frchr[21] = 
