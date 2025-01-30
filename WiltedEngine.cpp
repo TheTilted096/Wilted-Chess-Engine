@@ -37,7 +37,7 @@ class Engine : public Position{
         //uint64_t nodesForever;
 
         //Tranposition Table
-        TTentry* ttable;
+        //TTentry* ttable;
 
         //Killer Moves
 
@@ -47,11 +47,14 @@ class Engine : public Position{
         std::chrono::_V2::steady_clock::time_point moment;
 
         Engine();
-        ~Engine();
+        //~Engine();
 
         void forceStop();
         int64_t timeTaken();
         void timeMan(uint32_t, uint32_t);
+
+        void scoreMoves(int, int);
+        void sortMoves(int, int);
 
         int quiesce(int, int, int);
         int alphabeta(int, int, int, int);
@@ -80,9 +83,11 @@ Engine::Engine(){
     newGame();
 }
 
+/*
 Engine::~Engine(){
-    delete[] ttable;
+    //delete[] ttable;
 }
+*/
 
 void Engine::forceStop(){
     if (timeKept and (nodes % 2048 == 0)){
@@ -106,6 +111,39 @@ void Engine::timeMan(uint32_t base, uint32_t inc){
     hardTime = base / 10 + 9 * inc / 10;
 }
 
+void Engine::scoreMoves(int ply, int nc){
+    for (int i = 0; i < nc; i++){
+        //TT Move, Killers
+
+        if (moves[ply][i].capt()){ //captures
+            mprior[ply][i] = (1 << 16) + moves[ply][i].tpmv() - (moves[ply][i].cptp() << 4);
+            continue;
+        }
+
+        mprior[ply][i] = moves[ply][i].tpmv();        
+    }
+}
+
+void Engine::sortMoves(int ply, int nc){
+    int keyVal;
+    Move keyMove;
+
+    int j;
+    for (int i = 1; i < nc; i++){
+        keyVal = mprior[ply][i];
+        keyMove = moves[ply][i];
+        j = i - 1;
+        while ((j >= 0) and (mprior[ply][j] < keyVal)){
+            mprior[ply][j + 1] = mprior[ply][j];
+            moves[ply][j + 1] = moves[ply][j];
+            j--;
+        }
+
+        mprior[ply][j + 1] = keyVal;
+        moves[ply][j + 1] = keyMove;
+    }
+}
+
 int Engine::quiesce(int alpha, int beta, int ply){
     /*
     Check Insufficient Material
@@ -127,6 +165,9 @@ int Engine::quiesce(int alpha, int beta, int ply){
 
     int lply = 48 + ply;
     int moveCount = generateCaptures(lply);
+
+    scoreMoves(ply, moveCount);
+    sortMoves(ply, moveCount);
 
     for (int i = 0; i < moveCount; i++){
         makeMove<true>(moves[lply][i]);
@@ -191,6 +232,8 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
     bool inCheck = isChecked(toMove);
 
     //Move Scoring/Ordering
+    scoreMoves(ply, moveCount);
+    sortMoves(ply, moveCount);
 
     for (int i = 0; i < moveCount; i++){
         makeMove<true>(moves[ply][i]);

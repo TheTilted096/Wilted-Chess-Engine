@@ -217,6 +217,17 @@ int main(int argc, char* argv[]){
 
             //engine.quiesce(-30000, 30000, 0);
             //engine.print();
+
+            /*
+            int b = engine.generateMoves(0);
+            engine.scoreMoves(0, b);
+            engine.sortMoves(0, b);
+
+            for (int i = 0; i < b; i++){
+                std::cout << engine.moves[0][i].toStr() << ": " << engine.mprior[0][i] << '\n';
+            }
+            */
+            
            
         }   
     }

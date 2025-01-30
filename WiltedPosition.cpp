@@ -112,7 +112,8 @@ inline void Move::operator=(const uint32_t& t){
 
 class Position : public Bitboards{
     public:
-        Move moves[64][96];
+        Move moves[64][128];
+        int mprior[64][128];
 
         int scores[2];//, eScores[2];
         //int mobil[2], eMobil[2];
