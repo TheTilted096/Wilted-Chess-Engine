@@ -32,7 +32,7 @@ TTentry::TTentry(){
 
 void TTentry::update(int scr, int ntype, int dep, Move m, Hash h){
     data = m.info;
-    data |= (((uint64_t) ((int16_t) (scr))) << 32);
+    data |= (((uint64_t) ((uint16_t) (scr))) << 32);
     data |= (((uint64_t) dep) << 48);
     data |= (((uint64_t) ntype) << 54);
 
@@ -89,6 +89,8 @@ class Engine : public Position{
         int64_t timeTaken();
         void timeMan(uint32_t, uint32_t);
 
+        void eraseTransposeTable();
+
         void scoreMoves(int, int, Move);
         void scoreQMoves(int, int);
 
@@ -118,6 +120,12 @@ Engine::Engine(){
 
 Engine::~Engine(){
     delete[] ttable;
+}
+
+void Engine::eraseTransposeTable(){
+    for (int i = 0; i < 0xFFFFF; i++){
+        ttable[i].reset();
+    }
 }
 
 void Engine::forceStop(){
@@ -256,6 +264,9 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
     }
 
     //insufficient material
+    if (insufficient()){
+        return 0;
+    }
 
     if (depth == 0){
         return quiesce(alpha, beta, 0);
@@ -266,14 +277,26 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
 
     //Transposition Table Probing
     int ttindex = zhist[thm] & 0xFFFFF;
-    //int ttdepth = ttable[ttindex].eDepth();
+    int ttdepth = ttable[ttindex].eDepth();
     Move ttmove;
 
     if (ttable[ttindex].eHash() == zhist[thm]){
         score = ttable[ttindex].eScore();
         ttmove = ttable[ttindex].eMove();
 
-        //implement TT Cutoffs later...
+        //implement TT Cutoffs
+        int ntype = ttable[ttindex].enType();
+        if ((ttdepth >= depth) and (repeats == 1) and (ply > 0)){
+            if (ntype == 1){
+                return score;
+            }
+            if ((ntype == 2) and (score >= beta)){
+                return score;
+            }
+            if ((ntype == 3) and (score <= alpha)){
+                return score;
+            }
+        }
     }
 
     //RFP
@@ -291,6 +314,7 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
 
     bool isAllNode = true; //used for TT updating
     Move localBestMove;
+
 
     for (int i = 0; i < moveCount; i++){
         makeMove<true>(moves[ply][i]);
@@ -386,7 +410,6 @@ int Engine::search(int mdepth, uint64_t maxNodes, bool output){
         for (int i = 1; i <= mdepth; i++){ //iterative deepening search
             searchScore = alphabeta(-30000, 30000, i, 0);
             
-
             currentBest = bestMove; //each complete depth saves best move and score
             if (output){ std::cout << "info depth " << i << " nodes " << nodes << " score cp " << searchScore << std::endl; }
 
@@ -429,6 +452,7 @@ void Engine::newGame(){
     setStartPos();
 
     //erase history, killers, TT
+    eraseTransposeTable();
 
     beginZobrist();
 }

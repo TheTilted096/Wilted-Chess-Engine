@@ -8,9 +8,11 @@ Basic Iterative Deepening Search
 
 Quiescent Search at Terminal Nodes
 
+TT Move and MVVLVA Move Ordering, TT Cutoffs
+
 Soft/Hard Time Management
 
-Basic Zobrist Hashing (Threefold Detecting)
+Basic Zobrist Hashing
 
 Randomly Generated PSQTs
 
@@ -23,3 +25,5 @@ pre2 - iterative deepening, time management
 pre3 - zobrist hashing, qsearch
 
 pre4 - MVVLVA and TT Move
+
+pre5 - ttcutoffs, rfp, nmp

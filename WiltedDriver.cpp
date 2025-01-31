@@ -169,12 +169,12 @@ int main(int argc, char* argv[]){
             */
        
             /* Zobrist Key Generation
-            std::mt19937_64 twist{0x9558D232B73B6B00};
+            std::mt19937_64 twist{0xBF4C588392769BFFULL};
 
             std::ofstream zfile("randKeys.txt");
 
             zfile << std::hex;
-            zfile << "uint64_t zpk[2][6][64] =\n{";
+            zfile << "static constexpr Hash zpk[2][6][64] =\n{";
 
             //zfile << "0x" << std::uppercase << twist() << "ULL" << std::nouppercase << ", ";
             for (int i = 0; i < 2; i++){
@@ -192,7 +192,7 @@ int main(int argc, char* argv[]){
                 zfile << '}';
             }
 
-            zfile << "\n\nuint64_t zck[16] = \n{";
+            zfile << "\n\nstatic constexpr Hash zck[16] = \n{";
 
             for (int i = 0; i < 16; i++){
                 zfile << "0x" << std::uppercase << twist() << "ULL" << std::nouppercase << ", ";
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]){
                 }
             }
 
-            zfile << "\n\nuint64_t zek[8] = \n{";
+            zfile << "\n\nstatic constexpr Hash zek[8] = \n{";
             for (int i = 0; i < 8; i++){
                 zfile << "0x" << std::uppercase << twist() << "ULL" << std::nouppercase << ", ";
                 if (i % 4 == 3){
@@ -209,7 +209,7 @@ int main(int argc, char* argv[]){
                 }
             }
 
-            zfile << "\n\nuint64_t ztk = ";
+            zfile << "\n\nstatic constexpr Hash ztk = ";
             zfile << "0x" << std::uppercase << twist() << "ULL" << std::nouppercase << ";";
             */
        
