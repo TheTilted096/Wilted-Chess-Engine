@@ -470,6 +470,7 @@ class Bitboards{
         int pieceAt(int);
 
         bool insufficient();
+        bool onlyPawns(bool);
 
         void setStartPos();
         void empty();
@@ -640,6 +641,10 @@ bool Bitboards::insufficient(){
     }
 
     return (__builtin_popcountll(pieces[3] | pieces[4]) < 2);
+}
+
+bool Bitboards::onlyPawns(bool s){
+    return !(sides[s] ^ (sides[s] & (pieces[0] | pieces[5])));
 }
 
 void Bitboards::setStartPos(){

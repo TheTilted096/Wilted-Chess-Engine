@@ -65,6 +65,25 @@ Hash TTentry::eHash(){
     return hash;
 }
 
+class Sentry{ //search stack entry
+    public:
+        bool nmp;
+        int presentEval;
+        //Move killer;
+
+        Sentry();
+        void clear();
+};
+
+Sentry::Sentry(){
+    clear();
+}
+
+void Sentry::clear(){
+    presentEval = -29501;
+    nmp = false;
+}
+
 class Engine : public Position{
     public:
         Move bestMove;
@@ -75,7 +94,8 @@ class Engine : public Position{
         //Tranposition Table
         TTentry* ttable;
 
-        //Killer Moves
+        //Search Stack
+        Sentry stack[64];
 
         bool timeKept;
         int64_t thinkLimit;
@@ -90,6 +110,7 @@ class Engine : public Position{
         void timeMan(uint32_t, uint32_t);
 
         void eraseTransposeTable();
+        void eraseStack();
 
         void scoreMoves(int, int, Move);
         void scoreQMoves(int, int);
@@ -125,6 +146,12 @@ Engine::~Engine(){
 void Engine::eraseTransposeTable(){
     for (int i = 0; i < 0xFFFFF; i++){
         ttable[i].reset();
+    }
+}
+
+void Engine::eraseStack(){
+    for (int i = 0; i < 64; i++){
+        stack[i].clear();
     }
 }
 
@@ -204,9 +231,11 @@ int Engine::quiesce(int alpha, int beta, int ply){
 
     int bestScore = score;
 
-    if (ply > 15){ //cap to prevent segfaults
+    /*
+    if (ply > 31){ //cap to prevent segfaults
         return score;
     }
+    */
 
     if (score >= beta){
         return score;
@@ -215,7 +244,7 @@ int Engine::quiesce(int alpha, int beta, int ply){
         alpha = score;
     }
 
-    int lply = 48 + ply;
+    int lply = 64 + ply;
     int moveCount = generateCaptures(lply);
 
     scoreQMoves(lply, moveCount);
@@ -273,6 +302,8 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
         //return evaluate();
     }
 
+    bool inCheck = isChecked(toMove);
+
     //Mate Distance Pruning
 
     //Transposition Table Probing
@@ -302,11 +333,20 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
     //RFP
 
     //NMP
+    if (ply > 0){ //template <rootNode> someday...
+        stack[ply].nmp = !stack[ply - 1].nmp and (depth > 2) and !onlyPawns(toMove) and !inCheck;
+        if (stack[ply].nmp){
+            passMove();
+            score = -alphabeta(-beta, -alpha, depth - 3, ply + 1);
+            unpassMove();
+            if (score >= beta){
+                return score;
+            }
+        }
+    }
 
 
     int moveCount = generateMoves(ply);
-
-    bool inCheck = isChecked(toMove);
 
     //Move Scoring/Ordering
     scoreMoves(ply, moveCount, ttmove);
@@ -453,6 +493,7 @@ void Engine::newGame(){
 
     //erase history, killers, TT
     eraseTransposeTable();
+    eraseStack();
 
     beginZobrist();
 }

@@ -26,4 +26,14 @@ pre3 - zobrist hashing, qsearch
 
 pre4 - MVVLVA and TT Move
 
-pre5 - ttcutoffs, rfp, nmp
+pre5 - ttcutoffs, nmp
+
+pre6 - tuned eval, HCE expansion
+
+pre7 - rfp, pvs, mate distance
+
+pre8 - LMR
+
+pre9 - killers, history
+
+pre10 - 

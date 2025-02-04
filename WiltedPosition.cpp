@@ -118,8 +118,8 @@ inline void Move::operator=(const uint32_t& t){
 
 class Position : public Bitboards{
     public:
-        Move moves[64][128];
-        int mprior[64][128];
+        Move moves[96][128];
+        int mprior[96][128];
 
         int scores[2];//, eScores[2];
         //int mobil[2], eMobil[2];
@@ -209,6 +209,8 @@ class Position : public Bitboards{
 
         template <bool> void makeMove(Move);
         template <bool> void unmakeMove(Move);
+        void passMove();
+        void unpassMove();
 
         void sendMove(std::string);
 
@@ -1063,6 +1065,21 @@ template <bool ev> void Position::unmakeMove(Move m){
     }
 
     toMove ^= 1;
+}
+
+void Position::passMove(){
+    toMove ^= 1;
+    nodes++; //count as a node?
+    thm++;
+    zhist[thm] = zhist[thm - 1] ^ ztk;
+    chm[thm] = chm[thm - 1];
+    ep[thm] = 255; //after passing, remove ep square
+    cr[thm] = cr[thm - 1]; //retain castling rights.
+}
+
+void Position::unpassMove(){
+    toMove ^= 1;
+    thm--;
 }
 
 uint64_t Position::perft(int depth, int ply){

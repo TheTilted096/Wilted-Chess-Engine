@@ -29,6 +29,10 @@ int main(int argc, char* argv[]){
             std::cout << "uciok\n";
         }
 
+        if (command == "ucinewgame"){
+            engine.newGame();
+        }
+
         if (command == "quit"){
             return 0;
         }
@@ -74,7 +78,7 @@ int main(int argc, char* argv[]){
 
             uint32_t ttb = 0xFFFFFFFFU; //assume absurdly large time
             uint32_t tti = 0U; //increment 0 unless specified
-            int tdb = 47;
+            int tdb = 63;
             uint64_t mnb = ~0ULL;
 
             //bool mtovr = false; //don't support movetime
@@ -227,7 +231,6 @@ int main(int argc, char* argv[]){
                 std::cout << engine.moves[0][i].toStr() << ": " << engine.mprior[0][i] << '\n';
             }
             */
-            
            
         }   
     }
