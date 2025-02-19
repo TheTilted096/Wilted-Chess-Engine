@@ -186,19 +186,19 @@ void Engine::scoreMoves(int ply, int nc, Move ttm){
             continue;
         }
 
-        if (moves[ply][i].capt()){ //captures
-            mprior[ply][i] = (1 << 16) + moves[ply][i].tpmv() - (moves[ply][i].cptp() << 4);
+        if (moves[ply][i].gcptp()){ //captures
+            mprior[ply][i] = (1 << 16) + moves[ply][i].gtpmv() - (moves[ply][i].gcptp() << 4);
             continue;
         }
 
-        mprior[ply][i] = moves[ply][i].tpmv();        
+        mprior[ply][i] = moves[ply][i].gtpmv();        
     }
 }
 
 void Engine::scoreQMoves(int ply, int nc){
     for (int i = 0; i < nc; i++){
 
-        mprior[ply][i] = (1 << 16) + moves[ply][i].tpmv() - (moves[ply][i].cptp() << 4);
+        mprior[ply][i] = (1 << 16) + moves[ply][i].gtpmv() - (moves[ply][i].gcptp() << 4);
 
     }
 }

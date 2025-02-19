@@ -2,119 +2,113 @@
 Class Definition of Position
 Intermediate Object
 
-Contains static evaluation and advanced makeMove
+Contains Static Evaluation Features
 
 */
 
 #include "WiltedBitboards.cpp"
 
+/*
+Move Representation:
+
+0000 0 0 0 0 
+0 000 0 000 000 0 000000 000000
+
+0-5: start square
+6-11: end square
+
+12-14: Captured Type
+15-17: Piece Type Moved
+
+18-20: Piece End Type
+
+[New Stuff]
+21: Castle Kingside
+22: Castle Queenside
+
+23: capture
+24: promotion
+25: en passant
+26: castling
+27: double push
+*/
+
 class Move{
     public:
         uint32_t info;
 
-        Move();
-        Move(const uint32_t&);
-        //Move(uint32_t&);
-        Move(const Move&);
+        Move(){ info = 0U; }
+        Move(const uint32_t& m){ info = m; }
+        Move(const Move& m){ info = m.info; }
 
-        std::string toStr();
-        void print();
+        std::string toStr(){ //converts to algebraic (ex. a8a8)
+            uint8_t start = gstsq();
+            uint8_t end = gedsq();
 
-        int stsq();
-        int edsq();
-        bool capt();
-        int cptp();
-        int tpmv();
-        bool prmt();
-        int tpnd();
+            std::string result;
 
-        int cstl();
-        bool dpsh();
-        bool epcp();
+            result += ((start & 7) + 97);
+            result += (8 - (start >> 3)) + 48;
 
-        //operator overload OR
-        //void operator|=(const uint32_t&);
-        //void operator=(const uint32_t&);
+            result += ((end & 7) + 97);
+            result += (8 - (end >> 3)) + 48;
 
-        bool operator==(const Move&);
+            if (gtpnd()){
+                result += Bitboards::frchr[9 + gtpnd()];
+            }
 
-        //ton of other things
+            return result;
+        }
+
+        int gstsq(){ return (info & 63U); } //start square (0 - 5), set upon construction
+        void sstsq(int k){ info = k; } //WARNING
         
+        int gedsq(){ return (info >> 6) & 63U; }  //end square (6 - 11)
+        void sedsq(int k){ info |= (k << 6); }
+
+        int gcptp(){ return (info >> 12) & 7U; } //capture type (12 - 15)
+        void scptp(int k){  //set capture type, capture flag (23)
+            info |= (k << 12); 
+            info |= (1U << 23); //set capture flag
+        }
+
+        int gtpmv(){ return (info >> 15) & 7U; } //type moved (15 - 18)
+        void stpmv(int k){ info |= (k << 15); }
+    
+        int gtpnd(){ return (info >> 18) & 7U; } //type ended (18 - 20)
+        void stpnd(int k){  //tpnd only set upon promotion
+            info |= (k << 18); 
+            info |= (1U << 24);
+        }
+
+        int gcstl(){ return (info >> 21) & 3U; } //castling (21-22)
+        void scstl(int k){  //set castling flag (26)
+            info |= (k << 21); 
+            info |= (1U << 26);
+        }
+
+        //bool gprmt(){ return (info >> 24) & 1U; } //seen by setting typeMoved
+        //void sprmt(){ info |= (1U << 24); }
+
+        bool gepcp(){ return (info >> 25) & 1U; } //en passant (25) set when pieceAt finds nothing
+        //void sepcp(){ info |= (1U << 25); } set upon deduction of capture type
+
+        bool gdpsh(){ return (info >> 27); } // double push (27)
+        void sdpsh(){ info |= (1U << 27); }
+
+        int state(){ return (info >> 23); }
+
+        void show(){
+            std::cout << toStr() << ' ' << info << ' ' << gstsq() << ' ' << gedsq() << ' ' << gcptp() << ' ' << 
+                gtpmv() << ' ' << gtpnd() << ' ' << gcstl() << ' ' << state() << '\n';
+        }
+
+        bool operator==(const Move& m){
+            return info == m.info;
+        }
 };
 
-/*
-Function Definitions for Position Class
 
-TheTilted096, 12-19-24
-Wilted Engine
-*/
-
-Move::Move(){
-    info = 0;
-}
-
-Move::Move(const uint32_t& m){
-    info = m;
-}
-
-Move::Move(const Move& m){ info = m.info; }
-
-inline bool Move::prmt(){ return (((info >> 15) & 7U) != ((info >> 18) & 7U)); }
-
-inline int Move::stsq(){ return (info & 63U); }
-
-inline int Move::edsq(){ return (info >> 6) & 63U; }
-
-inline bool Move::capt(){ return (info >> 12) & 7U; }
-
-inline int Move::cptp(){ return (info >> 12) & 7U; }
-
-inline int Move::tpmv(){ return (info >> 15) & 7U; }
-
-inline int Move::tpnd(){ return (info >> 18) & 7U; }
-
-inline int Move::cstl(){ return (info >> 21) & 3U; }
-
-inline bool Move::dpsh(){ return (info >> 23) & 1U; }
-
-inline bool Move::epcp(){ return (info >> 24) & 1U; }
-
-std::string Move::toStr(){
-    uint8_t start = info & 63U;
-    uint8_t end = (info >> 6) & 63U;
-
-    std::string result;
-
-    result += ((start & 7) + 97);
-    result += (8 - (start >> 3)) + 48;
-
-    result += ((end & 7) + 97);
-    result += (8 - (end >> 3)) + 48;
-
-    if (prmt()){
-        result += Bitboards::frchr[9 + tpnd()];
-    }
-
-    return result;
-}
-
-void Move::print(){
-    std::cout << info << '\n';
-}
-
-bool Move::operator==(const Move& m){
-    return (m.info == info);
-}
-
-/*
-inline void Move::operator|=(const uint32_t& t){
-    info |= t;
-}
-
-inline void Move::operator=(const uint32_t& t){
-    info = t;
-}
-*/
 
 class Position : public Bitboards{
     public:
@@ -124,19 +118,13 @@ class Position : public Bitboards{
         uint64_t nodes;
 
         int scores[2];//, eScores[2];
-        //int mobil[2], eMobil[2];
         //int gamePhase;
 
-        Bitboard atktbl[2][5];
-
-        //total game phase
-        //phases, material values
+        //Bitboard atktbl[2][5]; //atktbl[s][i] is the threats to piece i posed by s. i.e. atktbl[0][4] = black threats to knights (black pawns)
 
         static constexpr int material[6] = {0, 900, 500, 350, 300, 100};
         //static constexpr int phases[6] = {0, 8, 5, 3, 3, 1};
         //static constexpr int totalPhase = 64;
-        
-        //Piece Square Tables
 
         int mps[6][64] = 
         {{6, 21, 0, 30, 24, 10, 20, 8, 
@@ -248,46 +236,56 @@ class Position : public Bitboards{
         -6, 2, -7, -9, -9, 9, 4, 3, 
         -1, -4, -9, -2, -6, 6, -8, 8, 
         -2, 6, 3, 5, -8, -8, 9, 0}};
-
-        //Mobility
-        //8 + 13 + 14 + 27 + 8 = 70
-
-        int mmb[70] = 
-        {25, -18, 11, -1, -8, -28, -19, -38,
-        25, 31, -40, -30, -67, -80, 43, -85, 39, 60, -21, -62, 64, 14, -37, -55, 45, 20, -43, 24, 32, 88, 68, 71, -17, -25, -56,
-        10, -30, -43, 7, 4, 28, -44, -46, 30, 50, -25, -28, -40, 6,
-        33, -27, -9, 19, -30, -29, -4, -23, -8, 13, -17, 17, 16,
-        -16, 22, 10, -18, 20, -2, 25, 8};
-
-        int emb[70] = 
-        {-30, 22, 26, -28, -7, -15, 16, 24,
-        -27, -66, 60, -80, -64, 5, 84, -9, 87, -54, 59, 11, 17, -57, 75, -29, 30, 19, 21, 80, 55, -56, -47, -34, -52, 68, -60,
-        -47, -50, -22, 13, -33, -6, -13, -5, -35, 24, 20, 37, 50, 43,
-        -16, 19, -22, -28, -35, 35, -25, 8, -33, 22, -32, -26, -27,
-        2, -18, -12, -10, -21, 20, 1, -19};
         */
 
+        /*
+        static constexpr int midx[5] = {0, 9, 37, 52, 66};
+
+        int mmb[75] = 
+        {-6, 25, -18, 11, -1, -8, -28, -19, -38,
+        -57, 25, 31, -40, -30, -67, -80, 43, -85, 39, 60, -21, -62, 64, 14, -37, -55, 45, 20, -43, 24, 32, 88, 68, 71, -17, -25, -56,
+        42, 10, -30, -43, 7, 4, 28, -44, -46, 30, 50, -25, -28, -40, 6,
+        -23, 33, -27, -9, 19, -30, -29, -4, -23, -8, 13, -17, 17, 16,
+        -29, -16, 22, 10, -18, 20, -2, 25, 8};
+
+        int emb[75] = 
+        {-29, -30, 22, 26, -28, -7, -15, 16, 24,
+        8, -27, -66, 60, -80, -64, 5, 84, -9, 87, -54, 59, 11, 17, -57, 75, -29, 30, 19, 21, 80, 55, -56, -47, -34, -52, 68, -60,
+        -50, -47, -50, -22, 13, -33, -6, -13, -5, -35, 24, 20, 37, 50, 43,
+        16, -16, 19, -22, -28, -35, 35, -25, 8, -33, 22, -32, -26, -27,
+        24, 2, -18, -12, -10, -21, 20, 1, -19};
+        */
+
+
         Position();
+        bool isAttacked(int, bool); //checks if a square is attacked by a side
+        bool isChecked(bool); //if a side is in check
+        bool notValid(Move); //if past player left king check
 
-        bool isAttacked(int, bool);
-        bool isChecked(bool);
-        bool notValid(Move);
+        int evaluate(); //returns static eval
+        int evaluateScratch(); //computes all psqts and mobility from scratch, then evaluates
 
-        int evaluate();
-        int evaluateScratch();
+        uint64_t perft(int, int);
+
+        template <bool, int, bool> void __impl_makeMove(Move); //side, movestate, incremental eval
+        template <bool, int, bool> void __impl_unmakeMove(Move);
+
+        //template <bool> void __swit_makeMove(Move);
+        //template <bool> void __swit_unmakeMove(Move);
+
+        template <bool> void makeMove(Move);
+        template <bool> void unmakeMove(Move);
+
+        template <bool, int, bool> int __impl_generateMoves(int); //side, castling, captures
+        template <bool> int __swit_generateMoves(int);
 
         int generateMoves(int);
         int generateCaptures(int);
 
-        uint64_t perft(int, int);
-
-        template <bool> void makeMove(Move);
-        template <bool> void unmakeMove(Move);
         void passMove();
         void unpassMove();
 
         void sendMove(std::string);
-
 
 };
 
@@ -295,34 +293,13 @@ Position::Position(){
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 64; j++){
             mps[i][j] += material[i];
+            //eps[i][j] += material[i];
         }
     }
     nodes = 0ULL;
 }
 
 bool Position::isAttacked(int sq, bool s){
-    /*
-    Bitboard inc;
-
-    inc = plt[!s][sq] & pieces[5] & sides[s];
-    inc |= KnightAttacks[sq] & pieces[4] & sides[s];
-
-    Bitboard occ = sides[0] | sides[1]; // | (1ULL << sq);
-    Bitboard bpst = bishopAttack(sq, occ);
-
-    inc |= bpst & (pieces[3] | pieces[1]) & sides[s];
-
-    Bitboard rkst = rookAttack(sq, occ);
-
-    inc |= rkst & (pieces[2] | pieces[1]) & sides[s];
-
-    inc |= KingAttacks[sq] & pieces[0] & sides[s];
-
-    //cm = inc;
-    
-    return inc;
-    */
-
     Bitboard inc;
 
     inc = plt[!s][sq] & pieces[5] & sides[s];
@@ -347,10 +324,10 @@ bool Position::isChecked(bool s){
 }
 
 bool Position::notValid(Move m){
-    uint8_t cat = m.cstl(); //Q = 2, K = 1
+    int cat = m.gcstl(); //Q = 2, K = 1
     if (cat){
         //std::cout << "Castle: " << (int) cat << '\n';
-        Bitboard cmask = (0x1C0ULL >> (cat << 1)) << (!toMove * 56);
+        Bitboard cmask = cmk[cat - 1] << (!toMove * 56);
         //printAsBitboard(cmask);
         int f;
         while (cmask){
@@ -371,495 +348,294 @@ bool Position::notValid(Move m){
     return isChecked(!toMove);
 }
 
-/*
-Move Representation:
-
-0000 0 0 0 0 
-0 000 0 000 000 0 000000 000000
-
-0-5: start square
-6-11: end square
-
-12-14: Captured Type
-15-17: Piece Type Moved
-
-18-20: Piece End Type
-
-[New Stuff]
-21: Castle Kingside
-22: Castle Queenside
-
-23: Double Pawn Push
-24: En Passant Capture
-*/
-
-int Position::generateMoves(int ply){
-    int tgm = 0;
-    Bitboard mvst, pcs, xset;
-    Bitboard occ = sides[0] | sides[1];
-    Bitboard ours = sides[toMove];
-    Bitboard opps = sides[!toMove];
-
-    int f, p, cc;
-
-    //Pawns
-
-    pcs = pieces[5] & ours;
-
-    Bitboard pshtrgt = ((pcs << 8) >> (toMove << 4)) & ~occ;
-    Bitboard dpshtrgt = ((pshtrgt << 8) >> (toMove << 4)) & ~occ & (0xFF000000ULL << (toMove << 3)); //two-square pushes
-
-   	Bitboard pawnopps = opps | ((ep[thm] != 255) * (1ULL << ep[thm])); //maybe ep[thm] + 1 = 0?
-
-	Bitboard leftcap = (((pcs & 0xFEFEFEFEFEFEFEFEULL) << 7) >> (toMove << 4)) & pawnopps;
-	Bitboard rightcap = (((pcs & 0x7F7F7F7F7F7F7F7FULL) << 9) >> (toMove << 4)) & pawnopps;
-
-	while (rightcap){
-		f = __builtin_ctzll(rightcap);
-
-		moves[ply][tgm].info = f - 9 + (toMove << 4);
-		moves[ply][tgm].info |= (f << 6);
-		
-		cc = pieceAt(f);
-		moves[ply][tgm].info |= (cc << 12);
-		moves[ply][tgm].info |= ((cc == 13) << 24); //ep capture;
-
-		moves[ply][tgm].info |= (5U << 15); //type moved
-
-		bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
-		if (prmt){
-			uint32_t tmp = moves[ply][tgm].info;
-
-			moves[ply][tgm].info = tmp | (1U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (2U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (3U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (4U << 18);
-		} else {
-			moves[ply][tgm].info |= (5U << 18);
-		}
-
-		rightcap ^= (1ULL << f);
-		tgm++;
-	}
-
-	while (leftcap){
-		f = __builtin_ctzll(leftcap);
-
-		moves[ply][tgm].info = f - 7 + (toMove << 4);
-		moves[ply][tgm].info |= (f << 6);
-		
-		cc = pieceAt(f);
-		moves[ply][tgm].info |= (cc << 12);
-		moves[ply][tgm].info |= ((cc == 13) << 24); //ep capture;
-
-		moves[ply][tgm].info |= (5U << 15); //type moved
-
-		bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
-		if (prmt){
-			uint32_t tmp = moves[ply][tgm].info;
-
-			moves[ply][tgm].info = tmp | (1U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (2U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (3U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (4U << 18);
-		} else {
-			moves[ply][tgm].info |= (5U << 18);
-		}
-
-		leftcap ^= (1ULL << f);
-		tgm++;
-	}
-	
-    //pawn pushes and double-pushes
-    while (pshtrgt){
-        f = __builtin_ctzll(pshtrgt);
-        moves[ply][tgm].info = f - 8 + (toMove << 4); //start
-        moves[ply][tgm].info |= (f << 6); //end
-
-        moves[ply][tgm].info |= (5U << 15); //type moved
-
-        bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
-        if (prmt){
-            uint32_t tmp = moves[ply][tgm].info;
-
-            moves[ply][tgm].info = tmp | (1U << 18);
-            tgm++;
-
-            moves[ply][tgm].info = tmp | (2U << 18);
-            tgm++;
-
-            moves[ply][tgm].info = tmp | (3U << 18);
-            tgm++;
-
-            moves[ply][tgm].info = tmp | (4U << 18);
-        } else {
-            moves[ply][tgm].info |= (5U << 18);
-        }
-
-        pshtrgt ^= (1ULL << f);
-        tgm++;
-    }
-
-    while (dpshtrgt){
-        f = __builtin_ctzll(dpshtrgt);
-        moves[ply][tgm].info = f - 16 + (toMove << 5);
-        moves[ply][tgm].info |= (f << 6);
-        moves[ply][tgm].info |= (5U << 15);
-
-        moves[ply][tgm].info |= (5U << 18);
-        moves[ply][tgm].info |= (1U << 23);
-
-        dpshtrgt ^= (1ULL << f);
-        tgm++;
-    }
-
-    //Knights
-    pcs = pieces[4] & ours;
-    while (pcs){
-        f = __builtin_ctzll(pcs);
-
-        mvst = KnightAttacks[f] & ~ours;
-        xset = mvst & opps;
-        mvst ^= xset;
-
-        while (xset){
-            p = __builtin_ctzll(xset);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-            
-            cc = pieceAt(p);
-            moves[ply][tgm].info |= (cc << 12);
-
-            moves[ply][tgm].info |= (4U << 15);
-            moves[ply][tgm].info |= (4U << 18);
-
-            tgm++;
-            xset ^= (1ULL << p);
-        }
-
-        while (mvst){
-            p = __builtin_ctzll(mvst);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-
-            moves[ply][tgm].info |= (4U << 15);
-            moves[ply][tgm].info |= (4U << 18);
-            
-            tgm++;
-            mvst ^= (1ULL << p);
-        }
-
-        pcs ^= (1ULL << f);
-    }
-
-    //Bishops
-    pcs = pieces[3] & ours;
-    while (pcs){
-        f = __builtin_ctzll(pcs);
-
-        mvst = bishopAttack(f, occ) & ~ours;
-        xset = mvst & opps;
-        mvst ^= xset;
-
-        while (xset){
-            p = __builtin_ctzll(xset);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-            
-            cc = pieceAt(p);
-            moves[ply][tgm].info |= (cc << 12);
-
-            moves[ply][tgm].info |= (3U << 15);
-            moves[ply][tgm].info |= (3U << 18);
-
-            tgm++;
-            xset ^= (1ULL << p);
-        }
-
-        while (mvst){
-            p = __builtin_ctzll(mvst);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-
-            moves[ply][tgm].info |= (3U << 15);
-            moves[ply][tgm].info |= (3U << 18);
-            
-            tgm++;
-            mvst ^= (1ULL << p);
-        }
-
-        pcs ^= (1ULL << f);
-    }
-
-    //Rooks
-    pcs = pieces[2] & ours;
-    while (pcs){
-        f = __builtin_ctzll(pcs);
-
-        mvst = rookAttack(f, occ) & ~ours;
-        xset = mvst & opps;
-        mvst ^= xset;
-
-        while (xset){
-            p = __builtin_ctzll(xset);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-            
-            cc = pieceAt(p);
-            moves[ply][tgm].info |= (cc << 12);
-
-            moves[ply][tgm].info |= (2U << 15);
-            moves[ply][tgm].info |= (2U << 18);
-
-            tgm++;
-            xset ^= (1ULL << p);
-        }
-
-        while (mvst){
-            p = __builtin_ctzll(mvst);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-
-            moves[ply][tgm].info |= (2U << 15);
-            moves[ply][tgm].info |= (2U << 18);
-            
-            tgm++;
-            mvst ^= (1ULL << p);
-        }
-
-        pcs ^= (1ULL << f);
-    }
-
-    //Queens
-    pcs = pieces[1] & ours;
-    while (pcs){
-        f = __builtin_ctzll(pcs);
-
-        mvst = (bishopAttack(f, occ) | rookAttack(f, occ)) & ~ours;
-        xset = mvst & opps;
-        mvst ^= xset;
-
-        while (xset){
-            p = __builtin_ctzll(xset);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-            
-            cc = pieceAt(p);
-            moves[ply][tgm].info |= (cc << 12);
-
-            moves[ply][tgm].info |= (1U << 15);
-            moves[ply][tgm].info |= (1U << 18);
-
-            tgm++;
-            xset ^= (1ULL << p);
-        }
-
-        while (mvst){
-            p = __builtin_ctzll(mvst);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-
-            moves[ply][tgm].info |= (1U << 15);
-            moves[ply][tgm].info |= (1U << 18);
-            
-            tgm++;
-            mvst ^= (1ULL << p);
-        }
-
-        pcs ^= (1ULL << f);
-    }
-
-    //King
-    pcs = pieces[0] & ours;
-    f = __builtin_ctzll(pcs);
-
-    mvst = KingAttacks[f] & ~ours;
-    xset = mvst & opps;
-    mvst ^= xset;
-
-    while (xset){
-        p = __builtin_ctzll(xset);
-        moves[ply][tgm].info = f;
-        moves[ply][tgm].info |= (p << 6);
-        
-        cc = pieceAt(p);
-        moves[ply][tgm].info |= (cc << 12);
-
-        //moves[ply][tgm].info |= (0U << 15);
-        //moves[ply][tgm].info |= (0U << 18);
-
-        tgm++;
-        xset ^= (1ULL << p);
-    }
-
-    while (mvst){
-        p = __builtin_ctzll(mvst);
-        moves[ply][tgm].info = f;
-        moves[ply][tgm].info |= (p << 6);
-
-        //moves[ply][tgm].info |= (0U << 15);
-        //moves[ply][tgm].info |= (0U << 18);
-        
-        tgm++;
-        mvst ^= (1ULL << p);
-    }
-
-    //King Castling (Standard for Now)
-
-    Bitboard cmask = 0x60ULL << (56 * toMove);
-    bool able = !(cmask & occ) and (cr[thm] & (1 << (!toMove << 1)));
-    if (able){
-        moves[ply][tgm].info = f;
-        moves[ply][tgm].info |= ((6 + 56 * toMove) << 6);
-        moves[ply][tgm].info |= (1U << 21);
-        tgm++;
-    }
-
-    cmask = 0xEULL << (56 * toMove);
-    able = !(cmask & occ) and (cr[thm] & (2 << (!toMove << 1)));
-    if (able){
-        moves[ply][tgm].info = f;
-        moves[ply][tgm].info |= ((2 + 56 * toMove) << 6);
-        moves[ply][tgm].info |= (1U << 22);
-        tgm++;
-    }
-
-    return tgm;
+int Position::evaluate(){
+    //return ((scores[toMove] - scores[!toMove]) * gamePhase + (eScores[toMove] - eScores[!toMove]) * (totalPhase - gamePhase)) / totalPhase;
+    return scores[toMove] - scores[!toMove];
 }
 
-int Position::generateCaptures(int ply){
-    int tgm = 0;
-    Bitboard mvst, pcs, xset;
-    Bitboard occ = sides[0] | sides[1];
-    Bitboard ours = sides[toMove];
-    Bitboard opps = sides[!toMove];
 
-    int f, p, cc;
 
-    //Pawns
+int Position::evaluateScratch(){
+    scores[0] = 0;
+    scores[1] = 0;
+    //eScores[0] = 0;
+    //eScores[1] = 0;
 
-    pcs = pieces[5] & ours;
+    Bitboard pcs;//, mvst;
+    int f;//, m;
 
-    //Bitboard pshtrgt = ((pcs << 8) >> (toMove << 4)) & ~occ;
-    //Bitboard dpshtrgt = ((pshtrgt << 8) >> (toMove << 4)) & ~occ & (0xFF000000ULL << (toMove << 3)); //two-square pushes
+    for (int i = 0; i < 6; i++){ //computing piece-square bonuses
+        pcs = sides[1] & pieces[i];
+        while (pcs){
+            f = __builtin_ctzll(pcs);
 
-   	Bitboard pawnopps = opps | ((ep[thm] != 255) * (1ULL << ep[thm])); //maybe ep[thm] + 1 = 0?
+            scores[1] += mps[i][f]; //black is defined as the side that 'flips'
+            //eScores[1] += eps[i][f];
 
-	Bitboard leftcap = (((pcs & 0xFEFEFEFEFEFEFEFEULL) << 7) >> (toMove << 4)) & pawnopps;
-	Bitboard rightcap = (((pcs & 0x7F7F7F7F7F7F7F7FULL) << 9) >> (toMove << 4)) & pawnopps;
-
-	while (rightcap){
-		f = __builtin_ctzll(rightcap);
-
-		moves[ply][tgm].info = f - 9 + (toMove << 4);
-		moves[ply][tgm].info |= (f << 6);
-		
-		cc = pieceAt(f);
-		moves[ply][tgm].info |= (cc << 12);
-		moves[ply][tgm].info |= ((cc == 13) << 24); //ep capture;
-
-		moves[ply][tgm].info |= (5U << 15); //type moved
-
-		bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
-		if (prmt){
-			uint32_t tmp = moves[ply][tgm].info;
-
-			moves[ply][tgm].info = tmp | (1U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (2U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (3U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (4U << 18);
-		} else {
-			moves[ply][tgm].info |= (5U << 18);
-		}
-
-		rightcap ^= (1ULL << f);
-		tgm++;
-	}
-
-	while (leftcap){
-		f = __builtin_ctzll(leftcap);
-
-		moves[ply][tgm].info = f - 7 + (toMove << 4);
-		moves[ply][tgm].info |= (f << 6);
-		
-		cc = pieceAt(f);
-		moves[ply][tgm].info |= (cc << 12);
-		moves[ply][tgm].info |= ((cc == 13) << 24); //ep capture;
-
-		moves[ply][tgm].info |= (5U << 15); //type moved
-
-		bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
-		if (prmt){
-			uint32_t tmp = moves[ply][tgm].info;
-
-			moves[ply][tgm].info = tmp | (1U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (2U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (3U << 18);
-			tgm++;
-
-			moves[ply][tgm].info = tmp | (4U << 18);
-		} else {
-			moves[ply][tgm].info |= (5U << 18);
-		}
-
-		leftcap ^= (1ULL << f);
-		tgm++;
-	}
-	
-    //pawn pushes and double-pushes
-    /*
-    while (pshtrgt){
-        f = __builtin_ctzll(pshtrgt);
-        moves[ply][tgm].info = f - 8 + (toMove << 4); //start
-        moves[ply][tgm].info |= (f << 6); //end
-
-        moves[ply][tgm].info |= (5U << 15); //type moved
-
-        bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
-        if (prmt){
-            uint32_t tmp = moves[ply][tgm].info;
-
-            moves[ply][tgm].info = tmp | (1U << 18);
-            tgm++;
-
-            moves[ply][tgm].info = tmp | (2U << 18);
-            tgm++;
-
-            moves[ply][tgm].info = tmp | (3U << 18);
-            tgm++;
-
-            moves[ply][tgm].info = tmp | (4U << 18);
-        } else {
-            moves[ply][tgm].info |= (5U << 18);
+            pcs ^= (1ULL << f);
         }
 
-        pshtrgt ^= (1ULL << f);
-        tgm++;
+        pcs = sides[0] & pieces[i];
+        while (pcs){
+            f = __builtin_ctzll(pcs);
+
+            scores[0] += mps[i][f ^ 56];
+            //eScores[0] += eps[i][f ^ 56];
+
+            pcs ^= (1ULL << f);
+        }
     }
+
+    /* Scratch Mobility Calculations
+    atktbl[0][4] = (sides[0] & pieces[5] & 0x7F7F7F7F7F7F7F7FULL) << 9;
+    atktbl[0][4] |= (sides[0] & pieces[5] & 0xFEFEFEFEFEFEFEFEULL) << 7;
+
+    atktbl[1][4] = (sides[1] & pieces[5] & 0x7F7F7F7F7F7F7F7FULL) >> 7;
+    atktbl[1][4] |= (sides[1] & pieces[5] & 0xFEFEFEFEFEFEFEFEULL) >> 9;
+
+    Bitboard occ = sides[0] | sides[1];
+
+    atktbl[0][3] = atktbl[0][4]; //knights don't threaten bishops
+    atktbl[0][2] = atktbl[0][3]; //carry over attacks to rooks
+
+    atktbl[1][3] = atktbl[1][4];
+    atktbl[1][2] = atktbl[1][3];
+
+    for (int s = 0; s < 2; s++){ //add knight and bishop to rook threats; calculate knight and bishop mobs;
+        pcs = sides[s] & pieces[4]; //knights
+        while (pcs){
+            f = __builtin_ctzll(pcs);
+
+            mvst = KnightAttacks[f];
+            atktbl[s][2] |= mvst;
+            m = __builtin_popcountll(mvst & ~atktbl[!s][4]);
+
+            scores[s] += mmb[midx[4] + m];
+            eScores[s] += emb[midx[4] + m];
+
+            pcs ^= (1ULL << f);
+        }
+
+        pcs = sides[s] & pieces[3]; //bishops
+        while (pcs){
+            f = __builtin_ctzll(pcs);
+
+            mvst = bishopAttack(f, occ);
+            atktbl[s][2] |= mvst;
+            m = __builtin_popcountll(mvst & ~atktbl[!s][3]);
+
+            scores[s] += mmb[midx[3] + m];
+            eScores[s] += emb[midx[3] + m];
+
+            pcs ^= (1ULL << f);            
+        }
+    }
+
+    atktbl[0][1] = atktbl[0][2]; //carry rook threats to queen
+    atktbl[1][1] = atktbl[1][2];
+
+    for (int s = 0; s < 2; s++){ //add rook moves to queen threats; calculate rook mobs
+        pcs = sides[s] & pieces[2];
+        while (pcs){
+            f = __builtin_ctzll(pcs);
+
+            mvst = rookAttack(f, occ);
+            atktbl[s][1] |= mvst;
+
+            m = __builtin_popcountll(mvst & ~atktbl[!s][2]);
+            scores[s] += mmb[midx[2] + m];
+            eScores[s] += emb[midx[2] + m];
+
+            pcs ^= (1ULL << f);
+        }
+    }
+
+    atktbl[0][0] = atktbl[0][1]; //carry queen threats to kings
+    atktbl[1][0] = atktbl[1][1];
+
+    for (int s = 0; s < 2; s++){ //add queen attacks to king; calculate queen mobs
+        pcs = sides[s] & pieces[1];
+        while (pcs){
+            f = __builtin_ctzll(pcs);
+
+            mvst = (rookAttack(f, occ) | bishopAttack(f, occ));
+            atktbl[s][0] |= mvst;
+
+            m = __builtin_popcountll(mvst & ~atktbl[!s][1]);
+            scores[s] = mmb[midx[1] + m];
+            eScores[s] = emb[midx[1] + m];
+
+            pcs ^= (1ULL << f);
+        }
+    }
+    
+    atktbl[0][0] |= KingAttacks[__builtin_ctzll(sides[0] & pieces[0])]; //black king threatens white king
+    
+    mvst = KingAttacks[__builtin_ctzll(sides[1] & pieces[0])]; //white king attacks
+    atktbl[1][0] |= mvst; //white king threatens black king
+    m = __builtin_popcountll(mvst & ~atktbl[0][0]); //calculate white king mobility and add
+    scores[1] += mmb[midx[0] + m];
+    eScores[1] += emb[midx[0] + m];
+
+    mvst = KingAttacks[__builtin_ctzll(sides[0] & pieces[0])]; //calculate black king mobility and add
+    m = __builtin_popcountll(mvst & ~atktbl[1][0]);
+    scores[0] += mmb[midx[0] + m];
+    eScores[0] += emb[midx[0] + m];
     */
 
+    return evaluate();
+}
+
+template <bool who, int cstl, bool cpex> int Position::__impl_generateMoves(int ply){
+    int tgm = 0;
+
+    Bitboard mvst, pcs, xset;
+    Bitboard occ = sides[0] | sides[1];
+
+    Bitboard ours = sides[who];
+    Bitboard opps = sides[!who];
+
+    int f, p, cc;
+
+    //Pawns:
+    pcs = pieces[5] & ours;
+    
+    Bitboard pawnopps = opps;
+    if (ep[thm] != 255){
+        pawnopps |= (1ULL << ep[thm]);
+    }
+
+    Bitboard leftcap = (pcs & 0xFEFEFEFEFEFEFEFEULL) << 7;
+	Bitboard rightcap = (pcs & 0x7F7F7F7F7F7F7F7FULL) << 9;
+
+    if constexpr (who){
+        leftcap >>= (who << 4);
+        rightcap >>= (who << 4);
+    }
+
+    leftcap &= pawnopps;
+    rightcap &= pawnopps;
+
+    while (rightcap){
+        f = __builtin_ctzll(rightcap);
+
+        moves[ply][tgm].sstsq(f - 9 + (who << 4));
+        moves[ply][tgm].sedsq(f);
+
+        cc = pieceAt(f);
+        moves[ply][tgm].scptp(cc);
+
+        moves[ply][tgm].stpmv(5);
+
+        bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
+        if (prmt){
+            Move temp = moves[ply][tgm];
+
+            moves[ply][tgm] = temp;
+            moves[ply][tgm].stpnd(1);
+            tgm++;
+
+            moves[ply][tgm] = temp;
+            moves[ply][tgm].stpnd(2);
+            tgm++;
+
+            moves[ply][tgm] = temp;
+            moves[ply][tgm].stpnd(3);
+            tgm++;
+
+            moves[ply][tgm] = temp;
+            moves[ply][tgm].stpnd(4);     
+        }
+
+        tgm++;
+        rightcap ^= (1ULL << f);
+    }
+
+    while (leftcap){
+        f = __builtin_ctzll(leftcap);
+
+        moves[ply][tgm].sstsq(f - 7 + (who << 4));
+        moves[ply][tgm].sedsq(f);
+
+        cc = pieceAt(f);
+        moves[ply][tgm].scptp(cc);
+
+        moves[ply][tgm].stpmv(5);
+
+        bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
+        if (prmt){
+            Move temp = moves[ply][tgm];
+
+            moves[ply][tgm] = temp;
+            moves[ply][tgm].stpnd(1);
+            tgm++;
+
+            moves[ply][tgm] = temp;
+            moves[ply][tgm].stpnd(2);
+            tgm++;
+
+            moves[ply][tgm] = temp;
+            moves[ply][tgm].stpnd(3);
+            tgm++;
+
+            moves[ply][tgm] = temp;
+            moves[ply][tgm].stpnd(4);     
+        }
+
+        tgm++;
+        leftcap ^= (1ULL << f);
+    }
+
+    if constexpr (!cpex){
+        Bitboard pshtrgt = ((pcs << 8) >> (who << 4)) & ~occ;
+        Bitboard dpshtrgt = ((pshtrgt << 8) >> (who << 4)) & ~occ & (0xFF000000ULL << (who << 3));
+
+        while (pshtrgt){
+            f = __builtin_ctzll(pshtrgt);
+            moves[ply][tgm].sstsq(f - 8 + (who << 4));
+            moves[ply][tgm].sedsq(f);
+
+            moves[ply][tgm].stpmv(5);
+
+            bool prmt = ((1ULL << f) & 0xFF000000000000FF); //cast promotion mask to bool
+            if (prmt){
+                Move temp = moves[ply][tgm];
+    
+                moves[ply][tgm] = temp;
+                moves[ply][tgm].stpnd(1);
+                tgm++;
+    
+                moves[ply][tgm] = temp;
+                moves[ply][tgm].stpnd(2);
+                tgm++;
+    
+                moves[ply][tgm] = temp;
+                moves[ply][tgm].stpnd(3);
+                tgm++;
+    
+                moves[ply][tgm] = temp;
+                moves[ply][tgm].stpnd(4);     
+            }
+
+            tgm++;
+            pshtrgt ^= (1ULL << f);
+        }
+    
+        while (dpshtrgt){
+            f = __builtin_ctzll(dpshtrgt);
+
+            moves[ply][tgm].sstsq(f - 16 + (who << 5));
+            moves[ply][tgm].sedsq(f);
+            moves[ply][tgm].stpmv(5);
+
+            moves[ply][tgm].sdpsh();
+
+            dpshtrgt ^= (1ULL << f);
+            tgm++;
+        }
+    
+    }
+
     //Knights
     pcs = pieces[4] & ours;
     while (pcs){
@@ -871,17 +647,32 @@ int Position::generateCaptures(int ply){
 
         while (xset){
             p = __builtin_ctzll(xset);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-            
-            cc = pieceAt(p);
-            moves[ply][tgm].info |= (cc << 12);
 
-            moves[ply][tgm].info |= (4U << 15);
-            moves[ply][tgm].info |= (4U << 18);
+            moves[ply][tgm].sstsq(f);
+            moves[ply][tgm].sedsq(p);
+
+            cc = pieceAt(p);
+            moves[ply][tgm].scptp(cc);
+
+            moves[ply][tgm].stpmv(4);
 
             tgm++;
             xset ^= (1ULL << p);
+        }
+
+        if constexpr (!cpex){
+            while (mvst){
+                p = __builtin_ctzll(mvst);
+
+                moves[ply][tgm].sstsq(f);
+                moves[ply][tgm].sedsq(p);
+
+                moves[ply][tgm].stpmv(4);
+
+                tgm++;
+                mvst ^= (1ULL << p);
+            }
+
         }
 
         pcs ^= (1ULL << f);
@@ -898,17 +689,32 @@ int Position::generateCaptures(int ply){
 
         while (xset){
             p = __builtin_ctzll(xset);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-            
-            cc = pieceAt(p);
-            moves[ply][tgm].info |= (cc << 12);
 
-            moves[ply][tgm].info |= (3U << 15);
-            moves[ply][tgm].info |= (3U << 18);
+            moves[ply][tgm].sstsq(f);
+            moves[ply][tgm].sedsq(p);
+
+            cc = pieceAt(p);
+            moves[ply][tgm].scptp(cc);
+
+            moves[ply][tgm].stpmv(3);
 
             tgm++;
             xset ^= (1ULL << p);
+        }
+
+        if constexpr (!cpex){
+            while (mvst){
+                p = __builtin_ctzll(mvst);
+
+                moves[ply][tgm].sstsq(f);
+                moves[ply][tgm].sedsq(p);
+
+                moves[ply][tgm].stpmv(3);
+
+                tgm++;
+                mvst ^= (1ULL << p);
+            }
+
         }
 
         pcs ^= (1ULL << f);
@@ -925,17 +731,32 @@ int Position::generateCaptures(int ply){
 
         while (xset){
             p = __builtin_ctzll(xset);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-            
-            cc = pieceAt(p);
-            moves[ply][tgm].info |= (cc << 12);
 
-            moves[ply][tgm].info |= (2U << 15);
-            moves[ply][tgm].info |= (2U << 18);
+            moves[ply][tgm].sstsq(f);
+            moves[ply][tgm].sedsq(p);
+
+            cc = pieceAt(p);
+            moves[ply][tgm].scptp(cc);
+
+            moves[ply][tgm].stpmv(2);
 
             tgm++;
             xset ^= (1ULL << p);
+        }
+
+        if constexpr (!cpex){
+            while (mvst){
+                p = __builtin_ctzll(mvst);
+
+                moves[ply][tgm].sstsq(f);
+                moves[ply][tgm].sedsq(p);
+
+                moves[ply][tgm].stpmv(2);
+
+                tgm++;
+                mvst ^= (1ULL << p);
+            }
+
         }
 
         pcs ^= (1ULL << f);
@@ -952,25 +773,39 @@ int Position::generateCaptures(int ply){
 
         while (xset){
             p = __builtin_ctzll(xset);
-            moves[ply][tgm].info = f;
-            moves[ply][tgm].info |= (p << 6);
-            
-            cc = pieceAt(p);
-            moves[ply][tgm].info |= (cc << 12);
 
-            moves[ply][tgm].info |= (1U << 15);
-            moves[ply][tgm].info |= (1U << 18);
+            moves[ply][tgm].sstsq(f);
+            moves[ply][tgm].sedsq(p);
+
+            cc = pieceAt(p);
+            moves[ply][tgm].scptp(cc);
+
+            moves[ply][tgm].stpmv(1);
 
             tgm++;
             xset ^= (1ULL << p);
         }
 
+        if constexpr (!cpex){
+            while (mvst){
+                p = __builtin_ctzll(mvst);
+
+                moves[ply][tgm].sstsq(f);
+                moves[ply][tgm].sedsq(p);
+
+                moves[ply][tgm].stpmv(1);
+
+                tgm++;
+                mvst ^= (1ULL << p);
+            }
+
+        }
+
         pcs ^= (1ULL << f);
     }
 
-    //King
-    pcs = pieces[0] & ours;
-    f = __builtin_ctzll(pcs);
+    //Kings
+    f = __builtin_ctzll(pieces[0] & ours);
 
     mvst = KingAttacks[f] & ~ours;
     xset = mvst & opps;
@@ -978,46 +813,374 @@ int Position::generateCaptures(int ply){
 
     while (xset){
         p = __builtin_ctzll(xset);
-        moves[ply][tgm].info = f;
-        moves[ply][tgm].info |= (p << 6);
-        
-        cc = pieceAt(p);
-        moves[ply][tgm].info |= (cc << 12);
 
-        //moves[ply][tgm].info |= (0U << 15);
-        //moves[ply][tgm].info |= (0U << 18);
+        moves[ply][tgm].sstsq(f);
+        moves[ply][tgm].sedsq(p);
+
+        cc = pieceAt(p);
+        moves[ply][tgm].scptp(cc);
+
+        //moves[ply][tgm].stpmv(0);
 
         tgm++;
         xset ^= (1ULL << p);
     }
 
+    if constexpr (!cpex){
+        while (mvst){
+            p = __builtin_ctzll(mvst);
+
+            moves[ply][tgm].sstsq(f);
+            moves[ply][tgm].sedsq(p);
+
+            //moves[ply][tgm].stpmv(0);
+
+            tgm++;
+            mvst ^= (1ULL << p);
+        }
+    }
+
+    //King Castling
+
+    //Kingside
+    if constexpr (cstl & 1){
+        if (!((coc[0] << (who * 56)) & occ)){
+            moves[ply][tgm].sstsq(f);
+            moves[ply][tgm].sedsq(6 + (56 * who));
+            moves[ply][tgm].scstl(1);
+            tgm++;
+        }
+    }
+
+    //Queenside
+    if constexpr (cstl & 2){
+        if (!((coc[1] << (who * 56)) & occ)){
+            moves[ply][tgm].sstsq(f);
+            moves[ply][tgm].sedsq(2 + (56 * who));
+            moves[ply][tgm].scstl(2);
+            tgm++;
+        }
+    }
+
     return tgm;
 }
 
+template <bool cpex> inline int Position::__swit_generateMoves(int ply){
+    int ind = (toMove << 2) ^ ((cr[thm] >> (!toMove << 1)) & 0x3);
+
+    switch (ind){
+        case 0:
+            return __impl_generateMoves<false, 0, cpex>(ply);
+        case 1:
+            return __impl_generateMoves<false, 1, cpex>(ply);
+        case 2:
+            return __impl_generateMoves<false, 2, cpex>(ply);
+        case 3:
+            return __impl_generateMoves<false, 3, cpex>(ply);
+        case 4:
+            return __impl_generateMoves<true, 0, cpex>(ply);
+        case 5:
+            return __impl_generateMoves<true, 1, cpex>(ply);
+        case 6:
+            return __impl_generateMoves<true, 2, cpex>(ply);
+        case 7:
+            return __impl_generateMoves<true, 3, cpex>(ply);
+        default:
+            __builtin_unreachable();        
+    }
+}
+
+inline int Position::generateMoves(int ply){ return __swit_generateMoves<false>(ply); }
+
+inline int Position::generateCaptures(int ply){ return __swit_generateMoves<true>(ply); }
+
+template <bool who, int state, bool eval> void Position::__impl_makeMove(Move m){
+    uint8_t start = m.gstsq();
+    uint8_t end = m.gedsq();
+    uint8_t typei = m.gtpmv();
+    uint8_t typef;
+
+    constexpr bool capt = state & 1;
+
+    if constexpr (state & 2){ //promotion
+        typef = m.gtpnd();
+    } else {
+        typef = typei;
+    }
+
+    Hash zFactor = ztk;
+
+    if constexpr (capt){
+        constexpr bool pass = state & 4;
+        uint8_t target = (end + pass * ((who << 4) - 8));
+        uint8_t ctype = m.gcptp();
+
+        pieces[ctype] ^= (1ULL << target);
+        sides[!who] ^= (1ULL << target);
+
+        zFactor ^= zpk[!who][ctype][target];
+
+        if constexpr (eval){
+            scores[!who] -= mps[ctype][target ^ (56 * who)];
+            //eScores[!who] -= eps[ctype][target ^ (56 * who)];
+        }
+    }
+
+    sides[who] ^= ((1ULL << start) | (1ULL << end));
+    pieces[typei] ^= (1ULL << start);
+    pieces[typef] ^= (1ULL << end);
+
+    zFactor ^= zpk[who][typei][start]; //replace zobrist keys of piece
+    zFactor ^= zpk[who][typef][end];
+
+    if constexpr (eval){
+        scores[who] += (mps[typef][end ^ (56 * !who)] - mps[typei][start ^ (56 * !who)]);
+        //eScores[who] += (eps[typef][end ^ (56 * !who)] - eps[typei][start ^ (56 * !who)]);
+    }
+
+    thm++;
+    nodes++;
+
+    if constexpr (state & 16){ //double-push
+        ep[thm] = end - 8 + (who << 4);
+        zFactor ^= zek[end & 7];
+    } else {
+        ep[thm] = 255;
+    }
+
+    if (ep[thm - 1] != 255){
+        zFactor ^= zek[ep[thm - 1] & 7];
+    }
+
+    if constexpr (capt){
+        chm[thm] = 0;
+    } else if (typei == 5){
+        chm[thm] = 0;
+    } else {
+        chm[thm] = chm[thm - 1] + 1;
+    }
+
+    cr[thm] = cr[thm - 1];
+    if (cr[thm] != 0){
+        uint8_t change = crc[start] | crc[end];
+        if (change){
+            cr[thm] &= ~change;
+            zFactor ^= zck[cr[thm - 1]];
+            zFactor ^= zck[cr[thm]];
+        }
+    }
+
+    if constexpr (state & 8){ //castling
+        uint8_t cat = m.gcstl();
+        start = cf[cat - 1] ^ (56 * who);
+        end = 7 - (cat << 1) + 56 * who;
+
+        sides[who] ^= ((1ULL << start) | (1ULL << end));
+        pieces[2] ^= ((1ULL << start) | (1ULL << end));
+
+        zFactor ^= zpk[who][2][start]; //move the rook from start and end
+        zFactor ^= zpk[who][2][end];
+
+        if constexpr (eval){
+            scores[who] += (mps[2][end ^ (56 * !who)] - mps[2][start ^ (56 * !who)]);
+            //eScores[who] += (eps[2][end ^ (56 * !who)] - eps[2][start ^ (56 * !who)]);
+        }
+    }
+
+    zhist[thm] = zhist[thm - 1] ^ zFactor;
+    toMove ^= 1;
+}
+
+template <bool who, int state, bool eval> void Position::__impl_unmakeMove(Move m){
+    uint8_t start = m.gstsq();
+    uint8_t end = m.gedsq();
+    uint8_t typei = m.gtpmv();
+
+    uint8_t typef;
+    constexpr bool capt = state & 1;
+
+    if constexpr (state & 2){
+        typef = m.gtpnd();
+    } else {
+        typef = typei;
+    }
+
+    sides[!who] ^= ((1ULL << start) | (1ULL << end));
+    pieces[typei] ^= (1ULL << start);
+    pieces[typef] ^= (1ULL << end);
+
+    if constexpr (eval){
+        scores[!who] -= (mps[typef][end ^ (56 * who)] - mps[typei][start ^ (56 * who)]);
+        //eScores[!who] -= (eps[typef][end ^ (56 * who)] - eps[typei][start ^ (56 * who)]);
+    }
+
+    if constexpr (capt){
+        constexpr bool pass = state & 4;
+        uint8_t target = end + pass * ((!who << 4) - 8);
+        uint8_t ctype = m.gcptp();
+
+        pieces[ctype] ^= (1ULL << target);
+        sides[who] ^= (1ULL << target);
+
+        if constexpr (eval){
+            scores[who] += mps[ctype][target ^ (56 * !who)];
+            //eScores[who] += eps[ctype][target ^ (56 * !who)];
+        }
+    }
+
+    thm--;
+
+    if constexpr (state & 8){
+        uint8_t cat = m.gcstl();
+        start = cf[cat - 1] ^ (56 * !who);
+        end = 7 - (cat << 1) + (56 * !who);
+
+        sides[!who] ^= ((1ULL << start) | (1ULL << end));
+        pieces[2] ^= ((1ULL << start) | (1ULL << end));
+
+        if constexpr (eval){
+            scores[!who] -= (mps[2][end ^ (56 * who)] - mps[2][start ^ (56 * who)]);
+            //eScores[!who] -= (eps[2][end ^ (56 * who)] - eps[2][start ^ (56 * who)]);
+        }
+    }
+
+    toMove ^= 1;
+}
+
+
+template <bool eval> inline void Position::makeMove(Move m){
+    int ind = (toMove << 5) ^ m.state();
+
+    switch (ind){
+        case 0:
+            __impl_makeMove<false, 0, eval>(m);
+            break;
+        case 1:
+            __impl_makeMove<false, 1, eval>(m);
+            break;
+        case 2:
+            __impl_makeMove<false, 2, eval>(m);
+            break;
+        case 3:
+            __impl_makeMove<false, 3, eval>(m);
+            break;
+        case 5:
+            __impl_makeMove<false, 5, eval>(m);
+            break;
+        case 8:
+            __impl_makeMove<false, 8, eval>(m);
+            break;
+        case 16:
+            __impl_makeMove<false, 16, eval>(m);
+            break;
+
+        case 32:
+            __impl_makeMove<true, 0, eval>(m);
+            break;
+        case 33:
+            __impl_makeMove<true, 1, eval>(m);
+            break;
+        case 34:
+            __impl_makeMove<true, 2, eval>(m);
+            break;
+        case 35:
+            __impl_makeMove<true, 3, eval>(m);
+            break;
+        case 37:
+            __impl_makeMove<true, 5, eval>(m);
+            break;
+        case 40:
+            __impl_makeMove<true, 8, eval>(m);
+            break;
+        case 48:
+            __impl_makeMove<true, 16, eval>(m);
+            break;
+        
+        default:
+            //exit(1);
+            __builtin_unreachable();
+    }
+}
+
+template <bool eval> inline void Position::unmakeMove(Move m){
+    int ind = (toMove << 5) ^ m.state();
+
+    switch (ind){
+        case 0:
+            __impl_unmakeMove<false, 0, eval>(m);
+            break;
+        case 1:
+            __impl_unmakeMove<false, 1, eval>(m);
+            break;
+        case 2:
+            __impl_unmakeMove<false, 2, eval>(m);
+            break;
+        case 3:
+            __impl_unmakeMove<false, 3, eval>(m);
+            break;
+        case 5:
+            __impl_unmakeMove<false, 5, eval>(m);
+            break;
+        case 8:
+            __impl_unmakeMove<false, 8, eval>(m);
+            break;
+        case 16:
+            __impl_unmakeMove<false, 16, eval>(m);
+            break;
+
+        case 32:
+            __impl_unmakeMove<true, 0, eval>(m);
+            break;
+        case 33:
+            __impl_unmakeMove<true, 1, eval>(m);
+            break;
+        case 34:
+            __impl_unmakeMove<true, 2, eval>(m);
+            break;
+        case 35:
+            __impl_unmakeMove<true, 3, eval>(m);
+            break;
+        case 37:
+            __impl_unmakeMove<true, 5, eval>(m);
+            break;
+        case 40:
+            __impl_unmakeMove<true, 8, eval>(m);
+            break;
+        case 48:
+            __impl_unmakeMove<true, 16, eval>(m);
+            break;
+        
+        default:
+            __builtin_unreachable();
+    }
+}
+
+
+/*
 template <bool ev> void Position::makeMove(Move m){
-    uint8_t startsquare = m.stsq();
-    uint8_t endsquare = m.edsq();
+    uint8_t startsquare = m.gstsq();
+    uint8_t endsquare = m.gedsq();
 
-    uint8_t typeMoved = m.tpmv();
-    uint8_t typeEnded = m.tpnd();
+    uint8_t typeMoved = m.gtpmv();
+    uint8_t typeEnded = (m.state() & 2) ? m.gtpnd() : typeMoved;
 
-    bool capturing = m.capt();
+    bool capturing = m.gcptp();
     //uint8_t captureType = m.cptp();
 
-    bool passed = m.epcp();
+    bool passed = m.gepcp();
 
     Hash zFactor = ztk;
 
     if (capturing){
         uint8_t target = (endsquare + passed * ((toMove << 4) - 8));
-        uint8_t captureType = m.cptp();
+        uint8_t captureType = m.gcptp();
         pieces[captureType] ^= (1ULL << target);
         sides[!toMove] ^= (1ULL << target);
 
-        zFactor = zpk[!toMove][captureType][target]; //when capturing, remove the target piece
+        zFactor ^= zpk[!toMove][captureType][target]; //when capturing, remove the target piece
 
         if (ev){
-            int csb = mps[captureType][endsquare ^ (toMove * 56)];
+            int csb = mps[captureType][target ^ (toMove * 56)];
             scores[!toMove] -= csb;
         }
     }
@@ -1038,9 +1201,9 @@ template <bool ev> void Position::makeMove(Move m){
     nodes++;
 
     //En Passant Square Update
-    ep[thm] = m.dpsh() * (endsquare - 7 + (toMove << 4)) - 1;
+    ep[thm] = m.gdpsh() * (endsquare - 7 + (toMove << 4)) - 1;
 
-    zFactor ^= (m.dpsh() * zek[endsquare & 7]); //file of en-passant square
+    zFactor ^= (m.gdpsh() * zek[endsquare & 7]); //file of en-passant square
     if (ep[thm - 1] != 255){
         zFactor ^= zek[ep[thm - 1] & 7]; // remove previous ep square
     }
@@ -1066,7 +1229,7 @@ template <bool ev> void Position::makeMove(Move m){
 
     //castling
     //still have to play Rh1-f1 or Ra1-d1
-    uint8_t cat = m.cstl(); //valued 1 K or 2 Q
+    uint8_t cat = m.gcstl(); //valued 1 K or 2 Q
     if (cat){
         startsquare = cf[cat - 1] + 56 * toMove;
         endsquare = 7 - (cat << 1) + 56 * toMove;
@@ -1089,16 +1252,16 @@ template <bool ev> void Position::makeMove(Move m){
 }
 
 template <bool ev> void Position::unmakeMove(Move m){
-    uint8_t startsquare = m.stsq();
-    uint8_t endsquare = m.edsq();
+    uint8_t startsquare = m.gstsq();
+    uint8_t endsquare = m.gedsq();
 
-    uint8_t typeMoved = m.tpmv();
-    uint8_t typeEnded = m.tpnd();
+    uint8_t typeMoved = m.gtpmv();
+    uint8_t typeEnded = (m.state() & 2) ? m.gtpnd() : typeMoved;
 
-    bool capturing = m.capt();
+    bool capturing = m.gcptp();
     //uint8_t captureType = m.cptp();
 
-    bool passed = m.epcp();
+    bool passed = m.gepcp();
 
     sides[!toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare)); 
     pieces[typeMoved] ^= (1ULL << startsquare);
@@ -1111,20 +1274,20 @@ template <bool ev> void Position::unmakeMove(Move m){
     
     if (capturing){
         uint8_t target = (endsquare + passed * ((!toMove << 4) - 8));
-        uint8_t captureType = m.cptp();
+        uint8_t captureType = m.gcptp();
 
         pieces[captureType] ^= (1ULL << target);
         sides[toMove] ^= (1ULL << target);
 
         if (ev){
-            int csb = mps[captureType][endsquare ^ (!toMove * 56)];;
+            int csb = mps[captureType][target ^ (!toMove * 56)];;
             scores[toMove] += csb;
         }
     }
 
     thm--;
 
-    uint8_t cat = m.cstl();
+    uint8_t cat = m.gcstl();
     if (cat){
         startsquare = cf[cat - 1] + 56 * !toMove;
         endsquare = 7 - (cat << 1) + 56 * !toMove;
@@ -1140,10 +1303,51 @@ template <bool ev> void Position::unmakeMove(Move m){
 
     toMove ^= 1;
 }
+*/
+
+
+uint64_t Position::perft(int depth, int ply){
+    uint64_t pnodes = 0;
+    if (depth == 0){
+        return 1ULL;
+    }
+
+    int v = generateMoves(ply);
+
+    for (int i = 0; i < v; i++){
+        makeMove<false>(moves[ply][i]);
+        //std::cout << "make " << moves[ply][i].toStr() << '\n';
+
+        if (notValid(moves[ply][i])){
+            unmakeMove<false>(moves[ply][i]);
+            //std::cout << "Legality\n";
+            continue;
+        }
+
+        uint64_t next = perft(depth - 1, ply + 1);
+
+        unmakeMove<false>(moves[ply][i]);
+
+        if (ply == 0){
+            //print();
+            std::cout << moves[ply][i].toStr() << ": " << next << '\n';
+        }
+
+        //std::cout << "unmake " << moves[ply][i].toStr() << '\n';
+
+        pnodes += next;
+    }
+
+    if (ply == 0){
+        std::cout << '\n' << pnodes << " nodes\n";
+    }
+
+    return pnodes;
+}
 
 void Position::passMove(){
     toMove ^= 1;
-    nodes++; //count as a node?
+    //nodes++; //count as a node?
     thm++;
     zhist[thm] = zhist[thm - 1] ^ ztk;
     chm[thm] = chm[thm - 1];
@@ -1154,40 +1358,6 @@ void Position::passMove(){
 void Position::unpassMove(){
     toMove ^= 1;
     thm--;
-}
-
-uint64_t Position::perft(int depth, int ply){
-    uint64_t pnodes = 0;
-    if (depth == 0){
-        return 1ULL;
-    }
-
-    int v = generateMoves(ply);
-    for (int i = 0; i < v; i++){
-        makeMove<false>(moves[ply][i]);
-
-        if (notValid(moves[ply][i])){
-            unmakeMove<false>(moves[ply][i]);
-            continue;
-        }
-
-        uint64_t next = perft(depth -1, ply + 1);
-
-        unmakeMove<false>(moves[ply][i]);
-
-        if (ply == 0){
-            std::cout << moves[ply][i].toStr() << ": " << next << '\n';
-        }
-        
-
-        pnodes += next;
-    }
-
-    if (ply == 0){
-        std::cout << '\n' << pnodes << " nodes\n";
-    }
-
-    return pnodes;
 }
 
 void Position::sendMove(std::string str){
@@ -1213,40 +1383,9 @@ void Position::sendMove(std::string str){
     }
 }
 
-int Position::evaluate(){
-    return scores[toMove] - scores[!toMove];
-}
-
-int Position::evaluateScratch(){
-    scores[0] = 0;
-    scores[1] = 0;
-
-    Bitboard pcs;
-    int f;
-
-    for (int i = 0; i < 6; i++){
-        pcs = sides[1] & pieces[i]; //white defined as original
-        while (pcs){
-            f = __builtin_ctzll(pcs);
-
-            scores[1] += mps[i][f];
-
-            pcs ^= (1ULL << f);
-        }
-
-        pcs = sides[0] & pieces[i];
-        while (pcs){
-            f = __builtin_ctzll(pcs);
-
-            scores[0] += mps[i][f ^ 56];
-
-            pcs ^= (1ULL << f);
-        }
-    }
 
 
-    return scores[toMove] - scores[!toMove];
-}
+
 
 
 
