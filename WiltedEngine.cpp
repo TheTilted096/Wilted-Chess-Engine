@@ -68,7 +68,7 @@ Hash TTentry::eHash(){
 class Sentry{ //search stack entry
     public:
         bool nmp;
-        int presentEval;
+        //int presentEval;
         //Move killer;
 
         Sentry();
@@ -80,7 +80,7 @@ Sentry::Sentry(){
 }
 
 void Sentry::clear(){
-    presentEval = -29501;
+    //presentEval = -29501;
     nmp = false;
 }
 
@@ -304,7 +304,18 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
 
     bool inCheck = isChecked(toMove);
 
+
+    bool isPV = (beta - alpha > 1);
+
     //Mate Distance Pruning
+    if (!isPV){
+        int ma = std::max(alpha, -29000 + ply);
+        int mb = std::min(beta, 29000 - ply - 1);
+
+        if (ma >= mb){
+            return ma;
+        }
+    }
 
     //Transposition Table Probing
     int ttindex = zhist[thm] & 0xFFFFF;
@@ -317,7 +328,7 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
 
         //implement TT Cutoffs
         int ntype = ttable[ttindex].enType();
-        if ((ttdepth >= depth) and (repeats == 1) and (ply > 0)){
+        if ((ttdepth >= depth) and (repeats == 1) and !isPV and (ply > 0)){
             if (ntype == 1){
                 return score;
             }
@@ -334,10 +345,10 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
 
     //NMP
     if (ply > 0){ //template <rootNode> someday...
-        stack[ply].nmp = !stack[ply - 1].nmp and (depth > 2) and !onlyPawns(toMove) and !inCheck;
+        stack[ply].nmp = !stack[ply - 1].nmp and (depth > 2) and !onlyPawns(toMove) and !inCheck; //minimum NMP depth, not sure why?
         if (stack[ply].nmp){
             passMove();
-            score = -alphabeta(-beta, -alpha, depth - 3, ply + 1);
+            score = -alphabeta(-beta, -alpha, depth - 3, ply + 1); //reduction = 2
             unpassMove();
             if (score >= beta){
                 return score;
@@ -368,10 +379,18 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
 
         //Shallow Depth Pruning
 
-        score = -alphabeta(-beta, -alpha, depth - 1, ply + 1);
+        //score = -alphabeta(-beta, -alpha, depth - 1, ply + 1); no PVS
 
-        //PVS is the scourge of the century
-        //so is LMR
+        //PVS, LMR
+        if (i == 0){ //First Move
+            score = -alphabeta(-beta, -alpha, depth - 1, ply + 1); //Search Full Window
+        } else {
+            score = -alphabeta(-alpha - 1, -alpha, depth - 1, ply + 1); //Otherwise, search with null window
+
+            if ((score > alpha) and isPV){
+                score = -alphabeta(-beta, -alpha, depth - 1, ply + 1);
+            }
+        }
 
         unmakeMove<true>(moves[ply][i]);
 
