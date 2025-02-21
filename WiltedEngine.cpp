@@ -102,6 +102,12 @@ class Engine : public Position{
         uint32_t hardTime, softTime;
         std::chrono::_V2::steady_clock::time_point moment;
 
+        //Tunables
+        const int minNMPdepth = 2;
+        const int NMPreduce = 2;
+        const int ASPbase = 50;
+        const double ASPmult = 2.0;
+
         Engine();
         ~Engine();
 
@@ -174,7 +180,7 @@ int64_t Engine::timeTaken(){
 void Engine::timeMan(uint32_t base, uint32_t inc){
     timeKept = ~base;
     softTime = base / 40 + inc / 2;
-    hardTime = std::min(base, base / 10 + 9 * inc / 10);
+    hardTime = std::min(9 * base / 10, base / 10 + 9 * inc / 10);
 }
 
 void Engine::scoreMoves(int ply, int nc, Move ttm){
@@ -345,10 +351,10 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
 
     //NMP
     if (ply > 0){ //template <rootNode> someday...
-        stack[ply].nmp = !stack[ply - 1].nmp and (depth > 2) and !onlyPawns(toMove) and !inCheck; //minimum NMP depth, not sure why?
+        stack[ply].nmp = !stack[ply - 1].nmp and (depth > minNMPdepth) and !onlyPawns(toMove) and !inCheck;
         if (stack[ply].nmp){
             passMove();
-            score = -alphabeta(-beta, -alpha, depth - 3, ply + 1); //reduction = 2
+            score = -alphabeta(-beta, -alpha, depth - 1 - NMPreduce, ply + 1); //reduction = 2
             unpassMove();
             if (score >= beta){
                 return score;
@@ -439,47 +445,69 @@ int Engine::search(int mdepth, uint64_t maxNodes, bool output){
     bool oMove = toMove; int othm = thm;
 
     //init alpha, beta
-
-    //current best move and evaluation
-    Move currentBest(0);
+    int alpha = -30000, beta = 30000;
     
     //erase history table
 
-    evaluateScratch();
-
     //begin mobilities and attack tables (might be looped into evalscratch);
+    evaluateScratch();
 
     //aspiration windows
     int searchScore;
+    int prevScore;
+    Move currentBest(0);
+
+    bool aspFail;
 
     //set time and node counts
     nodes = 0;
     mnodes = maxNodes;
     moment = std::chrono::steady_clock::now();
 
-    //searchScore = alphabeta(-30000, 30000, 4, 0);
-
-    //std::cout << "info depth 4 nodes " << nodes << " score cp " << searchScore << '\n';
-
     try {
-        searchScore = alphabeta(-30000, 30000, 0, 0); //depth 0 search
+        searchScore = alphabeta(alpha, beta, 0, 0); //depth 0 search
 
         if (output){ std::cout << "info depth 0 nodes " << nodes << " score cp " << searchScore << std::endl; }
 
         for (int i = 1; i <= mdepth; i++){ //iterative deepening search
+            /*
             searchScore = alphabeta(-30000, 30000, i, 0);
             
             currentBest = bestMove; //each complete depth saves best move and score
             if (output){ std::cout << "info depth " << i << " nodes " << nodes << " score cp " << searchScore << std::endl; }
 
             if (timeKept and (timeTaken() > softTime)){ //quit search if exceeded soft time
-                //std::cout << "Soft Time Reached\n";
+                break;
+            }
+            */
+            aspFail = true;
+            prevScore = searchScore;
+            int aspa = ASPbase, aspb = ASPbase;
+            
+            while (aspFail){
+                alpha = prevScore - aspa;
+                beta = prevScore + aspb;
+
+                searchScore = alphabeta(alpha, beta, i, 0);
+
+                if (searchScore <= alpha){
+                    aspa *= ASPmult;
+                } else if (searchScore >= beta){
+                    aspb *= ASPmult;
+                } else {
+                    aspFail = false;
+                }
+            }
+
+            currentBest = bestMove;
+            if (output){ std::cout << "info depth " << i << " nodes " << nodes << " score cp " << searchScore << std::endl; }
+
+            if (timeKept and (timeTaken() > softTime)){ //quit search if exceeded soft time
                 break;
             }
         }
 
     } catch (const char* e){
-        //std::cout << e << '\n';
         bestMove = currentBest; //when hard-stopped, reset all the pieces back
     }
 
