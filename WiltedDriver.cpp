@@ -73,8 +73,8 @@ int main(int argc, char* argv[]){
         if (command.substr(0, 2) == "go"){
             std::stringstream srprm(command);
 
-            std::string ourTime = engine.toMove ? "wtime" : "btime";
-            std::string ourInc = engine.toMove ? "winc" : "binc";
+            std::string ourTime = engine.who() ? "wtime" : "btime";
+            std::string ourInc = engine.who() ? "winc" : "binc";
 
             uint32_t ttb = 0xFFFFFFFFU; //assume absurdly large time
             uint32_t tti = 0U; //increment 0 unless specified
@@ -95,7 +95,7 @@ int main(int argc, char* argv[]){
                 }
                 if (param == "depth"){
                     srprm >> param;
-                    tdb = std::min(47, stoi(param)); //cap search depth for some reason
+                    tdb = std::min(63, stoi(param)); //cap search depth for some reason
                 }
                 if (param == "nodes"){
                     srprm >> param;
@@ -217,6 +217,7 @@ int main(int argc, char* argv[]){
             zfile << "0x" << std::uppercase << twist() << "ULL" << std::nouppercase << ";";
             */
        
+            /*
             engine.showZobrist();   
 
             //engine.quiesce(-30000, 30000, 0);
@@ -230,6 +231,9 @@ int main(int argc, char* argv[]){
             for (int i = 0; i < b; i++){
                 std::cout << engine.moves[0][i].toStr() << ": " << engine.mprior[0][i] << '\n';
             }
+            */
+
+            std::cout << engine.countLegal() << '\n';
 
            
         }   

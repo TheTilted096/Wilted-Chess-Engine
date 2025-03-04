@@ -461,9 +461,14 @@ class Bitboards{
         {'/', '1', '2', '3', '4', '5', '6', '7', '8',
             'k', 'q', 'r', 'b', 'n', 'p', 'K', 'Q', 'R', 'B', 'N', 'P'};
 
-        static constexpr char cstrt[4] = 
-        {'K', 'Q', 'k', 'q'};
+        //static constexpr char cstrt[4] = 
+        //{'K', 'Q', 'k', 'q'};
 
+        std::string cstrt[16] = 
+        {"-", "K", "Q", "KQ",
+        "k", "Kk", "Qk", "KQk",
+        "q", "Kq", "Qq", "KQq",
+        "kq", "Kkq", "Qkq", "KQkq"};
 
         Bitboards();
 
@@ -484,7 +489,10 @@ class Bitboards{
         int countReps(int);
 
         void readFen(std::string);
+        std::string makeFen();
 
+        bool who(){ return toMove; }
+        int halfMoves(){ return chm[thm]; }
 };
 
 /*
@@ -727,35 +735,39 @@ void Bitboards::readFen(std::string fen){
             }
         }
 
-        if ((0 < ind) and (ind < 9)){
+        if (ind < 9){
             sq += ind;
             continue;
         }
-        if ((ind >= 9) and (ind < 15)){
+        if (ind < 15){
             pieces[ind - 9] |= (1ULL << sq);
             sides[0] |= (1ULL << sq);
             sq++;
             continue;
         }
-        if ((ind >= 15) and (ind < 21)){
-            pieces[ind - 15] |= (1ULL << sq);
-            sides[1] |= (1ULL << sq);
-            sq++;
-            continue;
-        }
+
+        pieces[ind - 15] |= (1ULL << sq);
+        sides[1] |= (1ULL << sq);
+        sq++;
     }
 
     segs >> feed; //side to move
     toMove = feed[0] & 1; //'w' = 119 and 'b' = 98;
     
     segs >> feed; //castling rights 'KQkq' or something
-    feed += ' ';
-    ind = 0;
+    for (ind = 0; ; ind++){
+        if (cstrt[ind] == feed){
+            break;
+        }
+    }
+    
+    cr[0] = ind;
 
     //input total 1/2 move clock starting at 0th
     thm = 0;
 
     //might want to optimize this later
+    /*
     cr[0] |= (cstrt[0] == feed[ind]);
     ind += (cstrt[0] == feed[ind]);
 
@@ -767,6 +779,16 @@ void Bitboards::readFen(std::string fen){
 
     cr[0] |= ((cstrt[3] == feed[ind]) << 3);
     ind += (cstrt[3] == feed[ind]);
+    */
+
+    /*
+    for (int i = 0; i < 4; i++){
+        bool can = cstrt[i] == feed[ind];
+        cr[0] |= (can << i);
+        ind += can;
+    }
+    */
+
 
     segs >> feed; //en passant square
     ep[0] = (feed != "-") ? ((feed[0] - 97) + 8 * (56 - feed[1])) : 255;
@@ -774,6 +796,65 @@ void Bitboards::readFen(std::string fen){
     //implement half move clock
     segs >> feed;
     chm[0] = std::stoi(feed); 
+}
+
+std::string Bitboards::makeFen(){
+	uint64_t occ = sides[0] | sides[1];
+	std::string result = "";
+
+	uint64_t squarebb;
+
+	int emptyCount;
+
+	for (int i = 0; i < 8; i++){ //for each of 8 rows
+		emptyCount = 0;
+		for (int j = 0; j < 8; j++){ //for each square in each row
+			squarebb = 1ULL << (8 * i + j);
+
+			if (squarebb & occ){ //if landed on occupied space
+				if (emptyCount != 0){ //unload stored empty squares
+					result += emptyCount + 48;
+					emptyCount = 0;
+				}
+
+                for (int k = 0; k < 6; k++){
+                    if (squarebb & pieces[k] & sides[1]){
+                        result += frchr[k + 15];
+                    }
+                    if (squarebb & pieces[k] & sides[0]){
+                        result += frchr[k + 9];
+                    }
+                }
+
+				emptyCount = 0; //no longer empty
+			} else { //otherwise, count as empty square
+				emptyCount++;
+			}
+		}
+		if (emptyCount != 0){
+			result += emptyCount + 48;
+		}
+		if (i != 7){
+			result += '/';
+		}
+	}
+
+	result += ' ';
+	result += (toMove ? 'w' : 'b');
+    result += ' ';
+	result += cstrt[cr[thm]];
+    result += ' ';
+    if (ep[thm] == 255){
+        result += '-';
+    } else {
+        result += ((ep[thm] & 7) + 97);
+        result += (8 - (ep[thm] >> 3)) + 48;
+    }
+    result += ' ';
+	result += std::to_string(chm[thm]);
+	result += " 1";
+
+	return result;
 }
 
 void Bitboards::beginZobrist(){

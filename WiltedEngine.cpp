@@ -129,12 +129,16 @@ class Engine : public Position{
 
         void newGame();
 
+        Move getMove(){ return bestMove; }
+
 };
 
 Engine::Engine(){
     //maximum nodes
     mnodes = 0ULL;
     hardTime = ~0U; softTime = ~0U;
+
+    timeKept = false;
 
     //init transposition table
     ttable = new TTentry[0x100000]; // (1 << 20)
@@ -350,14 +354,18 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
     //RFP
 
     //NMP
+
     if (ply > 0){ //template <rootNode> someday...
-        stack[ply].nmp = !stack[ply - 1].nmp and (depth > minNMPdepth) and !onlyPawns(toMove) and !inCheck;
+        stack[ply].nmp = !stack[ply - 1].nmp and (depth > minNMPdepth) 
+                and !onlyPawns(toMove) and !inCheck /*and (beta > -27000)*/;
+        
         if (stack[ply].nmp){
             passMove();
-            score = -alphabeta(-beta, -alpha, depth - 1 - NMPreduce, ply + 1); //reduction = 2
+            int nullScore = -alphabeta(-beta, -alpha, depth - 1 - NMPreduce, ply + 1); //reduction = 2
             unpassMove();
-            if (score >= beta){
-                return score;
+            if (nullScore >= beta /*and nullScore < 27000*/){
+                //assert(abs(score) < 27000);
+                return nullScore;
             }
         }
     }
@@ -427,6 +435,7 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
         }
     }
 
+    //assert(bestScore > -29000);
     if (score == -29000){
         //print();
         //maybe make this branchless
@@ -436,6 +445,7 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
 
     ttable[ttindex].update(bestScore, 1 + 2 * isAllNode, depth, localBestMove, zhist[thm]);
 
+    //assert(bestScore > -29000);
     return bestScore;
 }
 
@@ -466,6 +476,7 @@ int Engine::search(int mdepth, uint64_t maxNodes, bool output){
 
     try {
         searchScore = alphabeta(alpha, beta, 0, 0); //depth 0 search
+        prevScore = searchScore;
 
         if (output){ std::cout << "info depth 0 nodes " << nodes << " score cp " << searchScore << std::endl; }
 
@@ -481,7 +492,6 @@ int Engine::search(int mdepth, uint64_t maxNodes, bool output){
             }
             */
             aspFail = true;
-            prevScore = searchScore;
             int aspa = ASPbase, aspb = ASPbase;
             
             while (aspFail){
@@ -500,7 +510,9 @@ int Engine::search(int mdepth, uint64_t maxNodes, bool output){
             }
 
             currentBest = bestMove;
+            prevScore = searchScore;
             if (output){ std::cout << "info depth " << i << " nodes " << nodes << " score cp " << searchScore << std::endl; }
+            
 
             if (timeKept and (timeTaken() > softTime)){ //quit search if exceeded soft time
                 break;
@@ -514,10 +526,12 @@ int Engine::search(int mdepth, uint64_t maxNodes, bool output){
     auto end = std::chrono::steady_clock::now();
     double dur = 1 + std::chrono::duration_cast<std::chrono::microseconds>(end - moment).count();
 
-    std::cout << "info nodes " << nodes << " nps ";
-    std::cout << (int) ((nodes / dur) * 1000000) << '\n';
+    if (output){
+        std::cout << "info nodes " << nodes << " nps ";
+        std::cout << (int) ((nodes / dur) * 1000000) << '\n';
 
-    std::cout << "bestmove " << bestMove.toStr() << '\n';
+        std::cout << "bestmove " << bestMove.toStr() << '\n';
+    }
 
     //nodesForever += nodes;
 
@@ -532,7 +546,7 @@ int Engine::search(int mdepth, uint64_t maxNodes, bool output){
     mnodes = ~0ULL;
 
 
-    return searchScore;   
+    return prevScore;
 }
 
 void Engine::newGame(){

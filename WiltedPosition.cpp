@@ -108,8 +108,6 @@ class Move{
         }
 };
 
-
-
 class Position : public Bitboards{
     public:
         Move moves[96][128];
@@ -123,8 +121,8 @@ class Position : public Bitboards{
         //Bitboard atktbl[2][5]; //atktbl[s][i] is the threats to piece i posed by s. i.e. atktbl[0][4] = black threats to knights (black pawns)
 
         static constexpr int material[6] = {0, 900, 500, 350, 300, 100};
-        //static constexpr int phases[6] = {0, 8, 5, 3, 3, 1};
-        //static constexpr int totalPhase = 64;
+        static constexpr int phases[6] = {0, 14, 8, 5, 4, 2};
+        static constexpr int totalPhase = 128;
 
         int mps[6][64] = 
         {{6, 21, 0, 30, 24, 10, 20, 8, 
@@ -266,6 +264,7 @@ class Position : public Bitboards{
         int evaluateScratch(); //computes all psqts and mobility from scratch, then evaluates
 
         uint64_t perft(int, int);
+        int countLegal();
 
         template <bool, int, bool> void __impl_makeMove(Move); //side, movestate, incremental eval
         template <bool, int, bool> void __impl_unmakeMove(Move);
@@ -352,8 +351,6 @@ int Position::evaluate(){
     //return ((scores[toMove] - scores[!toMove]) * gamePhase + (eScores[toMove] - eScores[!toMove]) * (totalPhase - gamePhase)) / totalPhase;
     return scores[toMove] - scores[!toMove];
 }
-
-
 
 int Position::evaluateScratch(){
     scores[0] = 0;
@@ -1047,7 +1044,6 @@ template <bool who, int state, bool eval> void Position::__impl_unmakeMove(Move 
     toMove ^= 1;
 }
 
-
 template <bool eval> inline void Position::makeMove(Move m){
     int ind = (toMove << 5) ^ m.state();
 
@@ -1155,157 +1151,6 @@ template <bool eval> inline void Position::unmakeMove(Move m){
     }
 }
 
-
-/*
-template <bool ev> void Position::makeMove(Move m){
-    uint8_t startsquare = m.gstsq();
-    uint8_t endsquare = m.gedsq();
-
-    uint8_t typeMoved = m.gtpmv();
-    uint8_t typeEnded = (m.state() & 2) ? m.gtpnd() : typeMoved;
-
-    bool capturing = m.gcptp();
-    //uint8_t captureType = m.cptp();
-
-    bool passed = m.gepcp();
-
-    Hash zFactor = ztk;
-
-    if (capturing){
-        uint8_t target = (endsquare + passed * ((toMove << 4) - 8));
-        uint8_t captureType = m.gcptp();
-        pieces[captureType] ^= (1ULL << target);
-        sides[!toMove] ^= (1ULL << target);
-
-        zFactor ^= zpk[!toMove][captureType][target]; //when capturing, remove the target piece
-
-        if (ev){
-            int csb = mps[captureType][target ^ (toMove * 56)];
-            scores[!toMove] -= csb;
-        }
-    }
-    
-    sides[toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
-    pieces[typeMoved] ^= (1ULL << startsquare);
-    pieces[typeEnded] ^= (1ULL << endsquare);
-
-    zFactor ^= zpk[toMove][typeMoved][startsquare]; //replace zobrist keys of piece
-    zFactor ^= zpk[toMove][typeEnded][endsquare];
-
-    if (ev){
-        int psb = mps[typeEnded][endsquare ^ (!toMove * 56)] - mps[typeMoved][startsquare ^ (!toMove * 56)];
-        scores[toMove] += psb;
-    }
-
-    thm++;
-    nodes++;
-
-    //En Passant Square Update
-    ep[thm] = m.gdpsh() * (endsquare - 7 + (toMove << 4)) - 1;
-
-    zFactor ^= (m.gdpsh() * zek[endsquare & 7]); //file of en-passant square
-    if (ep[thm - 1] != 255){
-        zFactor ^= zek[ep[thm - 1] & 7]; // remove previous ep square
-    }
-
-    //chm[thm] = !(capturing or (typeMoved == 5)) * (chm[thm - 1] + 1);
-    if (capturing or (typeMoved == 5)){
-        chm[thm] = 0;
-    } else {
-        chm[thm] = chm[thm - 1] + 1;
-    }
-
-    //Adjust Castling Rights
-    cr[thm] = cr[thm - 1]; //castling rights preserved at first
-
-    if (cr[thm] != 0){
-        uint8_t change = crc[startsquare] | crc[endsquare];
-        if (change){
-            cr[thm] &= ~change;
-            zFactor ^= zck[cr[thm - 1]]; //if castling exists, xor old state
-            zFactor ^= zck[cr[thm]]; //xor in new state
-        }
-    }
-
-    //castling
-    //still have to play Rh1-f1 or Ra1-d1
-    uint8_t cat = m.gcstl(); //valued 1 K or 2 Q
-    if (cat){
-        startsquare = cf[cat - 1] + 56 * toMove;
-        endsquare = 7 - (cat << 1) + 56 * toMove;
-
-        sides[toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
-        pieces[2] ^= ((1ULL << startsquare) | (1ULL << endsquare)); //move the rook
-
-        zFactor ^= zpk[toMove][2][startsquare]; //move the rook from start and end
-        zFactor ^= zpk[toMove][2][endsquare];
-
-        if (ev){
-            int psb = mps[2][endsquare ^ (56 * !toMove)] - mps[2][startsquare ^ (56 * !toMove)];
-            scores[toMove] += psb;
-        }
-    }
-
-    zhist[thm] = zhist[thm - 1] ^ zFactor;
-
-    toMove ^= 1;   
-}
-
-template <bool ev> void Position::unmakeMove(Move m){
-    uint8_t startsquare = m.gstsq();
-    uint8_t endsquare = m.gedsq();
-
-    uint8_t typeMoved = m.gtpmv();
-    uint8_t typeEnded = (m.state() & 2) ? m.gtpnd() : typeMoved;
-
-    bool capturing = m.gcptp();
-    //uint8_t captureType = m.cptp();
-
-    bool passed = m.gepcp();
-
-    sides[!toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare)); 
-    pieces[typeMoved] ^= (1ULL << startsquare);
-    pieces[typeEnded] ^= (1ULL << endsquare);
-
-    if (ev){
-        int psb = mps[typeEnded][endsquare ^ (toMove * 56)] - mps[typeMoved][startsquare ^ (toMove * 56)];
-        scores[!toMove] -= psb;
-    }
-    
-    if (capturing){
-        uint8_t target = (endsquare + passed * ((!toMove << 4) - 8));
-        uint8_t captureType = m.gcptp();
-
-        pieces[captureType] ^= (1ULL << target);
-        sides[toMove] ^= (1ULL << target);
-
-        if (ev){
-            int csb = mps[captureType][target ^ (!toMove * 56)];;
-            scores[toMove] += csb;
-        }
-    }
-
-    thm--;
-
-    uint8_t cat = m.gcstl();
-    if (cat){
-        startsquare = cf[cat - 1] + 56 * !toMove;
-        endsquare = 7 - (cat << 1) + 56 * !toMove;
-
-        sides[!toMove] ^= ((1ULL << startsquare) | (1ULL << endsquare));
-        pieces[2] ^= ((1ULL << startsquare) | (1ULL << endsquare)); //move the rook
-
-        if (ev){
-            int psb = mps[2][endsquare ^ (56 * toMove)] - mps[2][startsquare ^ (56 * toMove)];
-            scores[!toMove] -= psb;
-        }
-    }
-
-    toMove ^= 1;
-}
-*/
-
-
 uint64_t Position::perft(int depth, int ply){
     uint64_t pnodes = 0;
     if (depth == 0){
@@ -1343,6 +1188,25 @@ uint64_t Position::perft(int depth, int ply){
     }
 
     return pnodes;
+}
+
+int Position::countLegal(){
+    int l = generateMoves(0);
+    int r = 0;
+
+    for (int i = 0; i < l; i++){
+        makeMove<false>(moves[0][i]);
+
+        if (notValid(moves[0][i])){
+            unmakeMove<false>(moves[0][i]);
+            continue;
+        }
+
+        unmakeMove<false>(moves[0][i]);
+        r++;
+    }
+
+    return r;
 }
 
 void Position::passMove(){
