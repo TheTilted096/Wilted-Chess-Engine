@@ -115,12 +115,12 @@ class Position : public Bitboards{
 
         uint64_t nodes;
 
-        int scores[2];//, eScores[2];
-        //int gamePhase;
+        int scores[2], eScores[2];
+        int gamePhase;
 
         //Bitboard atktbl[2][5]; //atktbl[s][i] is the threats to piece i posed by s. i.e. atktbl[0][4] = black threats to knights (black pawns)
 
-        static constexpr int material[6] = {0, 900, 500, 350, 300, 100};
+        int material[6] = {0, 900, 500, 350, 300, 100};
         static constexpr int phases[6] = {0, 14, 8, 5, 4, 2};
         static constexpr int totalPhase = 128;
 
@@ -179,7 +179,6 @@ class Position : public Bitboards{
         -9, -4, -6, 6, 7, 2, 2, 9, 
         0, 0, 0, 0, 0, 0, 0, 0}};
 
-        /*
         int eps[6][64] =
         {{25, 7, -33, -15, 30, 28, 38, 8, 
         -33, -12, -22, -20, -40, 31, 8, -14, 
@@ -226,15 +225,14 @@ class Position : public Bitboards{
         -16, -18, 3, 19, 19, 13, -22, -3, 
         26, -7, -1, -17, -23, -12, -24, 20},
 
-        {8, 7, -8, -3, 3, 1, 5, 1, 
+        {0, 0, 0, 0, 0, 0, 0, 0,
         -7, -9, 2, -3, -7, -6, -7, -9, 
         -8, -3, -1, -3, -5, 1, -9, 4, 
         4, -6, 9, -6, 6, 8, 8, 1, 
         2, 3, 5, 1, 3, -6, 1, 4, 
         -6, 2, -7, -9, -9, 9, 4, 3, 
         -1, -4, -9, -2, -6, 6, -8, 8, 
-        -2, 6, 3, 5, -8, -8, 9, 0}};
-        */
+        0, 0, 0, 0, 0, 0, 0, 0,}};
 
         /*
         static constexpr int midx[5] = {0, 9, 37, 52, 66};
@@ -268,10 +266,7 @@ class Position : public Bitboards{
 
         template <bool, int, bool> void __impl_makeMove(Move); //side, movestate, incremental eval
         template <bool, int, bool> void __impl_unmakeMove(Move);
-
-        //template <bool> void __swit_makeMove(Move);
-        //template <bool> void __swit_unmakeMove(Move);
-
+        
         template <bool> void makeMove(Move);
         template <bool> void unmakeMove(Move);
 
@@ -292,7 +287,7 @@ Position::Position(){
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 64; j++){
             mps[i][j] += material[i];
-            //eps[i][j] += material[i];
+            eps[i][j] += material[i];
         }
     }
     nodes = 0ULL;
@@ -349,14 +344,21 @@ bool Position::notValid(Move m){
 
 int Position::evaluate(){
     //return ((scores[toMove] - scores[!toMove]) * gamePhase + (eScores[toMove] - eScores[!toMove]) * (totalPhase - gamePhase)) / totalPhase;
-    return scores[toMove] - scores[!toMove];
+    //return scores[toMove] - scores[!toMove];
+
+    int m = (scores[toMove] - scores[!toMove]) * gamePhase;
+    int e = (eScores[toMove] - eScores[!toMove]) * (totalPhase - gamePhase);
+
+    return (m + e) / totalPhase;
 }
 
 int Position::evaluateScratch(){
     scores[0] = 0;
     scores[1] = 0;
-    //eScores[0] = 0;
-    //eScores[1] = 0;
+    eScores[0] = 0;
+    eScores[1] = 0;
+
+    gamePhase = 0;
 
     Bitboard pcs;//, mvst;
     int f;//, m;
@@ -367,7 +369,7 @@ int Position::evaluateScratch(){
             f = __builtin_ctzll(pcs);
 
             scores[1] += mps[i][f]; //black is defined as the side that 'flips'
-            //eScores[1] += eps[i][f];
+            eScores[1] += eps[i][f];
 
             pcs ^= (1ULL << f);
         }
@@ -377,10 +379,14 @@ int Position::evaluateScratch(){
             f = __builtin_ctzll(pcs);
 
             scores[0] += mps[i][f ^ 56];
-            //eScores[0] += eps[i][f ^ 56];
+            eScores[0] += eps[i][f ^ 56];
 
             pcs ^= (1ULL << f);
         }
+    }
+
+    for (int j = 1; j < 6; j++){
+        gamePhase += phases[j] * __builtin_popcountll(pieces[j]);
     }
 
     /* Scratch Mobility Calculations
@@ -919,7 +925,8 @@ template <bool who, int state, bool eval> void Position::__impl_makeMove(Move m)
 
         if constexpr (eval){
             scores[!who] -= mps[ctype][target ^ (56 * who)];
-            //eScores[!who] -= eps[ctype][target ^ (56 * who)];
+            eScores[!who] -= eps[ctype][target ^ (56 * who)];
+            gamePhase -= phases[ctype];
         }
     }
 
@@ -932,7 +939,11 @@ template <bool who, int state, bool eval> void Position::__impl_makeMove(Move m)
 
     if constexpr (eval){
         scores[who] += (mps[typef][end ^ (56 * !who)] - mps[typei][start ^ (56 * !who)]);
-        //eScores[who] += (eps[typef][end ^ (56 * !who)] - eps[typei][start ^ (56 * !who)]);
+        eScores[who] += (eps[typef][end ^ (56 * !who)] - eps[typei][start ^ (56 * !who)]);
+        if constexpr (state & 2){ //promotion
+            gamePhase -= phases[5];
+            gamePhase += phases[typef];
+        }
     }
 
     thm++;
@@ -980,7 +991,7 @@ template <bool who, int state, bool eval> void Position::__impl_makeMove(Move m)
 
         if constexpr (eval){
             scores[who] += (mps[2][end ^ (56 * !who)] - mps[2][start ^ (56 * !who)]);
-            //eScores[who] += (eps[2][end ^ (56 * !who)] - eps[2][start ^ (56 * !who)]);
+            eScores[who] += (eps[2][end ^ (56 * !who)] - eps[2][start ^ (56 * !who)]);
         }
     }
 
@@ -1008,7 +1019,11 @@ template <bool who, int state, bool eval> void Position::__impl_unmakeMove(Move 
 
     if constexpr (eval){
         scores[!who] -= (mps[typef][end ^ (56 * who)] - mps[typei][start ^ (56 * who)]);
-        //eScores[!who] -= (eps[typef][end ^ (56 * who)] - eps[typei][start ^ (56 * who)]);
+        eScores[!who] -= (eps[typef][end ^ (56 * who)] - eps[typei][start ^ (56 * who)]);
+        if constexpr (state & 2){
+            gamePhase += phases[5];
+            gamePhase -= phases[typef];
+        }
     }
 
     if constexpr (capt){
@@ -1021,7 +1036,8 @@ template <bool who, int state, bool eval> void Position::__impl_unmakeMove(Move 
 
         if constexpr (eval){
             scores[who] += mps[ctype][target ^ (56 * !who)];
-            //eScores[who] += eps[ctype][target ^ (56 * !who)];
+            eScores[who] += eps[ctype][target ^ (56 * !who)];
+            gamePhase += phases[ctype];
         }
     }
 
@@ -1037,7 +1053,7 @@ template <bool who, int state, bool eval> void Position::__impl_unmakeMove(Move 
 
         if constexpr (eval){
             scores[!who] -= (mps[2][end ^ (56 * who)] - mps[2][start ^ (56 * who)]);
-            //eScores[!who] -= (eps[2][end ^ (56 * who)] - eps[2][start ^ (56 * who)]);
+            eScores[!who] -= (eps[2][end ^ (56 * who)] - eps[2][start ^ (56 * who)]);
         }
     }
 

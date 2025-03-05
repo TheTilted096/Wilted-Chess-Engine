@@ -396,14 +396,15 @@ void Match::run(){
 }
 
 int main(int argc, char* argv[]){
-    if (argc != 4){ //file name, num threads, num games
-
+    if (argc != 5){ //file name, num threads, num games
+        std::cout << "Correct Usage: ./wauto fileName numThreads numGames numNodes\n";
+        return 0;
     }
 
     srand(time(0));
     Bitboards::initSlideAttacks();
 
-    Game::maxNodes = 524288;
+    Game::maxNodes = std::stoi(std::string(argv[4]));
 
     Game::beginReport = 20;
     Game::endReport = 20;
@@ -426,7 +427,10 @@ int main(int argc, char* argv[]){
     Match::verifDepth = 4;
     Match::openScore = 100;
 
-    Match m(5, 20);
+    int threadCount = std::stoi(std::string(argv[2]));
+    int gameCount = std::stoi(std::string(argv[3]));
+
+    Match m(threadCount, gameCount);
 
     m.run();
 

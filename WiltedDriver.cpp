@@ -233,7 +233,45 @@ int main(int argc, char* argv[]){
             }
             */
 
-            std::cout << engine.countLegal() << '\n';
+            //std::cout << engine.countLegal() << '\n';
+            /*
+            engine.evaluateScratch();
+
+            std::cout << engine.scores[1] << ", " << engine.scores[0] << '\n';
+            std::cout << engine.eScores[1] << ", " << engine.eScores[0] << '\n';
+            std::cout << engine.gamePhase << '\n';
+
+            
+            //engine.makeMove<true>(8439149); //Qxf6
+            //engine.makeMove<true>(134384054); //g4
+            //engine.makeMove<true>(71306940); //0-0
+            engine.makeMove<true>(17203208);
+
+            std::cout << engine.scores[1] << ", " << engine.scores[0] << '\n';
+            std::cout << engine.eScores[1] << ", " << engine.eScores[0] << '\n';
+            std::cout << engine.gamePhase << '\n';
+
+            //engine.unmakeMove<true>(134384054); //g4
+            //engine.unmakeMove<true>(71306940);
+            //engine.unmakeMove<true>(8439149);
+
+            engine.unmakeMove<true>(17203208);
+
+            std::cout << engine.scores[1] << ", " << engine.scores[0] << '\n';
+            std::cout << engine.eScores[1] << ", " << engine.eScores[0] << '\n';
+            std::cout << engine.gamePhase << '\n';
+            */
+            
+            /*
+            int k = engine.generateMoves(0);
+            for (int i = 0; i < k; i++){
+                std::cout << engine.moves[0][i].toStr() << ": " << engine.moves[0][i].info << '\n';
+            }
+            */
+
+
+
+
 
            
         }   
