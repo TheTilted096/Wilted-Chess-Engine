@@ -412,7 +412,7 @@ int main(int argc, char* argv[]){
     Game::filename = myOut;
 
     Match::openDepth = 6;
-    Match::verifDepth = 0;
+    Match::verifDepth = 1;
     Match::openScore = 100;
 
     int threadCount = std::stoi(std::string(argv[2]));
