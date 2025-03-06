@@ -6,6 +6,9 @@ debug:
 auto:
 	clang++ -O2 -Wall -static -g -march=native -o wauto WiltedAutoplay.cpp
 
+tuna:
+	clang++ -Wall -static -g -march=native -o wtuna WiltedTuna.cpp
+
 latest:
 	clang++ -O2 -Wall -static -g -march=native -o cwilted-pre-pre7 WiltedDriver.cpp
 

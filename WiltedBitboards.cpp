@@ -765,31 +765,7 @@ void Bitboards::readFen(std::string fen){
 
     //input total 1/2 move clock starting at 0th
     thm = 0;
-
-    //might want to optimize this later
-    /*
-    cr[0] |= (cstrt[0] == feed[ind]);
-    ind += (cstrt[0] == feed[ind]);
-
-    cr[0] |= ((cstrt[1] == feed[ind]) << 1);
-    ind += (cstrt[1] == feed[ind]);
-
-    cr[0] |= ((cstrt[2] == feed[ind]) << 2);
-    ind += (cstrt[2] == feed[ind]);
-
-    cr[0] |= ((cstrt[3] == feed[ind]) << 3);
-    ind += (cstrt[3] == feed[ind]);
-    */
-
-    /*
-    for (int i = 0; i < 4; i++){
-        bool can = cstrt[i] == feed[ind];
-        cr[0] |= (can << i);
-        ind += can;
-    }
-    */
-
-
+    
     segs >> feed; //en passant square
     ep[0] = (feed != "-") ? ((feed[0] - 97) + 8 * (56 - feed[1])) : 255;
 

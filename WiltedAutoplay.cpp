@@ -47,8 +47,10 @@ class Game{
     static uint64_t maxNodes; //maximum nodes to search
     static int beginReport, endReport, maxHalf; //moves after opening position, moves from end, maximum half move count
     //static bool quiets; // report positions no checks and captures
-    static std::ofstream outFile;
+    static std::ofstream outFile, hOutFile;
     static std::string filename;
+
+    static bool dualReport;
 };
 
 uint64_t Game::maxNodes;
@@ -56,12 +58,14 @@ uint64_t Game::maxNodes;
 int Game::beginReport;
 int Game::endReport;
 int Game::maxHalf;
+bool Game::dualReport;
 
 /*
 bool Game::quiets;
 */
 
 std::ofstream Game::outFile;
+std::ofstream Game::hOutFile;
 std::string Game::filename;
 
 Game::Game(){
@@ -73,6 +77,8 @@ Game::Game(){
     for (int i = 0; i < 8; i++){
         reportPack[i] = 0ULL;
     }
+
+    dualReport = false;
 }
 
 Game::~Game(){
@@ -183,6 +189,9 @@ void Game::play(){
         if (moves[clock].gcptp()){ // Filter out positions where a capture was made (noisy)
             blockRep(clock);
         }
+        if (moves[clock].gtpnd()){ //and promotions
+            blockRep(clock);
+        }
 
         if (clock == 0){
             inuci += " moves";
@@ -196,18 +205,20 @@ void Game::play(){
 }
 
 void Game::report(int id){
-    outFile << "GAME " << id << '\n';
-    outFile << "RESULT: " << result << '\n';
-    outFile << "REASON: " << reason << '\n';
-    outFile << "START: " << positions[0] << '\n';
+    hOutFile << "GAME " << id << '\n';
+    hOutFile << "RESULT: " << result << '\n';
+    hOutFile << "REASON: " << reason << '\n';
+    hOutFile << "START: " << positions[0] << '\n';
     for (int i = beginReport; i <= clock - endReport; i++){
         if (!getRep(i)){
-            outFile << "D: " << positions[i] << " | " << scores[i] << " | " << result << '\n';
+            hOutFile << "D: " << positions[i] << " | " << scores[i] << " | " << result << '\n';
+            outFile << positions[i] << " | " << scores[i] << " | " << result << '\n';
         }
     }
-    outFile << "FINAL: " << positions[clock] << '\n';
+    hOutFile << "FINAL: " << positions[clock] << '\n';
 }
 
+/*
 void Game::shuffleData(){
     outFile.close(); //When shuffling data, cease editing of stored data.
 
@@ -229,26 +240,10 @@ void Game::shuffleData(){
         std::getline(firstFile, fl);
     } while (!firstFile.eof()); // or fl != ""
 
-    /*
-    for (uint32_t i : idxs){
-        std::cout << i << ' ';
-    }
-    std::cout << '\n';
-    */
 
     std::ofstream endFile(filename.substr(6));
 
     std::mt19937_64 wheel(0xCAFEBABE);
-
-    /*
-    spin = wheel() % idxs.size();
-    for (int i = 0; i <= idxs[spin]; i++){ std::getline(firstFile, fl); }
-
-    std::cout << "spin: " << spin << '\n';
-    std::cout << "idxs[spin]: " << idxs[spin] << '\n';
-    std::cout << "fl: " << fl << '\n';
-    */
-
 
     while (!idxs.empty()){
         firstFile.clear();
@@ -258,12 +253,6 @@ void Game::shuffleData(){
 
         for (int i = 0; i <= idxs[spin]; i++){ std::getline(firstFile, fl); }
 
-        /*
-        std::cout << "spin: " << spin << '\n';
-        std::cout << "idxs[spin]: " << idxs[spin] << '\n';
-        std::cout << "fl: " << fl << '\n';
-        */
-
         endFile << fl.substr(3) << '\n';
 
         idxs.erase(idxs.begin() + spin);
@@ -272,6 +261,7 @@ void Game::shuffleData(){
     firstFile.close();
     endFile.close();
 }
+*/
 
 class Match{
     public: 
@@ -410,17 +400,15 @@ int main(int argc, char* argv[]){
     Game::endReport = 20;
     Game::maxHalf = 20;
 
-    bool willShuffle = true; //for human perusal
-
     std::string myOut = argv[1];
 
-    if (willShuffle){
-        myOut = "Human-" + myOut;
-    }
+    Game::dualReport = true;
 
     remove(myOut.c_str());
+    remove(("H-" + myOut).c_str());
 
     Game::outFile.open(myOut);
+    Game::hOutFile.open("H-" + myOut);
     Game::filename = myOut;
 
     Match::openDepth = 6;
@@ -434,7 +422,11 @@ int main(int argc, char* argv[]){
 
     m.run();
 
+    /*
+    std::cout << "Reprocessing Data...\n";
     Game::shuffleData();
+    std::cout << "Done.";
+    */
 
     return 0;
 }
