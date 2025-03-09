@@ -322,7 +322,7 @@ void Match::getBook(){
             while (j < openDepth){
                 mi = rand() % e.generateMoves(0);
                 e.makeMove<false>(e.moves[0][mi]);
-                if (e.notValid(e.moves[0][mi])){
+                if (e.notValid(e.moves[0][mi]) or (e.countLegal() == 0)){
                     e.unmakeMove<false>(e.moves[0][mi]);
                     continue;
                 }
@@ -333,6 +333,9 @@ void Match::getBook(){
         }
 
         book[i] = e.makeFen();
+        if (i % 1000 == 0){
+            std::cout << i << " of " << gameLimit << " openings collected.\n";
+        }
     }    
 }
 
@@ -412,7 +415,7 @@ int main(int argc, char* argv[]){
     Game::filename = myOut;
 
     Match::openDepth = 6;
-    Match::verifDepth = 1;
+    Match::verifDepth = 4;
     Match::openScore = 100;
 
     int threadCount = std::stoi(std::string(argv[2]));

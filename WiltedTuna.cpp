@@ -488,9 +488,9 @@ void Tuna::tune(int epochs){
 
         updates();
 
-        if (i % 50 == 0){ 
+        //if (i % 50 == 0){ 
             std::cout << i + 1 << " of " << epochs << " epochs finished. MSE = " << errorSum() << '\n';
-        }
+        //}
     }
 }
 
@@ -511,10 +511,10 @@ int main(int argc, char* argv[]){
     t.sigk = log(10) / 400;
     std::cout << "Optimal K: " << t.sigk << "\nMSE: " << t.errorSum() << '\n';
 
-    t.learnRate = 1000000;
+    t.learnRate = 100000;
     std::cout << "Learning Rate: " << t.learnRate << '\n';
 
-    t.tune(500);
+    t.tune(100);
 
     std::cout << "MSE: " << t.errorSum() << '\n';
 
