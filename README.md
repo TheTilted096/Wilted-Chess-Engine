@@ -4,17 +4,23 @@ A very *wilted* chess engine.
 
 # Features
 
-Basic Iterative Deepening Search
+Iterative Deepening Search
+
+Principal Variation Search
+
+Aspiration Windows
 
 Quiescent Search at Terminal Nodes
 
 TT Move and MVVLVA Move Ordering, TT Cutoffs
 
+Null-Move Pruning
+
 Soft/Hard Time Management
 
 Basic Zobrist Hashing
 
-Randomly Generated PSQTs
+Tuned Middlegame and Endgame PSQTs
 
 # Version History
 
@@ -30,10 +36,12 @@ pre5 - ttcutoffs, nmp
 
 pre6 - pvs, aspiration
 
-pre7 - hce update
+pre7 - tuned tapered psqt
 
 pre8 - rfp, lmr
 
 pre9 - killers, history
+
+pre10 - mobility, king safety, tempo
 
 1 - see pruning
