@@ -68,7 +68,7 @@ Hash TTentry::eHash(){
 class Sentry{ //search stack entry
     public:
         bool nmp;
-        //int presentEval;
+        int presentEval;
         //Move killer;
 
         Sentry();
@@ -80,7 +80,7 @@ Sentry::Sentry(){
 }
 
 void Sentry::clear(){
-    //presentEval = -29501;
+    presentEval = -29501;
     nmp = false;
 }
 
@@ -106,7 +106,10 @@ class Engine : public Position{
         const int minNMPdepth = 2;
         const int NMPreduce = 2;
         const int ASPbase = 50;
-        const double ASPmult = 2.0;
+        const int ASPmult = 2;
+        const int maxRFPdepth = 6;
+        const int RFPbase = 40;
+        const int RFPmult = 60;
 
         Engine();
         ~Engine();
@@ -351,11 +354,20 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
         }
     }
 
-    //RFP
 
-    //NMP
+    stack[ply].presentEval = evaluate();
 
     if (ply > 0){ //template <rootNode> someday...
+        //RFP
+        int margin = RFPbase + RFPmult * depth;
+        if ((depth < maxRFPdepth) and !inCheck
+                and (stack[ply].presentEval - beta > margin)){
+                    
+            return (stack[ply].presentEval + beta) / 2;
+        }
+
+
+        //NMP
         stack[ply].nmp = !stack[ply - 1].nmp and (depth > minNMPdepth) 
                 and !onlyPawns(toMove) and !inCheck /*and (beta > -27000)*/;
         
@@ -368,6 +380,7 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
                 return nullScore;
             }
         }
+
     }
 
 
