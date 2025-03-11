@@ -50,4 +50,6 @@ pre10 - mobility, king safety, tempo
 
 PVS 'i == 0' is not always legal
 
+count legal moves instead of i
+
 include queen promotion as noisy
