@@ -69,7 +69,7 @@ class Sentry{ //search stack entry
     public:
         bool nmp;
         int presentEval;
-        //Move killer;
+        Move killer;
 
         Sentry();
         void clear();
@@ -82,6 +82,7 @@ Sentry::Sentry(){
 void Sentry::clear(){
     presentEval = -29501;
     nmp = false;
+    killer = 0;
 }
 
 class Engine : public Position{
@@ -210,7 +211,12 @@ void Engine::scoreMoves(int ply, int nc, Move ttm){
         }
 
         if (moves[ply][i].gcptp()){ //captures
-            mprior[ply][i] = (1 << 16) + moves[ply][i].gtpmv() - (moves[ply][i].gcptp() << 4);
+            mprior[ply][i] = (1 << 20) + moves[ply][i].gtpmv() - (moves[ply][i].gcptp() << 4);
+            continue;
+        }
+
+        if (moves[ply][i] == stack[ply].killer){
+            mprior[ply][i] = (1 << 16);
             continue;
         }
 
@@ -221,7 +227,7 @@ void Engine::scoreMoves(int ply, int nc, Move ttm){
 void Engine::scoreQMoves(int ply, int nc){
     for (int i = 0; i < nc; i++){
 
-        mprior[ply][i] = (1 << 16) + moves[ply][i].gtpmv() - (moves[ply][i].gcptp() << 4);
+        mprior[ply][i] = (1 << 20) + moves[ply][i].gtpmv() - (moves[ply][i].gcptp() << 4);
 
     }
 }
@@ -460,6 +466,9 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
             ttable[ttindex].update(score, 2, depth, moves[ply][i], zhist[thm]);
 
             //Killers and History
+            if (!noisyMove){
+                stack[ply].killer = moves[ply][i];
+            }
 
             return score;
         }
