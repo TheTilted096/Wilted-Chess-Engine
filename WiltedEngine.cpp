@@ -110,6 +110,11 @@ class Engine : public Position{
         const int maxRFPdepth = 6;
         const int RFPbase = 40;
         const int RFPmult = 60;
+        const int minLMRdepth = 2;
+        const double LMRbase = 0.4;
+        const double LMRmult = 0.6;
+
+        int LMRreds[64][128];
 
         Engine();
         ~Engine();
@@ -147,6 +152,11 @@ Engine::Engine(){
     ttable = new TTentry[0x100000]; // (1 << 20)
 
     //LMR Coefs
+    for (int i = 0; i < 64; i++){
+        for (int j = 0; j < 128; j++){
+            LMRreds[i][j] = LMRbase + LMRmult * log(i + 1) * log(j + 1);
+        }
+    }
 
     //just ucinewgame
     newGame();
@@ -362,7 +372,7 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
         int margin = RFPbase + RFPmult * depth;
         if ((depth < maxRFPdepth) and !inCheck
                 and (stack[ply].presentEval - beta > margin)){
-                    
+
             return (stack[ply].presentEval + beta) / 2;
         }
 
@@ -393,6 +403,7 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
     bool isAllNode = true; //used for TT updating
     Move localBestMove;
 
+    bool noisyMove;
 
     for (int i = 0; i < moveCount; i++){
         makeMove<true>(moves[ply][i]);
@@ -404,6 +415,8 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
             continue;
         }
 
+        noisyMove = moves[ply][i].gcptp(); //captures noisy for now
+
         //Shallow Depth Pruning
 
         //score = -alphabeta(-beta, -alpha, depth - 1, ply + 1); no PVS
@@ -412,9 +425,30 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
         if (i == 0){ //First Move
             score = -alphabeta(-beta, -alpha, depth - 1, ply + 1); //Search Full Window
         } else {
+            // Just PVS
+            /*
             score = -alphabeta(-alpha - 1, -alpha, depth - 1, ply + 1); //Otherwise, search with null window
 
             if ((score > alpha) and isPV){
+                score = -alphabeta(-beta, -alpha, depth - 1, ply + 1);
+            }
+            */
+            
+            int r = 0;
+            if (depth > minLMRdepth and !noisyMove){ //determine reduction
+                r = LMRreds[ply][i];
+            }
+
+            //perform reduced search
+            score = -alphabeta(-alpha - 1, -alpha, std::max(0, depth - 1 - r), ply + 1);
+
+            //if reduced depth and surprise, re-search at full depth
+            if (score > alpha and r > 0){
+                score = -alphabeta(-alpha - 1, -alpha, depth - 1, ply + 1);
+            }
+
+            //if further surprise, research fully. guard with isPV to avoid redundant null-windows.
+            if (score > alpha and isPV){ 
                 score = -alphabeta(-beta, -alpha, depth - 1, ply + 1);
             }
         }

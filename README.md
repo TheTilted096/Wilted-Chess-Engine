@@ -45,3 +45,9 @@ pre9 - killers, history
 pre10 - mobility, king safety, tempo
 
 1 - see pruning
+
+# TODOs
+
+PVS 'i == 0' is not always legal
+
+include queen promotion as noisy

@@ -735,6 +735,13 @@ template <bool who, int cstl, bool cpex> int Position::__impl_generateMoves(int 
     //Pawns:
     pcs = pieces[5] & ours;
     
+    /*
+    //Queen Promotion
+    if constexpr (cpex){
+        
+    }
+    */
+
     Bitboard pawnopps = opps;
     if (ep[thm] != 255){
         pawnopps |= (1ULL << ep[thm]);
