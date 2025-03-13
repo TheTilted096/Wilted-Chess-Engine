@@ -114,8 +114,10 @@ class Engine : public Position{
         const int minLMRdepth = 2;
         const double LMRbase = 0.4;
         const double LMRmult = 0.6;
+        const int maxHIST = 16384;
 
         int LMRreds[64][128];
+        int history[2][6][64];
 
         Engine();
         ~Engine();
@@ -125,7 +127,10 @@ class Engine : public Position{
         void timeMan(uint32_t, uint32_t);
 
         void eraseTransposeTable();
+        void eraseHistories();
         void eraseStack();
+
+        void addQuietHistory(Move, int);
 
         void scoreMoves(int, int, Move);
         void scoreQMoves(int, int);
@@ -173,10 +178,26 @@ void Engine::eraseTransposeTable(){
     }
 }
 
+void Engine::eraseHistories(){
+    for (int i = 0; i < 6; i++){
+        for (int j = 0; j < 64; j++){
+            history[0][i][j] = 0;
+            history[1][i][j] = 0;
+        }
+    }
+}
+
 void Engine::eraseStack(){
     for (int i = 0; i < 64; i++){
         stack[i].clear();
     }
+}
+
+void Engine::addQuietHistory(Move m, int b){
+    uint8_t is = m.gtpmv();
+    uint8_t to = m.gedsq();
+    
+    history[toMove][is][to] += b - history[toMove][is][to] * b / maxHIST;
 }
 
 void Engine::forceStop(){
@@ -210,17 +231,19 @@ void Engine::scoreMoves(int ply, int nc, Move ttm){
             continue;
         }
 
-        if (moves[ply][i].gcptp()){ //captures
-            mprior[ply][i] = (1 << 20) + moves[ply][i].gtpmv() - (moves[ply][i].gcptp() << 4);
+        if (moves[ply][i].gcptp()){ //captures, will be 2^28 + CAPT_HIST - 2^15 * victim
+            mprior[ply][i] = (1 << 28) + moves[ply][i].gtpmv() - (moves[ply][i].gcptp() << 15);
             continue;
         }
 
         if (moves[ply][i] == stack[ply].killer){
-            mprior[ply][i] = (1 << 16);
+            mprior[ply][i] = (1 << 20);
             continue;
         }
 
-        mprior[ply][i] = moves[ply][i].gtpmv();        
+        uint8_t to = moves[ply][i].gedsq();
+        uint8_t is = moves[ply][i].gtpmv();
+        mprior[ply][i] = is + history[toMove][is][to];     
     }
 }
 
@@ -468,6 +491,8 @@ int Engine::alphabeta(int alpha, int beta, int depth, int ply){
             //Killers and History
             if (!noisyMove){
                 stack[ply].killer = moves[ply][i];
+
+                addQuietHistory(moves[ply][i], depth * depth);
             }
 
             return score;
@@ -514,6 +539,7 @@ int Engine::search(int mdepth, uint64_t maxNodes, bool output){
     int alpha = -30000, beta = 30000;
     
     //erase history table
+    eraseHistories();
 
     //begin mobilities and attack tables (might be looped into evalscratch);
     evaluateScratch();
@@ -610,6 +636,7 @@ void Engine::newGame(){
 
     //erase history, killers, TT
     eraseTransposeTable();
+    eraseHistories();
     eraseStack();
 
     beginZobrist();
