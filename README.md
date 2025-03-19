@@ -22,29 +22,11 @@ Basic Zobrist Hashing
 
 Tuned Middlegame and Endgame PSQTs
 
-# Version History
-
-pre1 - basic alphabeta depth 4
-
-pre2 - iterative deepening, time management
-
-pre3 - zobrist hashing, qsearch
-
-pre4 - MVVLVA and TT Move
-
-pre5 - ttcutoffs, nmp
-
-pre6 - pvs, aspiration
-
-pre7 - tuned tapered psqt
-
-pre8 - rfp, lmr
+# Latest Version History
 
 pre9 - killers, history
 
-pre10 - mobility, king safety, tempo
-
-1 - see pruning
+1 - SEE pruning
 
 # TODOs
 
@@ -53,3 +35,7 @@ PVS 'i == 0' is not always legal
 count legal moves instead of i
 
 include queen promotion as noisy
+
+try not indexing history by stm(?)
+
+add bench and uci prints

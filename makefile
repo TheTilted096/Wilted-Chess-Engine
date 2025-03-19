@@ -10,7 +10,7 @@ tuna:
 	clang++ -O2 -Wall -static -g -march=native -o wtuna WiltedTuna.cpp
 
 latest:
-	clang++ -O2 -Wall -static -g -march=native -o cwilted-pre9a WiltedDriver.cpp
+	clang++ -O2 -Wall -static -g -march=native -o cwilted-pre9a-t WiltedDriver.cpp
 
 # debug:
 #clang++ -O2 -Wall -static -g -march=native -o stilted-28-test STiltedDriverV3.cpp STiltedMoveGenV5.cpp STiltedSearchEvalV4.cpp

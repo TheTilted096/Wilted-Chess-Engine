@@ -116,6 +116,8 @@ class Engine : public Position{
         const double LMRmult = 0.6;
         const int maxHIST = 16384;
 
+        const int SEEbase[6] = {30000, 900, 500, 300, 300, 100};
+
         int LMRreds[64][128];
         int history[2][6][64];
 
@@ -136,6 +138,8 @@ class Engine : public Position{
         void scoreQMoves(int, int);
 
         void sortMoves(int, int);
+
+        bool see(Move, int);
 
         int quiesce(int, int, int);
         int alphabeta(int, int, int, int);
@@ -274,6 +278,43 @@ void Engine::sortMoves(int ply, int nc){
         moves[ply][j + 1] = keyMove;
     }
 }
+
+/*
+bool Engine::see(Move m, int bound){
+    //check if piece is "free"
+
+    uint8_t ao = m.gtpmv(); //first check if immediate pass
+    uint8_t vo = m.gcptp();
+
+    if ((vo > 0) * SEEbase[vo] - SEEbase[ao] >= bound){ //victim - aggressor > bound
+        return true;
+    }
+
+    bool stm = toMove;
+
+    uint32_t attackList[2] = {0U, 0U};
+
+    //get attackers
+
+    Bitboard pcs[6] = {pieces[0], pieces[1], pieces[2], pieces[3], pieces[4], pieces[5]};
+    Bitboard occ = sides[0] | sides[1];
+
+    uint8_t edsq = m.gedsq();
+
+    pcs[ao] ^= (1ULL << edsq); //remove attacker from consideration
+    occ ^= (1ULL << edsq);
+
+
+
+
+
+
+
+
+
+    
+}
+*/
 
 int Engine::quiesce(int alpha, int beta, int ply){
     /*
