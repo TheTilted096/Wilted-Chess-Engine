@@ -28,7 +28,7 @@ inline Piece operator--(Piece& p, int){
 enum Color : bool{Black, White};
 
 inline Color flip(const Color& c){
-    return static_cast<Color>(static_cast<bool>(c) ^ 1);
+    return static_cast<Color>(c ^ 1);
 }
 
 enum Square : uint8_t{

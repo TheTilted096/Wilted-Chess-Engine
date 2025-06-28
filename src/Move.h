@@ -84,5 +84,5 @@ class Move{
             return info == m.info;
         }
   
-        static constexpr uint32_t Invalid = 4095U;
+        static constexpr uint32_t Invalid = 0xFFFU; //How to make this into a static Move object?
 };

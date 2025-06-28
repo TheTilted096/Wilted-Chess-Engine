@@ -1,23 +1,20 @@
-// Move Generation Class
+// Class Definition for Generator
 
 #include "Attacks.h"
 #include "Position.h"
 
 class Generator{
     public:
-        Position* posptr;
+        Position* pos;
 
         Generator();
 
-        void assign(Position* pp){ posptr = pp; }
+        void assign(Position* pp){ pos = pp; }
 
         bool isAttacked(const Square&, const Color&) const;
         bool isChecked(const Color&) const;
 
-        bool illegalPos() const;
-        
-        //bool isPseudolegal(const Move& m);
-        //bool isLegal(const Move& m);
+        bool illegal() const;
 
         Count countLegal();
 

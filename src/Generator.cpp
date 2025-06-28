@@ -1,50 +1,46 @@
-// Function Definitions for Generator
+// Generator Function Definition
 
 #include "Generator.h"
 
-Generator::Generator(){
-
-} //nothing
+Generator::Generator(){}
 
 bool Generator::isAttacked(const Square& sq, const Color& c) const{
     Bitboard checkers;
-    Moment now = posptr->thisMoment();
-
-    checkers = Attacks::PawnAttacks[!c][sq] & now.those(c, Pawn);
+    
+    checkers = Attacks::PawnAttacks[!c][sq] & pos->those(c, Pawn);
     if (checkers){ return true; }
 
-    checkers = Attacks::KnightAttacks[sq] & now.those(c, Knight);
+    checkers = Attacks::KnightAttacks[sq] & pos->those(c, Knight);
     if (checkers){ return true; }
 
-    checkers = Attacks::KingAttacks[sq] & now.those(c, King);
+    checkers = Attacks::KingAttacks[sq] & pos->those(c, King);
     if (checkers){ return true; }
 
-    Bitboard occ = now.occupied();
-    Bitboard army = now.sides[c];
-    checkers = Attacks::rookAttacks(sq, occ) & now.straightPieces() & army;
+    Bitboard occ = pos->occupied();
+    Bitboard army = pos->sides[c];
+    checkers = Attacks::rookAttacks(sq, occ) & pos->straightPieces() & army;
     if (checkers){ return true; }
 
-    checkers = Attacks::bishopAttacks(sq, occ) & now.diagonalPieces() & army;
+    checkers = Attacks::bishopAttacks(sq, occ) & pos->diagonalPieces() & army;
     return !!checkers;
 }
 
-inline bool Generator::isChecked(const Color& c) const{ //is c in check
-    Moment now = posptr->thisMoment();
-    Square k = getLeastBit(now.those(c, King));
+inline bool Generator::isChecked(const Color& c) const{
+    Square k = getLeastBit(pos->those(c, King));
 
-    return isAttacked(k, flip(c)); //is the king square attacked by the other side
+    return isAttacked(k, flip(c));
 }
 
-bool Generator::illegalPos() const{ 
-    Color us = posptr->stm();
+bool Generator::illegal() const{
+    Color us = flip(pos->toMove); //easier to think about from nstm
 
-    uint8_t cat = posptr->lastPlayed().castling();
+    uint8_t cat = pos->lastPlayed().castling();
     if (cat){ //Kingside = 1, Queenside = 2, choose the relevant one
-        Bitboard extra = (cat - 1) ? posptr->queenSafeMask[!us] : posptr->kingSafeMask[!us];
+        Bitboard extra = (cat - 1) ? pos->queenSafeMask[us] : pos->kingSafeMask[us];
         Square s;
         while (extra){
             s = popLeastBit(extra);
-            if (isAttacked(s, us)){ //stm attacks a square nstm castled through
+            if (isAttacked(s, flip(us))){
                 return true;
             }
         }
@@ -52,37 +48,34 @@ bool Generator::illegalPos() const{
         return false;
     }
 
-    return isChecked(flip(us)); 
-} //nstm is in check
+    return isChecked(us);
+}
 
 template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& moveList){
     Count totalMoves = 0;
 
     Bitboard moveSet, pieces, captureSet;
 
-    Moment now = posptr->thisMoment();
-
-    Bitboard occupancy = now.occupied();
-    Bitboard allies = now.ours();
-    Bitboard enemies = now.theirs();
+    Bitboard occupancy = pos->occupied();
+    Bitboard allies = pos->ours();
+    Bitboard enemies = pos->theirs();
 
     Square origin, destination;
     Piece victimType;
+    
+    // Pawns
 
-    //Pawns
-
-    pieces = now.our(Pawn);
-
+    pieces = pos->our(Pawn);
     Bitboard pawnTargets = enemies;
 
-    if (now.enPassant != XX){
-        pawnTargets |= squareBitboard(now.enPassant);
+    if (pos->thisPassant() != XX){
+        pawnTargets |= squareBitboard(pos->thisPassant());
     }
 
     Bitboard leftCaptures = (pieces & 0xFEFEFEFEFEFEFEFEULL) << 7; //mask off A file, capture diagonally down and left
     Bitboard rightCaptures = (pieces & 0x7F7F7F7F7F7F7F7FULL) << 9; //mask off H file, capture diagonally down and right
 
-    if (now.toMove){ //if it's white to move
+    if (pos->toMove){ //if it's white to move
         leftCaptures >>= 16; //white captures towards the lower bits, shift targets up 2 ranks
         rightCaptures >>= 16;
     }
@@ -93,12 +86,12 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
     while (rightCaptures){
         destination = popLeastBit(rightCaptures);
 
-        moveList[totalMoves].setFrom(static_cast<Square>(destination - 9 + (now.toMove << 4)));
+        moveList[totalMoves].setFrom(static_cast<Square>(destination - 9 + (pos->toMove << 4)));
         moveList[totalMoves].setTo(destination);
 
         moveList[totalMoves].setMoving(Pawn);
 
-        victimType = now.pieceAt(destination);
+        victimType = pos->pieceAt(destination);
         if (victimType == None){ //Empty capture must be en passant
             moveList[totalMoves].setEpCaps();
             victimType = Pawn;
@@ -133,12 +126,12 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
     while (leftCaptures){
         destination = popLeastBit(leftCaptures);
 
-        moveList[totalMoves].setFrom(static_cast<Square>(destination - 7 + (now.toMove << 4)));
+        moveList[totalMoves].setFrom(static_cast<Square>(destination - 7 + (pos->toMove << 4)));
         moveList[totalMoves].setTo(destination);
 
         moveList[totalMoves].setMoving(Pawn);
 
-        victimType = now.pieceAt(destination);
+        victimType = pos->pieceAt(destination);
         if (victimType == None){
             moveList[totalMoves].setEpCaps();
             victimType = Pawn;
@@ -171,15 +164,15 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
     }
 
     if constexpr (!captureOnly){
-        Bitboard pushes = ((pieces << 8) >> (now.toMove << 4)) & ~occupancy;
+        Bitboard pushes = ((pieces << 8) >> (pos->toMove << 4)) & ~occupancy;
 
         //double push destinations are a square past the single push, but they also must be on the 4th rank (relative)
-        Bitboard doublePushes = ((pushes << 8) >> (now.toMove << 4)) & ~occupancy & (0xFF000000ULL << (now.toMove << 3));
+        Bitboard doublePushes = ((pushes << 8) >> (pos->toMove << 4)) & ~occupancy & (0xFF000000ULL << (pos->toMove << 3));
 
         while (pushes){
             destination = popLeastBit(pushes);
 
-            moveList[totalMoves].setFrom(static_cast<Square>(destination - 8 + (now.toMove << 4)));
+            moveList[totalMoves].setFrom(static_cast<Square>(destination - 8 + (pos->toMove << 4)));
             moveList[totalMoves].setTo(destination);
 
             moveList[totalMoves].setMoving(Pawn);
@@ -211,7 +204,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
         while (doublePushes){
             destination = popLeastBit(doublePushes);
 
-            moveList[totalMoves].setFrom(static_cast<Square>(destination - 16 + (now.toMove << 5)));
+            moveList[totalMoves].setFrom(static_cast<Square>(destination - 16 + (pos->toMove << 5)));
             moveList[totalMoves].setTo(destination);
             moveList[totalMoves].setMoving(Pawn);
             moveList[totalMoves].setEnding(Pawn);
@@ -221,9 +214,9 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
             totalMoves++;
         }    
     }
-
+ 
     //Knights
-    pieces = now.our(Knight);
+    pieces = pos->our(Knight);
     while (pieces){
         origin = popLeastBit(pieces);
 
@@ -238,7 +231,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
             moveList[totalMoves].setTo(destination);
 
             moveList[totalMoves].setMoving(Knight);
-            moveList[totalMoves].setCaptured(now.pieceAt(destination));
+            moveList[totalMoves].setCaptured(pos->pieceAt(destination));
             moveList[totalMoves].setEnding(Knight);
 
             totalMoves++;
@@ -260,7 +253,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
     }
 
     //Bishops
-    pieces = now.our(Bishop);
+    pieces = pos->our(Bishop);
     while (pieces){
         origin = popLeastBit(pieces);
 
@@ -275,7 +268,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
             moveList[totalMoves].setTo(destination);
 
             moveList[totalMoves].setMoving(Bishop);
-            moveList[totalMoves].setCaptured(now.pieceAt(destination));
+            moveList[totalMoves].setCaptured(pos->pieceAt(destination));
             moveList[totalMoves].setEnding(Bishop);
 
             totalMoves++;
@@ -297,7 +290,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
     }
 
     //Rooks
-    pieces = now.our(Rook);
+    pieces = pos->our(Rook);
     while (pieces){
         origin = popLeastBit(pieces);
 
@@ -312,7 +305,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
             moveList[totalMoves].setTo(destination);
 
             moveList[totalMoves].setMoving(Rook);
-            moveList[totalMoves].setCaptured(now.pieceAt(destination));
+            moveList[totalMoves].setCaptured(pos->pieceAt(destination));
             moveList[totalMoves].setEnding(Rook);
 
             totalMoves++;
@@ -334,7 +327,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
     }
 
     //Queens
-    pieces = now.our(Queen);
+    pieces = pos->our(Queen);
     while (pieces){
         origin = popLeastBit(pieces);
 
@@ -349,7 +342,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
             moveList[totalMoves].setTo(destination);
 
             moveList[totalMoves].setMoving(Queen);
-            moveList[totalMoves].setCaptured(now.pieceAt(destination));
+            moveList[totalMoves].setCaptured(pos->pieceAt(destination));
             moveList[totalMoves].setEnding(Queen);
 
             totalMoves++;
@@ -371,7 +364,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
     }
 
     //Kings
-    origin = getLeastBit(now.our(King));
+    origin = getLeastBit(pos->our(King));
 
     moveSet = Attacks::KingAttacks[origin] & ~allies;
     captureSet = moveSet & enemies;
@@ -384,7 +377,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
         moveList[totalMoves].setTo(destination);
 
         //moveList[totalMoves].setMoving(King); King = 0
-        moveList[totalMoves].setCaptured(now.pieceAt(destination));
+        moveList[totalMoves].setCaptured(pos->pieceAt(destination));
         //moveList[totalMoves].setEnding(King);
 
         totalMoves++;
@@ -403,13 +396,13 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
             totalMoves++;
         }
 
-        uint8_t rights = now.ourRights(); //castling
+        uint8_t rights = pos->ourRights(); //castling
         //std::cout << "CR: " << (int)rights << '\n';
         if (rights){
             if (rights & 1){ //kingside
-                if (!(posptr->kingOccMask[now.toMove] & occupancy)){
+                if (!(pos->kingOccMask[pos->toMove] & occupancy)){
                     moveList[totalMoves].setFrom(origin);
-                    moveList[totalMoves].setTo(Position::kingKingTo[now.toMove]);
+                    moveList[totalMoves].setTo(Position::kingKingTo[pos->toMove]);
 
                     //moveList[totalMoves].setMoving(King);
                     //moveList[totalMoves].setEnding(King);
@@ -420,9 +413,9 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
             }
 
             if (rights & 2){ //queenside
-                if (!(posptr->queenOccMask[now.toMove] & occupancy)){
+                if (!(pos->queenOccMask[pos->toMove] & occupancy)){
                     moveList[totalMoves].setFrom(origin);
-                    moveList[totalMoves].setTo(Position::queenKingTo[now.toMove]);
+                    moveList[totalMoves].setTo(Position::queenKingTo[pos->toMove]);
 
                     //moveList[totalMoves].setMoving(King);
                     //moveList[totalMoves].setEnding(King);
@@ -435,7 +428,6 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
     }
 
     return totalMoves;
-
 }
 
 Count Generator::countLegal(){
@@ -445,17 +437,17 @@ Count Generator::countLegal(){
     Count num = 0;
 
     for (Count i = 0; i < pl; i++){
-        posptr->makeMove(ml[i]);
+        pos->makeMove(ml[i]);
         //std::cout << ml[i].toString() << '\n';
-        if (illegalPos()){
-            posptr->unmakeMove();
+        if (illegal()){
+            pos->unmakeMove();
             //std::cout << "Legality Prune\n";
             continue;
         }
 
         num++;
 
-        posptr->unmakeMove();
+        pos->unmakeMove();
     }
 
     return num;
@@ -473,4 +465,7 @@ Move Generator::unalgebraic(std::string str){
 
     return Move::Invalid;
 }
+
+
+
 

@@ -6,11 +6,11 @@ Base of future chess engine projects
 
 # TODOS
 
-re-re-attempt incremental bitboard updates
-
 960 support
 
 isLegal()
+
+perhaps regain 2-3M perft speed
 
 # Versioning Scheme
 

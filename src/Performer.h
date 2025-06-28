@@ -31,12 +31,13 @@ template <bool rootNode> uint64_t Performer::perft(const Depth& depth){
     //gen.posptr->print();
 
     Count plegal = gen.generateMoves(mlist);
+    //std::cout << (int)plegal << " generated\n";
 
     for (Count i = 0; i < plegal; i++){
         posptr->makeMove(mlist[i]);
         //std::cout << mlist[i].toString() << '\n';
 
-        if (gen.illegalPos()){
+        if (gen.illegal()){
             //std::cout << "illegal prune\n";
             posptr->unmakeMove();
             continue;

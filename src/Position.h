@@ -1,64 +1,70 @@
-//Board Representation Class
+// Position Class Definition
 
-#include "Moment.h"
 #include "Move.h"
+#include "Zobrist.h"
 
 class Position{
-    public: //adjust access specifiers later
-        Index clock; //half move counter
-        std::array<Moment, 256> moments;
+    public:
+        // Make-Unmake in place
+        std::array<Bitboard, 2> sides;
+        std::array<Bitboard, 6> pieces;
+        Color toMove;
+
+        // Discard in Unmake
+        std::array<uint8_t, 256> castleRights;
+        std::array<Square, 256> enPassant;
+
+        std::array<Count, 256> halfMoves;
+        std::array<Hash, 256> hashes;
+
         std::array<Move, 256> plays;
 
+        Index clock;
+
         Position();
+        Position(const Position&);
 
-        Moment& thisMoment(){ return moments[clock]; }
+        Piece pieceAt(const Square&) const;
+        bool insufficient() const;
 
-        //Can call Moment functions on current Moment
-        //Piece pieceAt(const Square& s) const{ return moments[clock].pieceAt(s); }
-        bool insufficient() const{ return moments[clock].insufficient(); }
-        Color stm() const{ return moments[clock].toMove; }
-        Count sinceReset() const{ return moments[clock].sinceReset(); }
-        void empty(){
-            clock = 0;
-            moments[clock].empty();
-        }
-        void setStartPos(){
-            clock = 0;
-            moments[clock].setStartPos();
-        }
-        void print() const{
-            moments[clock].print();
-            std::cout << "Clock: " << static_cast<int>(clock) << '\n';
-            std::cout << getFen() << "\n\n";
-        }
-        void beginZobrist(){ moments[clock].beginZobrist(); }
+        Count sinceReset() const{ return halfMoves[clock]; }
 
-        void forget(){
-            moments[0] = moments[clock];
-            clock = 0;
-        }
+        Bitboard those(const Color& c, const Piece& p) const{ return sides[c] & pieces[p]; }
+        Bitboard our(const Piece& p) const{ return sides[toMove] & pieces[p]; }
+        Bitboard their(const Piece& p) const{ return sides[!toMove] & pieces[p]; }
+
+        //Bitboard thoses(const Color& c) const{ return sides[c]; }
+        Bitboard ours() const{ return sides[toMove]; }
+        Bitboard theirs() const{ return sides[!toMove]; }
+        Bitboard occupied() const{ return sides[Black] | sides[White]; }
+
+        Bitboard diagonalPieces() const{ return pieces[Bishop] | pieces[Queen]; }
+        Bitboard straightPieces() const{ return pieces[Rook] | pieces[Queen]; }
+
+        uint8_t ourRights() const{ return (castleRights[clock] >> (2 * !toMove)) & 3; }
+        Square thisPassant() const{ return enPassant[clock]; }
+        Hash thisHash() const{ return hashes[clock]; }
+
+        void readFen(std::string);
+        std::string makeFen() const;
+
+        void empty();
+        void setStartPos();
+
+        void print() const;
+
+        void beginZobrist();
+
+        void forget();
 
         Move lastPlayed() const{ return plays[clock]; }
-
-        //void showZobrist() const;
-        //Count countReps(Index) const;
-
-        void readFen(std::string fen){
-            clock = 0;
-            moments[clock].readFen(fen);
-        }
-
-        std::string getFen() const{
-            return moments[clock].makeFen();
-        }
 
         void makeMove(const Move& m);
         void unmakeMove();
 
-        //void passMove();
-        //void unpassMove();
+        bool isFRC = false;
 
-        //Castling Stuff [Perhaps moved to Generator class]
+        //Castling Stuff
         
         std::array<Square, 2> kingRookFrom = {h8, h1};
         std::array<Square, 2> queenRookFrom = {a8, a1};
@@ -85,9 +91,10 @@ class Position{
         0, 0, 0, 0, 0, 0, 0, 0,
         2, 0, 0, 0, 3, 0, 0, 1};
 
-        bool isFRC = false;
-
         // FEN parsing
+        static constexpr std::array<char, 21> fenChars = 
+        {'/', '1', '2', '3', '4', '5', '6', '7', '8',
+        'k', 'q', 'r', 'b', 'n', 'p', 'K', 'Q', 'R', 'B', 'N', 'P'};
 
         std::array<std::string, 16> castleStrings = 
         {"-", "K", "Q", "KQ",
