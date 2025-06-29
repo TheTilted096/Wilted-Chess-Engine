@@ -1,0 +1,4 @@
+Changelog 
+
+06-27-2025 ... 0.0.0.0 ... Movegen
+06-28-2025 ... 0.0.1.0 ... Makefile + Other Cleanups

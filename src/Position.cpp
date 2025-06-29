@@ -256,6 +256,13 @@ void Position::beginZobrist(){
     hashes[clock] ^= Zobrist::castleKeys[castleRights[clock]];
 }
 
+void Position::showZobrist() const{
+    std::cout << "Zobrist History:\n";
+    for (Count i = 0; i <= clock; i++){
+        std::cout << "ZH " << static_cast<int>(i) << ": " << hashes[i] << "\tHalves: " << static_cast<int>(halfMoves[i]) << '\n';
+    }
+}
+
 void Position::forget(){
     castleRights[0] = castleRights[clock];
     enPassant[0] = enPassant[clock];
@@ -386,7 +393,6 @@ void Position::unmakeMove(){
 
     clock--;
 }
-
 
 
 

@@ -27,6 +27,7 @@ class Move{
         Move(){ info = 0U; }
         Move(const uint32_t& m){ info = m; }
         Move(const Move& m){ info = m.info; }
+        //Move& operator=(const uint32_t m){ info = m; }
 
         std::string toString() const{ //set up 960 later
             Square start = from();

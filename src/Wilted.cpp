@@ -7,7 +7,9 @@ int main(int argc, char* argv[]){
     Generator g;
     g.assign(&engine);
 
-    std::cout << "Wilted 0.0.0.0 by TheTilted096\n";
+    std::string versionStr = "Wilted 0.0.1.0";
+
+    std::cout << versionStr << " by TheTilted096\n";
 
     std::string command, param;
 
@@ -19,10 +21,11 @@ int main(int argc, char* argv[]){
         }
 
         if (command == "uci"){
-            std::cout << "id name Wilted-0-0-0-0\n";
+            std::cout << "id name " << versionStr << '\n';
             std::cout << "id author TheTilted096\n";
             //std::cout << "option name Threads type spin default 1 min 1 max 1\n";
             //std::cout << "option name Hash type spin default 32 min 32 max 32\n";
+            std::cout << "UCI_Chess960 type check default false\n";
             std::cout << "uciok" << std::endl;
         }
 
@@ -86,18 +89,20 @@ int main(int argc, char* argv[]){
             perf.run(d);
         }
 
-        if (command == "prints"){
+        if (command == "printpieces"){
             engine.print();
+        }
+
+        if (command == "printzobrist"){
+            engine.showZobrist();
         }
 
         if (command == "test"){
             //g.assign(&engine);
 
-            engine.print();
+            Move m = Move::Invalid;
 
-            std::cout << (int) g.countLegal() << '\n';            
-            
-            engine.print();
+            std::cout << m.info << '\n';
         }
 
 

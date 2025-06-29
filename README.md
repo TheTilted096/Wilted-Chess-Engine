@@ -10,7 +10,7 @@ Base of future chess engine projects
 
 isLegal()
 
-perhaps regain 2-3M perft speed
+perhaps regain 2-3M perft speed (slightly more branching, wrapper types)
 
 # Versioning Scheme
 

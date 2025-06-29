@@ -54,6 +54,7 @@ class Position{
         void print() const;
 
         void beginZobrist();
+        void showZobrist() const;
 
         void forget();
 
@@ -63,6 +64,19 @@ class Position{
         void unmakeMove();
 
         bool isFRC = false;
+
+        //void deduceCastling(std::string);
+        //void restoreCastling();
+        /*uint8_t lookupCastling(std::string fed){
+            Index i;
+            for (i = 0; i < 16; i++){
+                if (castleStrings[i] == fed){
+                    break;
+                }
+            }
+            return i;
+        }
+        */
 
         //Castling Stuff
         
@@ -96,9 +110,10 @@ class Position{
         {'/', '1', '2', '3', '4', '5', '6', '7', '8',
         'k', 'q', 'r', 'b', 'n', 'p', 'K', 'Q', 'R', 'B', 'N', 'P'};
 
-        std::array<std::string, 16> castleStrings = 
+        std::array<std::string, 16> castleStrings =
         {"-", "K", "Q", "KQ",
         "k", "Kk", "Qk", "KQk",
         "q", "Kq", "Qq", "KQq",
         "kq", "Kkq", "Qkq", "KQkq"};
+
 };

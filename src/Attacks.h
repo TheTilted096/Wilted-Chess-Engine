@@ -188,7 +188,7 @@ static /*constexpr*/ std::array<Bitboard, 0x19000> RookAttacks = [](){ //pushes 
     12, 11, 11, 11, 11, 11, 11, 12};
 
     for (Square sq = a8; sq < XX; sq++){
-        for (std::size_t idx = 0; idx < (1 << RookBits[sq]); idx++){
+        for (std::size_t idx = 0; idx < (1U << RookBits[sq]); idx++){
             cons = manual_pdep_u64(idx, RookMasks[sq]) | squareBitboard(sq);
             atks[pos] = hqRookAttack(sq, cons);
             pos++;
@@ -293,7 +293,7 @@ static /*constexpr*/ std::array<Bitboard, 0x1480> BishopAttacks = [](){
     6, 5, 5, 5, 5, 5, 5, 6};
 
     for (Square sq = a8; sq < XX; sq++){
-        for (std::size_t idx = 0; idx < (1 << BishopBits[sq]); idx++){
+        for (std::size_t idx = 0; idx < (1U << BishopBits[sq]); idx++){
             cons = manual_pdep_u64(idx, BishopMasks[sq]) | squareBitboard(sq);
             atks[pos] = hqBishopAttack(sq, cons);
             pos++;
