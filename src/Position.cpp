@@ -53,7 +53,7 @@ void Position::setStartPos(){
 
     enPassant[0] = XX; 
     castleRights[0] = 15;
-    halfMoves[0] = 0;    
+    halfMoves[0] = 0;
 
     beginZobrist();
 }
@@ -117,12 +117,16 @@ void Position::readFen(std::string fen){
     toMove = static_cast<Color>(feed[0] & 1); //'w' = 119 and 'b' = 98, which have different last bit
 
     segments >> feed; //castling rights
-    for (ind = 0; ; ind++){
+    for (ind = 0; ind < 16; ind++){
         if (castleStrings[ind] == feed){
+            castleRights[0] = ind;
             break;
         }
     }
-    castleRights[0] = ind;
+    if (isFRC and (ind == 16)){
+        deduceCastling(feed);
+        assert(castleRights[0] != 0);
+    }
 
     segments >> feed; //EP Square
     enPassant[0] = (feed != "-") ? static_cast<Square>((feed[0] - 97) + 8 * (56 - feed[1])) : XX;
@@ -299,7 +303,8 @@ void Position::makeMove(const Move& m){
         hashes[clock] ^= Zobrist::pieceKeys[!toMove][victim][target];
     }
 
-    sides[toMove] ^= (squareBitboard(start) | squareBitboard(end));
+    sides[toMove] ^= squareBitboard(start);
+    sides[toMove] ^= squareBitboard(end);
     pieces[typei] ^= squareBitboard(start);
     pieces[typef] ^= squareBitboard(end);
 
@@ -342,8 +347,10 @@ void Position::makeMove(const Move& m){
             end = queenRookTo[toMove];
         }
 
-        sides[toMove] ^= (squareBitboard(start) | squareBitboard(end));
-        pieces[Rook] ^= (squareBitboard(start) | squareBitboard(end));
+        sides[toMove] ^= squareBitboard(start);
+        sides[toMove] ^= squareBitboard(end);
+        pieces[Rook] ^= squareBitboard(start);
+        pieces[Rook] ^= squareBitboard(end);
 
         hashes[clock] ^= Zobrist::pieceKeys[toMove][Rook][start];
         hashes[clock] ^= Zobrist::pieceKeys[toMove][Rook][end];
@@ -365,7 +372,8 @@ void Position::unmakeMove(){
 
     toMove = flip(toMove); //original stm
 
-    sides[toMove] ^= (squareBitboard(start) | squareBitboard(end));
+    sides[toMove] ^= squareBitboard(start);
+    sides[toMove] ^= squareBitboard(end);
     pieces[typei] ^= squareBitboard(start);
     pieces[typef] ^= squareBitboard(end);
 
@@ -386,14 +394,238 @@ void Position::unmakeMove(){
             end = queenRookTo[toMove];
         }
 
-        sides[toMove] ^= (squareBitboard(start) | squareBitboard(end));
-        pieces[Rook] ^= (squareBitboard(start) | squareBitboard(end));
+        sides[toMove] ^= squareBitboard(start);
+        sides[toMove] ^= squareBitboard(end);
+        pieces[Rook] ^= squareBitboard(start); 
+        pieces[Rook] ^= squareBitboard(end);
 
     }
 
     clock--;
 }
 
+void Position::deduceCastling(std::string given){
+    Square wk = static_cast<Square>(getLeastBit(those(White, King)) & 7); //white king file
+    Square bk = getLeastBit(those(Black, King)); //black king file
+ 
+    Square rookFile; //file the rook is on as determined by char
+    Bitboard rookTravel; //rook travelled squares
+
+    kingRookFrom[Black] = XX; //reset all safety, occupancy, and starting squares
+    kingRookFrom[White] = XX;
+
+    queenRookFrom[Black] = XX;
+    queenRookFrom[White] = XX;
+
+    kingSafeMask[Black] = 0ULL;
+    kingSafeMask[White] = 0ULL;
+
+    queenSafeMask[Black] = 0ULL;
+    queenSafeMask[White] = 0ULL;
+
+    kingOccMask[Black] = 0ULL;
+    kingOccMask[White] = 0ULL;
+
+    queenOccMask[Black] = 0ULL;
+    queenOccMask[White] = 0ULL;
+
+    rightsChange.fill(0);
+
+    castleRights[clock] = 0; //calculate castling rights here as well
+    //std::cout << "deduce clock: " << (int)clock << '\n';
+
+    std::array<char, 4> parts = {'Y', 'Z', 'y', 'z'}; //Y = placeholder K, Z = placeholder Q
+
+    //need to update 6 things:
+    //clear occupancy, safe mask, rook start, rights change, castling rights, fen strings
+
+    for (char c : given){ //A = 65, H = 72; a = 97, h = 104
+        rookFile = static_cast<Square>((c - 1) & 7);
+
+        if (c < 73){ //White has this castling right
+            if (wk < rookFile){ //kingside castle
+                kingRookFrom[White] = flip(rookFile); //white's kingside rook start (1)
+
+                kingSafeMask[White] = (squareBitboard(h8) - squareBitboard(wk));
+                //squares king travels through, inclusive, is also safemask
+
+                rookTravel = (squareBitboard(std::max(rookFile, f8)) << 1)
+                    - squareBitboard(std::min(rookFile, f8)); 
+                //perhaps replace with a ray table: ray[rookFile][f8] for example
+
+                kingOccMask[White] = kingSafeMask[White] | rookTravel;
+                kingOccMask[White] ^= squareBitboard(rookFile);
+                kingOccMask[White] ^= squareBitboard(wk);
+                //occupancy mask excludes castling king and rook
+
+                kingSafeMask[White] <<= 56; // (2)
+                kingOccMask[White] <<= 56; // (3)
+
+                rightsChange[flip(rookFile)] = 1; // rights change (4)
+                rightsChange[flip(wk)] |= 1;
+
+                castleRights[clock] |= 1; //white can kingside castle (5)
+                //std::cout << "added 1 to castleRights[clock]\n";
+
+                parts[0] = c; // string part (6)        
+
+            } else { //queenside castle
+                queenRookFrom[White] = flip(rookFile); // (1)
+
+                queenSafeMask[White] = (wk == b8) ? 0x6ULL : //handle edge case
+                    ((squareBitboard(wk) << 1) - squareBitboard(c8));
+                
+                rookTravel = (squareBitboard(std::max(rookFile, d8)) << 1)
+                    - squareBitboard(std::min(rookFile, d8));
+
+                queenOccMask[White] = queenSafeMask[White] | rookTravel;
+                queenOccMask[White] ^= squareBitboard(rookFile);
+                queenOccMask[White] ^= squareBitboard(wk);
+
+                queenSafeMask[White] <<= 56; // (2)
+                queenOccMask[White] <<= 56; // (3)
+
+                rightsChange[flip(rookFile)] = 2; // (4)
+                rightsChange[flip(wk)] |= 2;
+
+                castleRights[clock] |= 2;
+                
+                parts[1] = c;
+            }
+        } else { //black's castling
+            if (bk < rookFile){
+                kingRookFrom[Black] = rookFile; // (1)
+
+                kingSafeMask[Black] = squareBitboard(h8) - squareBitboard(bk); // (2)
+
+                rookTravel = (squareBitboard(std::max(rookFile, f8)) << 1)
+                    - squareBitboard(std::min(rookFile, f8)); 
+
+                kingOccMask[Black] = kingSafeMask[Black] | rookTravel;
+                kingOccMask[Black] ^= squareBitboard(rookFile);
+                kingOccMask[Black] ^= squareBitboard(bk); // (3)
+
+                rightsChange[rookFile] = 4; // rights change (4)
+                rightsChange[bk] |= 4;
+
+                castleRights[clock] |= 4; //white can kingside castle (5)
+
+                parts[2] = c; // string part (6)  
+
+            } else {
+                queenRookFrom[Black] = rookFile; // (1)
+                queenSafeMask[Black] = (bk == b8) ? 0x6ULL :
+                    ((squareBitboard(bk) << 1) - squareBitboard(c8)); // (2)
+
+                rookTravel = (squareBitboard(std::max(rookFile, d8)) << 1)
+                    - squareBitboard(std::min(rookFile, d8));
+
+                queenOccMask[Black] = queenSafeMask[Black] | rookTravel;
+                queenOccMask[Black] ^= squareBitboard(rookFile);
+                queenOccMask[Black] ^= squareBitboard(bk); // (3)
+
+                rightsChange[rookFile] = 8; // (4)
+                rightsChange[bk] |= 8;
+
+                castleRights[clock] |= 8; // (5)
+
+                parts[3] = c; // (6)
+            }
+        }
+    }
 
 
+    // (6) Creating the Table
+    makeCastleTable(parts);
 
+    /*
+    std::cout << "kr from: " << (int)kingRookFrom[0] << ' ' << (int)kingRookFrom[1] << '\n';
+    std::cout << "qr from: " << (int)queenRookFrom[0] << ' ' << (int)queenRookFrom[1] << '\n';
+
+    std::cout << "kingsafe:\n";
+    printAsBitboard(kingSafeMask[0]);
+    printAsBitboard(kingSafeMask[1]);
+
+    std::cout << "queensafe:\n";
+    printAsBitboard(queenSafeMask[0]);
+    printAsBitboard(queenSafeMask[1]);
+
+    std::cout << "kingocc:\n";
+    printAsBitboard(kingOccMask[0]);
+    printAsBitboard(kingOccMask[1]);
+
+    std::cout << "queenocc:\n";
+    printAsBitboard(queenOccMask[0]);
+    printAsBitboard(queenOccMask[1]);
+
+    for (int i = 0; i < 64; i++){
+        std::cout << (int)rightsChange[i] << "   ";
+        if ((i & 7) == 7){ std::cout << '\n'; }
+    }
+
+    std::cout << '\n';
+    for (int i = 0; i < 16; i++){
+        std::cout << castleStrings[i] << "     ";
+    }
+
+    std::cout << "castlerights: " << (int)castleRights[clock] << '\n';
+    std::cout << '\n';
+    */
+}
+
+void Position::restoreCastling(){
+    kingRookFrom[Black] = h8;
+    kingRookFrom[White] = h1;
+    kingSafeMask[Black] = 0x70ULL;
+    kingSafeMask[White] = 0x70ULL << 56;
+    queenSafeMask[Black] = 0x1CULL;
+    queenSafeMask[White] = 0x1CULL << 56;
+    kingOccMask[Black] = 0x60ULL;
+    kingOccMask[White] = 0x60ULL << 56;
+    rightsChange.fill(0);
+    rightsChange[a8] = 8;
+    rightsChange[e8] = 12;
+    rightsChange[h8] = 4;
+    rightsChange[a1] = 2;
+    rightsChange[e1] = 3;
+    rightsChange[h1] = 1;
+
+    makeCastleTable({'K', 'Q', 'k', 'q'});
+    castleRights[clock] = 0;
+}
+
+void Position::makeCastleTable(const std::array<char, 4>& parts){
+    for (Index i = 1; i < 16; i++){
+        std::string res = "";
+        for (int j = 0; j < 4; j++){
+            if (i & (1 << j)){ res += parts[j]; }
+        }
+        castleStrings[i] = res;
+    }
+}
+
+std::string Position::moveName(const Move& m) const{
+    Square start = m.from();
+    Square end;
+
+    if (!m.castling() or !isFRC){
+        end = m.to();
+    } else if (m.kingCastle()){
+        end = kingRookFrom[toMove];
+    } else {
+        end = queenRookFrom[toMove];
+    }
+
+    std::string result = "";
+    result += ((start & 7) + 97);
+    result += (8 - (start >> 3)) + 48;
+
+    result += ((end & 7) + 97);
+    result += (8 - (end >> 3)) + 48;
+
+    if (m.promoted()){
+        result += fenChars[m.ending() + 9];
+    }
+
+    return result;
+}

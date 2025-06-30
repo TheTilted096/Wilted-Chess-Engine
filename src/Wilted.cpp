@@ -1,5 +1,7 @@
 // Driver Code for Wilted Engine
 
+#include <fstream>
+#include <random>
 #include "Performer.h"
 
 int main(int argc, char* argv[]){
@@ -25,7 +27,7 @@ int main(int argc, char* argv[]){
             std::cout << "id author TheTilted096\n";
             //std::cout << "option name Threads type spin default 1 min 1 max 1\n";
             //std::cout << "option name Hash type spin default 32 min 32 max 32\n";
-            std::cout << "UCI_Chess960 type check default false\n";
+            std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "uciok" << std::endl;
         }
 
@@ -76,10 +78,14 @@ int main(int argc, char* argv[]){
                     given = g.unalgebraic(param);
                     if (!given.bad()){
                         engine.makeMove(given);
+                        //std::cout << "given info: " << given.info << '\n';
                     }
                 }
             }
         }
+
+        if (command == "setoption name UCI_Chess960 value true"){ engine.setFRC(); /*std::cout << "chungus\n";*/ }
+        if (command == "setoption name UCI_Chess960 value false"){ engine.stopFRC(); }
 
         if (command.substr(0, 5) == "perft"){
             Depth d = std::stoi(command.substr(6));
@@ -98,16 +104,29 @@ int main(int argc, char* argv[]){
         }
 
         if (command == "test"){
-            //g.assign(&engine);
 
-            Move m = Move::Invalid;
-
-            std::cout << m.info << '\n';
         }
 
+        // Custom Commands
+        // Customized PSQT
+        if (command == "randompsqt"){
+            srand(time(0));
+            std::ofstream spam("spam.txt");
+            std::array<Score, 6> bounds = {16, 36, 20, 14, 12, 4};
 
-
-
+            for (Score s : bounds){
+                spam << '{';
+                for (int i = 0; i < 64; i++){
+                    spam << (rand() % s) - (s >> 1) << ", ";
+                    if ((i & 7) == 7 and (i != 63)){
+                        spam << '\n';
+                    }
+                }
+                spam << "}, \n\n";
+            }
+        }
+    
+    
     }
 
 

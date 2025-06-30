@@ -48,6 +48,10 @@ constexpr Square getLeastBit(const Bitboard& b){
     return static_cast<Square>(std::countr_zero<Bitboard>(b));
 }
 
+constexpr Square getMostBit(const Bitboard& b){
+    return static_cast<Square>(63 - std::countl_zero<Bitboard>(b));
+}
+
 constexpr Square popLeastBit(Bitboard& b){
     Square s = getLeastBit(b);
     b &= b - 1;

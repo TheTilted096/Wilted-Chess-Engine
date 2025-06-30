@@ -45,6 +45,23 @@ bool Generator::illegal() const{
             }
         }
 
+        if (pos->isFRC){ //castling rook "blocks"
+            Bitboard backRankers = (0xFFULL << (us * 56)) & pos->straightPieces() & pos->sides[!us];
+            if (backRankers){
+                Square target = pos->lastPlayed().from();
+                Square fakeDest = pos->lastPlayed().to(); //king destination
+                Square fakeFile = (cat - 1) ? pos->queenRookTo[us] : pos->kingRookTo[us]; //rook destination
+
+                Bitboard occ = (pos->occupied() ^ squareBitboard(fakeDest) ^ squareBitboard(fakeFile));
+
+                Square agro = (cat - 1) ? getLeastBit(backRankers) : getMostBit(backRankers);
+                Bitboard seen = Attacks::rookAttacks(agro, occ);
+                if (seen & squareBitboard(target)){
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
@@ -458,7 +475,7 @@ Move Generator::unalgebraic(std::string str){
     Count c = generateMoves(testers);
 
     for (Count i = 0; i < c; i++){
-        if (testers[i].toString() == str){
+        if (pos->moveName(testers[i]) == str){
             return testers[i];
         }
     }

@@ -48,7 +48,7 @@ template <bool rootNode> uint64_t Performer::perft(const Depth& depth){
         posptr->unmakeMove();
 
         if constexpr (rootNode){
-            std::cout << mlist[i].toString() << ": " /*<< mlist[i].info << " : "*/<< next << '\n';
+            std::cout << posptr->moveName(mlist[i]) << ": " /*<< mlist[i].info << " : "*/<< next << '\n';
         }
 
         nodes += next;

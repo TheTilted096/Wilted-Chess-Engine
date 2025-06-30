@@ -1,5 +1,8 @@
 // Position Class Definition
 
+#pragma once
+
+#include <algorithm>
 #include "Move.h"
 #include "Zobrist.h"
 
@@ -11,7 +14,7 @@ class Position{
         Color toMove;
 
         // Discard in Unmake
-        std::array<uint8_t, 256> castleRights;
+        std::array<uint8_t, 256> castleRights; //last 4 bits q k Q K
         std::array<Square, 256> enPassant;
 
         std::array<Count, 256> halfMoves;
@@ -33,7 +36,7 @@ class Position{
         Bitboard our(const Piece& p) const{ return sides[toMove] & pieces[p]; }
         Bitboard their(const Piece& p) const{ return sides[!toMove] & pieces[p]; }
 
-        //Bitboard thoses(const Color& c) const{ return sides[c]; }
+        Bitboard thoses(const Color& c) const{ return sides[c]; }
         Bitboard ours() const{ return sides[toMove]; }
         Bitboard theirs() const{ return sides[!toMove]; }
         Bitboard occupied() const{ return sides[Black] | sides[White]; }
@@ -42,6 +45,7 @@ class Position{
         Bitboard straightPieces() const{ return pieces[Rook] | pieces[Queen]; }
 
         uint8_t ourRights() const{ return (castleRights[clock] >> (2 * !toMove)) & 3; }
+        uint8_t thoseRights(const Color& c) const{ return (castleRights[clock] >> (2 * !c)) & 3; }
         Square thisPassant() const{ return enPassant[clock]; }
         Hash thisHash() const{ return hashes[clock]; }
 
@@ -63,20 +67,21 @@ class Position{
         void makeMove(const Move& m);
         void unmakeMove();
 
-        bool isFRC = false;
+        std::string moveName(const Move& m) const;
 
-        //void deduceCastling(std::string);
-        //void restoreCastling();
-        /*uint8_t lookupCastling(std::string fed){
-            Index i;
-            for (i = 0; i < 16; i++){
-                if (castleStrings[i] == fed){
-                    break;
-                }
-            }
-            return i;
+        bool isFRC = false;
+        void setFRC(){ 
+            isFRC = true; 
+            //std::cout << "generated\n";
+            makeCastleTable({'H', 'A', 'h', 'a'});
         }
-        */
+        void stopFRC(){
+            isFRC = false;
+            restoreCastling();
+        }
+
+        void deduceCastling(std::string);
+        void restoreCastling();
 
         //Castling Stuff
         
@@ -115,5 +120,7 @@ class Position{
         "k", "Kk", "Qk", "KQk",
         "q", "Kq", "Qq", "KQq",
         "kq", "Kkq", "Qkq", "KQkq"};
+
+        void makeCastleTable(const std::array<char, 4>& parts);
 
 };

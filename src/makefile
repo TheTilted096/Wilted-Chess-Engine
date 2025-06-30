@@ -36,4 +36,4 @@ Generator.o: Generator.h Generator.cpp
 
 clean: # Works on Windows
 	del *.o;
-	#del wiltest.exe;
+#del wiltest.exe;

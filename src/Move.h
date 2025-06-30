@@ -20,7 +20,6 @@
 #include "Helpers.h"
 
 class Move{
-    static constexpr std::array<char, 5> pieceNames = {'k', 'q', 'r', 'n', 'b'};
     public:
         uint32_t info;
 
@@ -28,24 +27,6 @@ class Move{
         Move(const uint32_t& m){ info = m; }
         Move(const Move& m){ info = m.info; }
         //Move& operator=(const uint32_t m){ info = m; }
-
-        std::string toString() const{ //set up 960 later
-            Square start = from();
-            Square end = to();
-
-            std::string result = "";
-            result += ((start & 7) + 97);
-            result += (8 - (start >> 3)) + 48;
-
-            result += ((end & 7) + 97);
-            result += (8 - (end >> 3)) + 48;
-
-            if (promoted()){
-                result += pieceNames[ending()];
-            }
-
-            return result;
-        }
 
         bool bad() const{ return info == Invalid; }
 
