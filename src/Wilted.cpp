@@ -1,15 +1,12 @@
 // Driver Code for Wilted Engine
 
-#include <fstream>
-#include <random>
 #include "Performer.h"
+#include "Searcher.h"
 
 int main(int argc, char* argv[]){
-    Position engine;
-    Generator g;
-    g.assign(&engine);
+    Searcher master;
 
-    std::string versionStr = "Wilted 0.0.1.0";
+    std::string versionStr = "Wilted 0.1.0.0";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -25,7 +22,7 @@ int main(int argc, char* argv[]){
         if (command == "uci"){
             std::cout << "id name " << versionStr << '\n';
             std::cout << "id author TheTilted096\n";
-            //std::cout << "option name Threads type spin default 1 min 1 max 1\n";
+            std::cout << "option name Threads type spin default 1 min 1 max 1\n";
             //std::cout << "option name Hash type spin default 32 min 32 max 32\n";
             std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "uciok" << std::endl;
@@ -35,12 +32,15 @@ int main(int argc, char* argv[]){
             std::cout << "readyok" << std::endl;
         }
 
+        if (command == "ucinewgame"){
+            master.newGame();
+        }
+
         if (command.substr(0, 17) == "position startpos"){
-            engine.setStartPos();
+            master.pos.setStartPos();
 
             int movesStart = command.find("moves");
             if (movesStart == 18){ //if there is a moves xx string
-                //std::cout << "Parsing -> " << command.substr(movesStart + 6) << '\n';
 
                 std::stringstream extras(command.substr(movesStart + 6));
 
@@ -48,9 +48,12 @@ int main(int argc, char* argv[]){
 
                 while (!extras.eof()){
                     extras >> param;
-                    given = g.unalgebraic(param);
+                    given = master.gen.unalgebraic(param);
                     if (!given.bad()){
-                        engine.makeMove(given);
+                        master.pos.makeMove(given);
+                    }
+                    if (given.resets()){
+                        master.pos.forget();
                     }
                 }
             }
@@ -58,16 +61,10 @@ int main(int argc, char* argv[]){
 
         if (command.substr(0, 12) == "position fen"){
             int movesStart = command.find("moves"); //should return -1 (ULL) if not found
-            
-            //std::string fen = command.substr(13, movesStart - 13);
-            //std::cout << "fen:" << fen << '\n';
-            engine.readFen(command.substr(13, movesStart - 13));
 
-            //std::cout << "len: " << 13 + fen.length() << '\n';
-            //std::cout << movesStart << '\n';
+            master.pos.readFen(command.substr(13, movesStart - 13));
 
             if (movesStart != -1){
-                //std::cout << "Parsing -> " << command.substr(movesStart + 6) << '\n';
 
                 std::stringstream extras(command.substr(movesStart + 6));
 
@@ -75,39 +72,50 @@ int main(int argc, char* argv[]){
 
                 while (!extras.eof()){
                     extras >> param;
-                    given = g.unalgebraic(param);
+                    given = master.gen.unalgebraic(param);
                     if (!given.bad()){
-                        engine.makeMove(given);
-                        //std::cout << "given info: " << given.info << '\n';
+                        master.pos.makeMove(given);
+                    }
+                    if (given.resets()){
+                        master.pos.forget();
                     }
                 }
             }
         }
 
-        if (command == "setoption name UCI_Chess960 value true"){ engine.setFRC(); /*std::cout << "chungus\n";*/ }
-        if (command == "setoption name UCI_Chess960 value false"){ engine.stopFRC(); }
+        if (command == "setoption name UCI_Chess960 value true"){ master.pos.setFRC(); }
+        if (command == "setoption name UCI_Chess960 value false"){ master.pos.stopFRC(); }
+
+        if (command.substr(0, 2) == "go"){
+            master.search();
+        }
 
         if (command.substr(0, 5) == "perft"){
             Depth d = std::stoi(command.substr(6));
 
-            Performer perf(&engine);
+            Performer perf(&master.pos);
 
             perf.run(d);
         }
 
+        // Custom Commands
+
+        if (command.substr(0, 10) == "perftsuite"){
+            //got lazy
+        }
+
         if (command == "printpieces"){
-            engine.print();
+            master.pos.print();
         }
 
         if (command == "printzobrist"){
-            engine.showZobrist();
+            master.pos.showZobrist();
         }
 
         if (command == "test"){
 
         }
 
-        // Custom Commands
         // Customized PSQT
         if (command == "randompsqt"){
             srand(time(0));
@@ -126,6 +134,7 @@ int main(int argc, char* argv[]){
             }
         }
     
+
     
     }
 

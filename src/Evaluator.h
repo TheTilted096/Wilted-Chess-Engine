@@ -6,7 +6,7 @@ class Evaluator{
     public:
         Position* pos;
 
-        Score midScore[2];
+        Score midScores[2];
 
         //endgame, gamephase, phases
 
@@ -14,7 +14,7 @@ class Evaluator{
 
         std::array<Score, 6> material = {0, 900, 500, 350, 300, 100};
 
-        Table<Score, 6, 64> midpsqt = 
+        Table<Score, 6, 64> midpst = 
         {{{-1, -1, 1, 7, 1, 2, 3, 5, 
         3, -3, 0, -1, -4, -6, -3, -4, 
         -7, 6, 3, 0, -3, 5, 4, 1, 
@@ -74,10 +74,10 @@ class Evaluator{
 
         void assign(Position* pp){ pos = pp; }
 
-        Score get();
+        Score judge() const;
         Score refresh();
 
-        void makeMove(const Move& m); //no lazy updates
-        void unmakeMove(); 
+        void doMove(const Move& m); //no lazy updates
+        void undoMove(const Move& m); 
 
 };

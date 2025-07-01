@@ -1,11 +1,12 @@
 EXE := Wilted
 #no evalfile yet
 ARCH := native
-SOURCES := Wilted.cpp Generator.cpp Position.cpp
+SOURCES := Wilted.cpp Searcher.cpp Evaluator.cpp Generator.cpp Position.cpp
 
 CXX := clang++
 
-CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -static -Wall -g #-fconstexpr-steps=...
+CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -static -Wall -g
+#-fconstexpr-steps=...
 
 SUFFIX :=
 
@@ -22,8 +23,8 @@ $(EXE):
 
 # During Development, frequent compilation
 
-engine: Wilted.o Position.o Generator.o
-	$(CXX) Wilted.o Position.o Generator.o $(CXXFLAGS) -o wiltest
+engine: Wilted.o Position.o Generator.o Evaluator.o Searcher.o
+	$(CXX) Wilted.o Searcher.o Evaluator.o Generator.o Position.o $(CXXFLAGS) -o wiltest
 
 Wilted.o: Wilted.cpp
 	$(CXX) $(CXXFLAGS) -c Wilted.cpp -o Wilted.o
@@ -33,6 +34,12 @@ Position.o: Position.h Position.cpp
 
 Generator.o: Generator.h Generator.cpp
 	$(CXX) $(CXXFLAGS) -c Generator.cpp -o Generator.o
+
+Evaluator.o: Evaluator.h Evaluator.cpp
+	$(CXX) $(CXXFLAGS) -c Evaluator.cpp -o Evaluator.o
+
+Searcher.o: Searcher.h Searcher.cpp
+	$(CXX) $(CXXFLAGS) -c Searcher.cpp -o Searcher.o
 
 clean: # Works on Windows
 	del *.o;

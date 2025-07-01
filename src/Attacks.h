@@ -1,7 +1,8 @@
 // Attack Tables
 
+//#pragma once
+
 #include "Helpers.h"
-#include <immintrin.h>
 
 namespace Attacks{
 

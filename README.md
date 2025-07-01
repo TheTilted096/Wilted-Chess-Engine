@@ -4,13 +4,23 @@ TheTilted096
 
 Base of future chess engine projects
 
-# TODOS
+# To-Do's and Notes
 
-960 support (position startpos needs to revert to ahah)
+sanity check search, add PV Table
+
+write a perftsuite function
+
+move some attack functions from Generator to Position
+
+rethink standard library include locations
 
 isLegal()
 
-perhaps regain 2-3M perft speed (slightly more branching, wrapper types)
+lazy updates...?
+
+perhaps neaten up deduceCastling() to remove some conditionals
+
+perhaps regain 5-10% perft speed (slightly more branching, wrapper types)
 
 # Versioning Scheme
 

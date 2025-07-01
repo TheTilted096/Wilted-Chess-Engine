@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <algorithm>
 #include "Move.h"
 #include "Zobrist.h"
 
@@ -59,6 +58,7 @@ class Position{
 
         void beginZobrist();
         void showZobrist() const;
+        Count repetitions(Index) const;
 
         void forget();
 

@@ -62,6 +62,8 @@ class Move{
         bool promoted() const{ return (info >> 25); }
         void setPromote(){ info ^= (1U << 25); }
 
+        bool resets() const{ return (captured() or (moving() == Pawn)); }
+
         bool operator==(const Move& m){
             return info == m.info;
         }

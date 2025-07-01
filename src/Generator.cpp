@@ -25,7 +25,7 @@ bool Generator::isAttacked(const Square& sq, const Color& c) const{
     return !!checkers;
 }
 
-inline bool Generator::isChecked(const Color& c) const{
+bool Generator::isChecked(const Color& c) const{
     Square k = getLeastBit(pos->those(c, King));
 
     return isAttacked(k, flip(c));
@@ -68,7 +68,7 @@ bool Generator::illegal() const{
     return isChecked(us);
 }
 
-template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& moveList){
+template <bool captureOnly> Count Generator::generate(Actions& moveList){
     Count totalMoves = 0;
 
     Bitboard moveSet, pieces, captureSet;
@@ -448,7 +448,7 @@ template <bool captureOnly> Count Generator::generate(std::array<Move, 128>& mov
 }
 
 Count Generator::countLegal(){
-    std::array<Move, 128> ml;
+    Actions ml;
     Count pl = generate<false>(ml);
 
     Count num = 0;
@@ -471,7 +471,7 @@ Count Generator::countLegal(){
 }
 
 Move Generator::unalgebraic(std::string str){
-    std::array<Move, 128> testers = {};
+    Actions testers = {};
     Count c = generateMoves(testers);
 
     for (Count i = 0; i < c; i++){

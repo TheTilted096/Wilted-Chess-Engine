@@ -1,11 +1,16 @@
 // Type Definitions for Wilted Engine
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cassert>
+#include <chrono>
 #include <cstdint>
+#include <fstream>
+#include <immintrin.h>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <string>
 

@@ -267,6 +267,19 @@ void Position::showZobrist() const{
     }
 }
 
+Count Position::repetitions(Index ply) const{
+    Count reps = 1; //start with this repetition
+    Count ind = clock; // start right now
+
+    while ((ind > 1) and halfMoves[ind]){ //while at the beginning and last 50mr reset
+        ind -= 2;
+        reps += ((hashes[clock] == hashes[ind]) * (1 + (ind >= clock - ply)));
+        //add a rep if the position matches, add another if it occurs after search start
+    }
+
+    return reps;
+}
+
 void Position::forget(){
     castleRights[0] = castleRights[clock];
     enPassant[0] = enPassant[clock];

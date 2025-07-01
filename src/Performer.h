@@ -1,6 +1,5 @@
 // Wrapper Class for Perft
 
-#include <chrono>
 #include "Generator.h"
 
 class Performer{
@@ -26,7 +25,7 @@ template <bool rootNode> uint64_t Performer::perft(const Depth& depth){
     }
 
     uint64_t nodes = 0ULL;
-    std::array<Move, 128> mlist = {};
+    Actions mlist = {};
 
     //gen.posptr->print();
 
@@ -48,7 +47,7 @@ template <bool rootNode> uint64_t Performer::perft(const Depth& depth){
         posptr->unmakeMove();
 
         if constexpr (rootNode){
-            std::cout << posptr->moveName(mlist[i]) << ": " /*<< mlist[i].info << " : "*/<< next << '\n';
+            std::cout << posptr->moveName(mlist[i]) << ": " << /*mlist[i].info << " : " << */next << '\n';
         }
 
         nodes += next;

@@ -1,7 +1,11 @@
 // Class Definition for Generator
 
+#pragma once
+
 #include "Attacks.h"
 #include "Position.h"
+
+using Actions = std::array<Move, 128>;
 
 class Generator{
     public:
@@ -18,10 +22,10 @@ class Generator{
 
         Count countLegal();
 
-        template <bool> Count generate(std::array<Move, 128>&);
+        template <bool> Count generate(Actions&);
 
-        Count generateMoves(std::array<Move, 128>& ml){ return generate<false>(ml); }
-        Count generateCaptures(std::array<Move, 128>& ml){ return generate<true>(ml); }
+        Count generateMoves(Actions& ml){ return generate<false>(ml); }
+        Count generateCaptures(Actions& ml){ return generate<true>(ml); }
 
         Move unalgebraic(std::string);
 };
