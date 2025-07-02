@@ -6,7 +6,7 @@
 int main(int argc, char* argv[]){
     Searcher master;
 
-    std::string versionStr = "Wilted 0.1.0.0";
+    std::string versionStr = "Wilted 0.1.1.0";
 
     std::cout << versionStr << " by TheTilted096\n";
 

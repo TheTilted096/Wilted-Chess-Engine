@@ -6,11 +6,11 @@ Base of future chess engine projects
 
 # To-Do's and Notes
 
-sanity check search, add PV Table
-
 write a perftsuite function
 
-move some attack functions from Generator to Position
+possibly create compound class between Generator and Position
+
+re organize, maybe a sub-folder
 
 rethink standard library include locations
 

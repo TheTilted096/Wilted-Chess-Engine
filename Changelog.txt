@@ -4,3 +4,4 @@ Changelog
 06-28-2025 ... 0.0.1.0 ... Makefile + Other Cleanups
 06-29-2025 ... 0.0.1.1 ... 960 Support
 06-30-2025 ... 0.1.0.0 ... Basic A/B Search (Unverified)
+07-01-2025 ... 0.1.1.0 ... PV Table

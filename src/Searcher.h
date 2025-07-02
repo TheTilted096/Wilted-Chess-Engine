@@ -2,16 +2,15 @@
 
 #include "Evaluator.h"
 #include "Generator.h"
-
-class PrinceTable;
+#include "Princes.h"
 
 class Searcher{
     public:
         Position pos;
         Generator gen;
         Evaluator eva;
-
-        PrinceTable pvt;
+        
+        Princes pvt;
 
         uint64_t nodes;
         //uint64_t hardNodeCap;
@@ -42,9 +41,5 @@ class Searcher{
         static constexpr Score FORCE_VICTORY = 19000;
         static constexpr Score FORCE_DEFEAT = -19000;
 
-        static constexpr Index MAX_PLY = 16;
-};
-
-class PrinceTable{
-    
+        static constexpr Index MAX_PLY = Princes::LEN; //maximum PV/search length
 };

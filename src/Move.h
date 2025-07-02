@@ -17,6 +17,8 @@
 
 */
 
+#pragma once
+
 #include "Helpers.h"
 
 class Move{
@@ -26,7 +28,7 @@ class Move{
         Move(){ info = 0U; }
         Move(const uint32_t& m){ info = m; }
         Move(const Move& m){ info = m.info; }
-        //Move& operator=(const uint32_t m){ info = m; }
+        void operator=(const uint32_t m){ info = m; }
 
         bool bad() const{ return info == Invalid; }
 

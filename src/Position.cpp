@@ -550,40 +550,6 @@ void Position::deduceCastling(std::string given){
 
     // (6) Creating the Table
     makeCastleTable(parts);
-
-    /*
-    std::cout << "kr from: " << (int)kingRookFrom[0] << ' ' << (int)kingRookFrom[1] << '\n';
-    std::cout << "qr from: " << (int)queenRookFrom[0] << ' ' << (int)queenRookFrom[1] << '\n';
-
-    std::cout << "kingsafe:\n";
-    printAsBitboard(kingSafeMask[0]);
-    printAsBitboard(kingSafeMask[1]);
-
-    std::cout << "queensafe:\n";
-    printAsBitboard(queenSafeMask[0]);
-    printAsBitboard(queenSafeMask[1]);
-
-    std::cout << "kingocc:\n";
-    printAsBitboard(kingOccMask[0]);
-    printAsBitboard(kingOccMask[1]);
-
-    std::cout << "queenocc:\n";
-    printAsBitboard(queenOccMask[0]);
-    printAsBitboard(queenOccMask[1]);
-
-    for (int i = 0; i < 64; i++){
-        std::cout << (int)rightsChange[i] << "   ";
-        if ((i & 7) == 7){ std::cout << '\n'; }
-    }
-
-    std::cout << '\n';
-    for (int i = 0; i < 16; i++){
-        std::cout << castleStrings[i] << "     ";
-    }
-
-    std::cout << "castlerights: " << (int)castleRights[clock] << '\n';
-    std::cout << '\n';
-    */
 }
 
 void Position::restoreCastling(){

@@ -44,6 +44,8 @@ Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
 
     bool rootNode = (ply == 0);
 
+    pvt.clearLine(ply);
+
     Count repeats = pos.repetitions(0);
     if (repeats > 2){
         return DRAW;
@@ -86,6 +88,8 @@ Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
             if (rootNode){
                 bestMove = moves[i];
             }
+
+            pvt.write(moves[i], ply);
         }
 
         if (score >= beta){ //Cut Node
@@ -107,15 +111,22 @@ Score Searcher::search(){
     nodes = 0;
     moment = std::chrono::steady_clock::now();
 
-    Score result = alphabeta(-SCORE_INF, SCORE_INF, 4, 0);
+    pvt.clearAll();
+
+    Score result = alphabeta(-SCORE_INF, SCORE_INF, 6, 0);
 
     auto end = std::chrono::steady_clock::now();
     double dur = 1 + std::chrono::duration_cast<std::chrono::microseconds>(end - moment).count();
     int nps = (nodes / dur) * 1000000;
     int time = dur / 1000; //in ms
 
-    std::cout << "info depth 4 score cp " << result << " nodes " << nodes;
-    std::cout << " nps " << nps << " time " << time << '\n';
+    std::cout << "info depth 6 score cp " << result << " nodes " << nodes;
+    std::cout << " nps " << nps << " time " << time;
+    std::cout << " pv ";
+    for (int i = 0; i < pvt.heights[0]; i++){
+        std::cout << pos.moveName(pvt.vars[i]) << ' ';
+    }
+    std::cout << std::endl;
 
     std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
 

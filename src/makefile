@@ -1,4 +1,4 @@
-EXE := Wilted
+EXE := Wilted-0-1-1-0
 #no evalfile yet
 ARCH := native
 SOURCES := Wilted.cpp Searcher.cpp Evaluator.cpp Generator.cpp Position.cpp
@@ -43,4 +43,5 @@ Searcher.o: Searcher.h Searcher.cpp
 
 clean: # Works on Windows
 	del *.o;
+	del *.exe;
 #del wiltest.exe;
