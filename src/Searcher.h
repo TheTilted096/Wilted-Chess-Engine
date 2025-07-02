@@ -3,6 +3,7 @@
 #include "Evaluator.h"
 #include "Generator.h"
 #include "Princes.h"
+#include "Timeman.h"
 
 class Searcher{
     public:
@@ -13,12 +14,13 @@ class Searcher{
         Princes pvt;
 
         uint64_t nodes;
-        //uint64_t hardNodeCap;
+        uint64_t hardNodeMax;
+        uint64_t lifeNodes;
 
         Move bestMove;   
         //Index movesDeep; //indicates how deep into search stack
 
-        std::chrono::steady_clock::time_point moment; //timed search start point
+        Timeman tim;
 
         Searcher();
 
@@ -26,11 +28,15 @@ class Searcher{
         void revokeMove(const Move& m);
 
         Score alphabeta(Score, Score, Depth, Index);
-        Score search();
+        Score search(Depth, uint64_t, bool);
+
+        void maybeForceStop();
 
         void newGame();
 
         Move getBest(){ return bestMove; }
+
+        void bench();
 
         static constexpr Score SCORE_INF = 21000;
 

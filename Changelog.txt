@@ -5,3 +5,5 @@ Changelog
 06-29-2025 ... 0.0.1.1 ... 960 Support
 06-30-2025 ... 0.1.0.0 ... Basic A/B Search (Unverified)
 07-01-2025 ... 0.1.1.0 ... PV Table
+07-01-2025 ... 0.1.2.0 ... Iterative Deepening, Time Management
+07-01-2025 ... 0.1.2.1 ... Bench

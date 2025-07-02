@@ -4,7 +4,7 @@
 
 class Princes{
     public:
-        static constexpr Index LEN = 8;
+        static constexpr Index LEN = 16;
         static constexpr std::size_t PRINCE_SIZE = (LEN) * (LEN + 1) / 2;
         Move vars[PRINCE_SIZE]; //perhaps make this impl less C-style
         Index heights[LEN];

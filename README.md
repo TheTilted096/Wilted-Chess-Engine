@@ -6,11 +6,13 @@ Base of future chess engine projects
 
 # To-Do's and Notes
 
-write a perftsuite function
-
 possibly create compound class between Generator and Position
 
+switch to safer method of exiting search
+
 re organize, maybe a sub-folder
+
+write a perftsuite function
 
 rethink standard library include locations
 

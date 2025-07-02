@@ -1,4 +1,4 @@
-EXE := Wilted-0-1-1-0
+EXE := Wilted-0-1-2-1
 #no evalfile yet
 ARCH := native
 SOURCES := Wilted.cpp Searcher.cpp Evaluator.cpp Generator.cpp Position.cpp
@@ -38,7 +38,7 @@ Generator.o: Generator.h Generator.cpp
 Evaluator.o: Evaluator.h Evaluator.cpp
 	$(CXX) $(CXXFLAGS) -c Evaluator.cpp -o Evaluator.o
 
-Searcher.o: Searcher.h Searcher.cpp
+Searcher.o: Searcher.h Timeman.h Princes.h Searcher.cpp
 	$(CXX) $(CXXFLAGS) -c Searcher.cpp -o Searcher.o
 
 clean: # Works on Windows

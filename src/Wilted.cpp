@@ -6,7 +6,12 @@
 int main(int argc, char* argv[]){
     Searcher master;
 
-    std::string versionStr = "Wilted 0.1.1.0";
+    if ((argc == 2) and (std::string(argv[1]) == "bench")){
+        master.bench();
+        return 0;
+    }
+
+    std::string versionStr = "Wilted 0.1.2.1";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -87,7 +92,26 @@ int main(int argc, char* argv[]){
         if (command == "setoption name UCI_Chess960 value false"){ master.pos.stopFRC(); }
 
         if (command.substr(0, 2) == "go"){
-            master.search();
+            std::stringstream searchLimits(command);
+
+            std::string ot = master.pos.toMove ? "wtime" : "btime";
+            std::string oi = master.pos.toMove ? "winc" : "binc";
+
+            uint32_t thinkBase = ~0U;
+            uint32_t thinkrement = 0U; // increment 0 unless specified
+            Depth thinkDepth = Searcher::MAX_PLY;
+            uint64_t thinkNodes = ~0ULL;
+
+            while (!searchLimits.eof()){
+                searchLimits >> param;
+                if (param == ot){ searchLimits >> param; thinkBase = stoi(param); }
+                if (param == oi){ searchLimits >> param; thinkrement = stoi(param); }
+                if (param == "depth"){ searchLimits >> param; thinkDepth = stoi(param); }
+                if (param == "nodes"){ searchLimits >> param; thinkNodes = stoi(param); }
+            }
+
+            master.tim.setBounds(thinkBase, thinkrement);
+            master.search(thinkDepth, thinkNodes, true);
         }
 
         if (command.substr(0, 5) == "perft"){
