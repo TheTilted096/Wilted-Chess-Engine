@@ -5,7 +5,8 @@
 #include "Attacks.h"
 #include "Position.h"
 
-using Actions = std::array<Move, 128>;
+constexpr std::size_t MOVELIST_SIZE = 128;
+using MoveList = std::array<Move, MOVELIST_SIZE>;
 
 class Generator{
     public:
@@ -22,10 +23,10 @@ class Generator{
 
         Count countLegal();
 
-        template <bool> Count generate(Actions&);
+        template <bool> Count generate(MoveList&);
 
-        Count generateMoves(Actions& ml){ return generate<false>(ml); }
-        Count generateCaptures(Actions& ml){ return generate<true>(ml); }
+        Count generateMoves(MoveList& ml){ return generate<false>(ml); }
+        Count generateCaptures(MoveList& ml){ return generate<true>(ml); }
 
         Move unalgebraic(std::string);
 };

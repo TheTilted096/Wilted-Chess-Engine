@@ -68,7 +68,7 @@ bool Generator::illegal() const{
     return isChecked(us);
 }
 
-template <bool captureOnly> Count Generator::generate(Actions& moveList){
+template <bool captureOnly> Count Generator::generate(MoveList& moveList){
     Count totalMoves = 0;
 
     Bitboard moveSet, pieces, captureSet;
@@ -448,7 +448,7 @@ template <bool captureOnly> Count Generator::generate(Actions& moveList){
 }
 
 Count Generator::countLegal(){
-    Actions ml;
+    MoveList ml;
     Count pl = generate<false>(ml);
 
     Count num = 0;
@@ -471,7 +471,7 @@ Count Generator::countLegal(){
 }
 
 Move Generator::unalgebraic(std::string str){
-    Actions testers = {};
+    MoveList testers = {};
     Count c = generateMoves(testers);
 
     for (Count i = 0; i < c; i++){

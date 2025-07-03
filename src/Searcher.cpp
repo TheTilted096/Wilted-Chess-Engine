@@ -36,6 +36,37 @@ void Searcher::revokeMove(const Move& m){
     eva.undoMove(m);
 }
 
+void Searcher::scoreMoves(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len){
+    for (Index i = 0; i < len; i++){
+        if (ml[i].captured()){ //capture
+            points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16); //MVV LVA
+            continue;
+        }
+
+        points[i] = ml[i].moving(); //LVA
+    }
+}
+
+void Searcher::sortMoves(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len){
+    uint32_t keyPoints;
+    Move keyMove;
+
+    Index j;
+    for (Index i = 1; i < len; i++){
+        keyPoints = points[i];
+        keyMove = ml[i];
+        j = i;
+        while ((j > 0) and (points[j - 1] < keyPoints)){
+            points[j] = points[j - 1];
+            ml[j] = ml[j - 1];
+            j--;
+        }
+
+        points[j] = keyPoints;
+        ml[j] = keyMove;
+    }
+}
+
 void Searcher::newGame(){
     pos.setStartPos();
     pvt.clearAll();
@@ -82,8 +113,12 @@ Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
 
     bool inCheck = gen.isChecked(pos.toMove); //maybe clean up these functions
 
-    Actions moves{};
+    MoveList moves;
     Count moveCount = gen.generateMoves(moves);
+
+    std::array<uint32_t, MOVELIST_SIZE> movePower;
+    scoreMoves(moves, movePower, moveCount);
+    sortMoves(moves, movePower, moveCount);    
 
     for (Index i = 0; i < moveCount; i++){
 

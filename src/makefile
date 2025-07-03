@@ -1,4 +1,4 @@
-EXE := Wilted-0-1-2-1
+EXE := Wilted-0-2-0-0
 #no evalfile yet
 ARCH := native
 SOURCES := Wilted.cpp Searcher.cpp Evaluator.cpp Generator.cpp Position.cpp
@@ -24,7 +24,7 @@ $(EXE):
 # During Development, frequent compilation
 
 engine: Wilted.o Position.o Generator.o Evaluator.o Searcher.o
-	$(CXX) Wilted.o Searcher.o Evaluator.o Generator.o Position.o $(CXXFLAGS) -o wiltest
+	$(CXX) Wilted.o Searcher.o Evaluator.o Generator.o Position.o $(CXXFLAGS) -o $(EXE)
 
 Wilted.o: Wilted.cpp
 	$(CXX) $(CXXFLAGS) -c Wilted.cpp -o Wilted.o

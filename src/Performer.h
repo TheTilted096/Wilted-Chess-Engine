@@ -25,7 +25,7 @@ template <bool rootNode> uint64_t Performer::perft(const Depth& depth){
     }
 
     uint64_t nodes = 0ULL;
-    Actions mlist = {};
+    MoveList mlist = {};
 
     //gen.posptr->print();
 

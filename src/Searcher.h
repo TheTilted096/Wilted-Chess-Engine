@@ -27,6 +27,10 @@ class Searcher{
         bool invokeMove(const Move& m);
         void revokeMove(const Move& m);
 
+        void scoreMoves(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&);
+        //void scoreCaptures(MoveList&, uint32_t*&, const Index&);
+        void sortMoves(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&);
+
         Score alphabeta(Score, Score, Depth, Index);
         Score search(Depth, uint64_t, bool);
 

@@ -74,7 +74,7 @@ bool Position::insufficient() const{
         return false;
     }
 
-    return std::popcount<Bitboard>((pieces[Bishop] | pieces[Knight]) < 2);
+    return std::popcount<Bitboard>(pieces[Bishop] | pieces[Knight]) < 2;
 }
 
 void Position::readFen(std::string fen){

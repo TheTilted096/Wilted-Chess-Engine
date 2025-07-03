@@ -8,9 +8,13 @@ Base of future chess engine projects
 
 possibly create compound class between Generator and Position
 
+movelist/scoredmovelist wrapper
+
 switch to safer method of exiting search
 
 re organize, maybe a sub-folder
+
+investiate slowdowns, -(5-10%) perft, slower incremental psqt
 
 write a perftsuite function
 
@@ -22,8 +26,6 @@ lazy updates...?
 
 perhaps neaten up deduceCastling() to remove some conditionals
 
-perhaps regain 5-10% perft speed (slightly more branching, wrapper types)
-
 # Versioning Scheme
 
 4th - Non functional
@@ -33,6 +35,8 @@ perhaps regain 5-10% perft speed (slightly more branching, wrapper types)
 2nd - Moderate update
 
 1st - very important
+
+dev names will be x-x-x-x-dev, updates numbers if passed
 
 # specifications
 
