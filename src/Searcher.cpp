@@ -47,6 +47,12 @@ void Searcher::scoreMoves(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& poi
     }
 }
 
+void Searcher::scoreCaptures(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len){
+    for (Index i = 0; i < len; i++){
+        points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16);
+    }
+}
+
 void Searcher::sortMoves(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len){
     uint32_t keyPoints;
     Move keyMove;
@@ -84,6 +90,54 @@ void Searcher::maybeForceStop(){
     }
 }
 
+Score Searcher::quiesce(Score alpha, Score beta){
+    //insufficient material
+    if (pos.insufficient()){
+        return DRAW;
+    }
+
+    Score score = eva.judge();
+    Score bestScore = score;
+
+    if (score >= beta){
+        return score;
+    }
+    if (score > alpha){
+        alpha = score;
+    }
+
+    MoveList captures;
+    Count captureCount = gen.generateCaptures(captures);
+
+    std::array<uint32_t, MOVELIST_SIZE> capturePower;
+    scoreCaptures(captures, capturePower, captureCount);
+    sortMoves(captures, capturePower, captureCount);
+
+    for (Index i = 0; i < captureCount; i++){
+
+        maybeForceStop();
+
+        bool legal = invokeMove(captures[i]);
+        if (!legal){ continue; }
+
+        score = -quiesce(-beta, -alpha);
+
+        revokeMove(captures[i]);
+
+        if (score >= beta){
+            return score;
+        }
+        if (score > alpha){
+            alpha = score;
+        }
+        if (score > bestScore){
+            bestScore = score;
+        }
+    }
+
+    return bestScore;
+}
+
 Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
     Score score = DEFEAT;
     Score bestScore = DEFEAT;
@@ -108,7 +162,7 @@ Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
     }
 
     if (depth == 0){
-        return eva.judge();
+        return quiesce(alpha, beta);
     }
 
     bool inCheck = gen.isChecked(pos.toMove); //maybe clean up these functions

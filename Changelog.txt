@@ -7,4 +7,5 @@ Changelog
 07-01-2025 ... 0.1.1.0 ... PV Table
 07-01-2025 ... 0.1.2.0 ... Iterative Deepening, Time Management
 07-01-2025 ... 0.1.2.1 ... Bench
-07-02-2025 ... 0.2.0.0 ... MVV-LVA Move Ordering
+07-02-2025 ... 0.2.0.0 ... MVV-LVA Move Ordering ................ (212.4 +/- 49.4), (8 + 0.08), (Local)
+07-03-2025 ... 0.3.0.0 ... Quiescent Search ..................... (263.4 +/- 55.1), (8 + 0.08), (Local)

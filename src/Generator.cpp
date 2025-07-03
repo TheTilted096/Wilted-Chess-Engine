@@ -447,6 +447,9 @@ template <bool captureOnly> Count Generator::generate(MoveList& moveList){
     return totalMoves;
 }
 
+template Count Generator::generate<false>(MoveList&);
+template Count Generator::generate<true>(MoveList&);
+
 Count Generator::countLegal(){
     MoveList ml;
     Count pl = generate<false>(ml);

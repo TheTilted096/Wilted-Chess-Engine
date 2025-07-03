@@ -28,9 +28,10 @@ class Searcher{
         void revokeMove(const Move& m);
 
         void scoreMoves(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&);
-        //void scoreCaptures(MoveList&, uint32_t*&, const Index&);
+        void scoreCaptures(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&);
         void sortMoves(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&);
 
+        Score quiesce(Score, Score); //Index by Ply? - Could be useful for searchstack
         Score alphabeta(Score, Score, Depth, Index);
         Score search(Depth, uint64_t, bool);
 

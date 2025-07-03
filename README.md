@@ -10,6 +10,8 @@ possibly create compound class between Generator and Position
 
 movelist/scoredmovelist wrapper
 
+pickmove instead of sort all at once
+
 switch to safer method of exiting search
 
 re organize, maybe a sub-folder
