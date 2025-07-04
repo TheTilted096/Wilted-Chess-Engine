@@ -138,7 +138,7 @@ Score Searcher::quiesce(Score alpha, Score beta){
     return bestScore;
 }
 
-Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
+template <bool isPV> Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
     Score score = DEFEAT;
     Score bestScore = DEFEAT;
 
@@ -165,6 +165,14 @@ Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
         return quiesce(alpha, beta);
     }
 
+    if constexpr (!isPV){ //mate distance pruning
+        Score ma = std::max(alpha, static_cast<Score>(DEFEAT + ply));
+        Score mb = std::min(beta, static_cast<Score>(VICTORY - ply - 1));
+        if (ma >= mb){
+            return ma;
+        }
+    }
+
     bool inCheck = gen.isChecked(pos.toMove); //maybe clean up these functions
 
     MoveList moves;
@@ -172,7 +180,9 @@ Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
 
     std::array<uint32_t, MOVELIST_SIZE> movePower;
     scoreMoves(moves, movePower, moveCount);
-    sortMoves(moves, movePower, moveCount);    
+    sortMoves(moves, movePower, moveCount);
+    
+    Count numLegal = 0;
 
     for (Index i = 0; i < moveCount; i++){
 
@@ -181,8 +191,19 @@ Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
         bool legal = invokeMove(moves[i]);
         if (!legal){ continue; }
 
-        score = -alphabeta(-beta, -alpha, depth - 1, ply + 1);
+        numLegal++;
 
+        if (numLegal == 1){
+            score = -alphabeta<true>(-beta, -alpha, depth - 1, ply + 1);
+        } else {
+            score = -alphabeta<false>(-alpha - 1, -alpha, depth - 1, ply + 1);
+
+            if ((score > alpha) and isPV){
+                score = -alphabeta<true>(-beta, -alpha, depth - 1, ply + 1);
+            }
+        }
+        
+        
         revokeMove(moves[i]);
 
         if (score > bestScore){
@@ -196,7 +217,9 @@ Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
                 bestMove = moves[i];
             }
 
-            pvt.write(moves[i], ply);
+            if constexpr (isPV){
+                pvt.write(moves[i], ply);
+            }
         }
 
         if (score >= beta){ //Cut Node
@@ -212,6 +235,9 @@ Score Searcher::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
 
     return bestScore;
 }
+
+template Score Searcher::alphabeta<true>(Score, Score, Depth, Index);
+template Score Searcher::alphabeta<false>(Score, Score, Depth, Index);
 
 Score Searcher::search(Depth depthLim, uint64_t nodeLim, bool output){
     eva.refresh();
@@ -235,7 +261,7 @@ Score Searcher::search(Depth depthLim, uint64_t nodeLim, bool output){
 
     try {
         for (Depth d = 1; d <= depthLim; d++){
-            searchScore = alphabeta(-SCORE_INF, SCORE_INF, d, 0);
+            searchScore = alphabeta<true>(-SCORE_INF, SCORE_INF, d, 0);
             
             currentBest = bestMove;
             if (output){
