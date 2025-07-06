@@ -4,15 +4,14 @@
 
 class Princes{
     public:
-        static constexpr Index LEN = 16;
-        static constexpr std::size_t PRINCE_SIZE = (LEN) * (LEN + 1) / 2;
+        static constexpr std::size_t PRINCE_SIZE = (MAX_PLY) * (MAX_PLY + 1) / 2;
         Move vars[PRINCE_SIZE]; //perhaps make this impl less C-style
-        Index heights[LEN];
+        Index heights[MAX_PLY];
 
         Princes(){ clearAll(); }
 
         Move* line(int k){ //gets pvs at depth k
-            return &vars[k * (2 * LEN + 1 - k) / 2];
+            return &vars[k * (2 * MAX_PLY + 1 - k) / 2];
         }
 
         void clearLine(int k){
@@ -20,7 +19,7 @@ class Princes{
         }
 
         void clearAll(){
-            for (int i = 0; i < LEN; i++){
+            for (int i = 0; i < MAX_PLY; i++){
                 heights[i] = 0;
             }
         }

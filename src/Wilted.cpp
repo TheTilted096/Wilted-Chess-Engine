@@ -11,7 +11,7 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
-    std::string versionStr = "Wilted 0.3.1.0";
+    std::string versionStr = "Wilted 0.3.1.1";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]){
 
             uint32_t thinkBase = ~0U;
             uint32_t thinkrement = 0U; // increment 0 unless specified
-            Depth thinkDepth = Searcher::MAX_PLY;
+            Depth thinkDepth = MAX_PLY;
             uint64_t thinkNodes = ~0ULL;
 
             while (!searchLimits.eof()){

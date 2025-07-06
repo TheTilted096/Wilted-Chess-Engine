@@ -42,15 +42,4 @@ class Searcher{
         Move getBest(){ return bestMove; }
 
         void bench();
-
-        static constexpr Score SCORE_INF = 21000;
-
-        static constexpr Score VICTORY = 20000;
-        static constexpr Score DEFEAT = -20000;
-        static constexpr Score DRAW = 0;
-
-        static constexpr Score FORCE_VICTORY = 19000;
-        static constexpr Score FORCE_DEFEAT = -19000;
-
-        static constexpr Index MAX_PLY = Princes::LEN; //maximum PV/search length
 };
