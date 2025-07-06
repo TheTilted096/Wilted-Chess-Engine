@@ -10,3 +10,4 @@ Changelog
 07-02-2025 ... 0.2.0.0 ... MVV-LVA Move Ordering ................ (248.9 +/- 68.2), (8 + 0.08), (SPRT, 122), (Local)
 07-03-2025 ... 0.3.0.0 ... Quiescent Search ..................... (248.0 +/- 67.6), (8 + 0.08), (SPRT, 137), (Local)
 07-04-2025 ... 0.3.1.0 ... Principal Variation Search ........... (50.1 +/- 24.4) , (8 + 0.08), (SPRT, 642), (Local)
+07-05-2025 ... 0.3.1.1 ... Makefile Workaround
