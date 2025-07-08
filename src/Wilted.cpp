@@ -1,17 +1,19 @@
 // Driver Code for Wilted Engine
 
 #include "Performer.h"
-#include "Searcher.h"
+#include "Engine.h"
 
 int main(int argc, char* argv[]){
-    Searcher master;
+    Engine engine;
+    Position& mainpos = engine.master.pos;
+    Generator& maingen = engine.master.gen;
 
     if ((argc == 2) and (std::string(argv[1]) == "bench")){
-        master.bench();
+        engine.bench();
         return 0;
     }
 
-    std::string versionStr = "Wilted 0.3.1.1";
+    std::string versionStr = "Wilted 0.3.1.2";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -38,11 +40,11 @@ int main(int argc, char* argv[]){
         }
 
         if (command == "ucinewgame"){
-            master.newGame();
+            engine.newGame();
         }
 
         if (command.substr(0, 17) == "position startpos"){
-            master.pos.setStartPos();
+            mainpos.setStartPos();
 
             int movesStart = command.find("moves");
             if (movesStart == 18){ //if there is a moves xx string
@@ -53,12 +55,12 @@ int main(int argc, char* argv[]){
 
                 while (!extras.eof()){
                     extras >> param;
-                    given = master.gen.unalgebraic(param);
+                    given = maingen.unalgebraic(param);
                     if (!given.bad()){
-                        master.pos.makeMove(given);
+                        mainpos.makeMove(given);
                     }
                     if (given.resets()){
-                        master.pos.forget();
+                        mainpos.forget();
                     }
                 }
             }
@@ -67,7 +69,7 @@ int main(int argc, char* argv[]){
         if (command.substr(0, 12) == "position fen"){
             int movesStart = command.find("moves"); //should return -1 (ULL) if not found
 
-            master.pos.readFen(command.substr(13, movesStart - 13));
+            mainpos.readFen(command.substr(13, movesStart - 13));
 
             if (movesStart != -1){
 
@@ -77,25 +79,25 @@ int main(int argc, char* argv[]){
 
                 while (!extras.eof()){
                     extras >> param;
-                    given = master.gen.unalgebraic(param);
+                    given = maingen.unalgebraic(param);
                     if (!given.bad()){
-                        master.pos.makeMove(given);
+                        mainpos.makeMove(given);
                     }
                     if (given.resets()){
-                        master.pos.forget();
+                        mainpos.forget();
                     }
                 }
             }
         }
 
-        if (command == "setoption name UCI_Chess960 value true"){ master.pos.setFRC(); }
-        if (command == "setoption name UCI_Chess960 value false"){ master.pos.stopFRC(); }
+        if (command == "setoption name UCI_Chess960 value true"){ mainpos.setFRC(); }
+        if (command == "setoption name UCI_Chess960 value false"){ mainpos.stopFRC(); }
 
         if (command.substr(0, 2) == "go"){
             std::stringstream searchLimits(command);
 
-            std::string ot = master.pos.toMove ? "wtime" : "btime";
-            std::string oi = master.pos.toMove ? "winc" : "binc";
+            std::string ot = mainpos.toMove ? "wtime" : "btime";
+            std::string oi = mainpos.toMove ? "winc" : "binc";
 
             uint32_t thinkBase = ~0U;
             uint32_t thinkrement = 0U; // increment 0 unless specified
@@ -110,14 +112,14 @@ int main(int argc, char* argv[]){
                 if (param == "nodes"){ searchLimits >> param; thinkNodes = stoi(param); }
             }
 
-            master.tim.setBounds(thinkBase, thinkrement);
-            master.search(thinkDepth, thinkNodes, true);
+            engine.master.tim.setBounds(thinkBase, thinkrement);
+            engine.go(thinkDepth, thinkNodes, true);
         }
 
         if (command.substr(0, 5) == "perft"){
             Depth d = std::stoi(command.substr(6));
 
-            Performer perf(&master.pos);
+            Performer perf(&mainpos);
 
             perf.run(d);
         }
@@ -129,11 +131,11 @@ int main(int argc, char* argv[]){
         }
 
         if (command == "printpieces"){
-            master.pos.print();
+            mainpos.print();
         }
 
         if (command == "printzobrist"){
-            master.pos.showZobrist();
+            mainpos.showZobrist();
         }
 
         if (command == "test"){

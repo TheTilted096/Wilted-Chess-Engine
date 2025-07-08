@@ -36,7 +36,7 @@ template <bool rootNode> uint64_t Performer::perft(const Depth& depth){
         posptr->makeMove(mlist[i]);
         //std::cout << mlist[i].toString() << '\n';
 
-        if (gen.illegal()){
+        if (posptr->illegal()){
             //std::cout << "illegal prune\n";
             posptr->unmakeMove();
             continue;

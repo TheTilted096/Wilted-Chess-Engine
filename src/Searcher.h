@@ -3,6 +3,7 @@
 #include "Evaluator.h"
 #include "Generator.h"
 #include "Princes.h"
+//#include "TeaTable.h"
 #include "Timeman.h"
 
 class Searcher{
@@ -12,6 +13,8 @@ class Searcher{
         Evaluator eva;
         
         Princes pvt;
+
+        //TeaTable* ttref;
 
         uint64_t nodes;
         uint64_t hardNodeMax;
@@ -23,6 +26,8 @@ class Searcher{
         Timeman tim;
 
         Searcher();
+
+        //void assign(TeaTable*);
 
         bool invokeMove(const Move& m);
         void revokeMove(const Move& m);
@@ -40,6 +45,4 @@ class Searcher{
         void newGame();
 
         Move getBest(){ return bestMove; }
-
-        void bench();
 };

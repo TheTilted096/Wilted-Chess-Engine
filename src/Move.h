@@ -71,4 +71,5 @@ class Move{
         }
   
         static constexpr uint32_t Invalid = 0xFFFU; //How to make this into a static Move object?
+        static constexpr uint32_t Null = 0U;
 };

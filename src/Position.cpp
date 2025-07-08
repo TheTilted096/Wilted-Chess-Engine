@@ -77,6 +77,70 @@ bool Position::insufficient() const{
     return std::popcount<Bitboard>(pieces[Bishop] | pieces[Knight]) < 2;
 }
 
+bool Position::isAttacked(const Square& sq, const Color& c) const{
+    Bitboard checkers;
+    
+    checkers = Attacks::PawnAttacks[!c][sq] & those(c, Pawn);
+    if (checkers){ return true; }
+
+    checkers = Attacks::KnightAttacks[sq] & those(c, Knight);
+    if (checkers){ return true; }
+
+    checkers = Attacks::KingAttacks[sq] & those(c, King);
+    if (checkers){ return true; }
+
+    Bitboard occ = occupied();
+    Bitboard army = sides[c];
+    checkers = Attacks::rookAttacks(sq, occ) & straightPieces() & army;
+    if (checkers){ return true; }
+
+    checkers = Attacks::bishopAttacks(sq, occ) & diagonalPieces() & army;
+    return !!checkers;
+}
+
+bool Position::isChecked(const Color& c) const{
+    Square k = getLeastBit(those(c, King));
+
+    return isAttacked(k, flip(c));
+}
+
+bool Position::illegal() const{
+    Color us = flip(toMove); //easier to think about from nstm
+
+    uint8_t cat = lastPlayed().castling();
+    if (cat){ //Kingside = 1, Queenside = 2, choose the relevant one
+        Bitboard extra = (cat - 1) ? queenSafeMask[us] : kingSafeMask[us];
+        Square s;
+        while (extra){
+            s = popLeastBit(extra);
+            if (isAttacked(s, flip(us))){
+                return true;
+            }
+        }
+
+        if (isFRC){ //castling rook "blocks"
+            Bitboard backRankers = (0xFFULL << (us * 56)) & straightPieces() & sides[!us];
+            if (backRankers){
+                Square target = lastPlayed().from();
+                Square fakeDest = lastPlayed().to(); //king destination
+                Square fakeFile = (cat - 1) ? queenRookTo[us] : kingRookTo[us]; //rook destination
+
+                Bitboard occ = (occupied() ^ squareBitboard(fakeDest) ^ squareBitboard(fakeFile));
+
+                Square agro = (cat - 1) ? getLeastBit(backRankers) : getMostBit(backRankers);
+                Bitboard seen = Attacks::rookAttacks(agro, occ);
+                if (seen & squareBitboard(target)){
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    return isChecked(us);
+}
+
 void Position::readFen(std::string fen){
     //Example: rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1
 
@@ -583,16 +647,18 @@ void Position::makeCastleTable(const std::array<char, 4>& parts){
     }
 }
 
-std::string Position::moveName(const Move& m) const{
+std::string Position::moveName(const Move& m, bool toFlip) const{
     Square start = m.from();
     Square end;
+
+    Color stm = static_cast<Color>(toMove ^ toFlip);
 
     if (!m.castling() or !isFRC){
         end = m.to();
     } else if (m.kingCastle()){
-        end = kingRookFrom[toMove];
+        end = kingRookFrom[stm];
     } else {
-        end = queenRookFrom[toMove];
+        end = queenRookFrom[stm];
     }
 
     std::string result = "";
@@ -608,3 +674,4 @@ std::string Position::moveName(const Move& m) const{
 
     return result;
 }
+

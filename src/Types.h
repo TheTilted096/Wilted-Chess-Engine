@@ -22,13 +22,13 @@ enum Piece : uint8_t{King, Queen, Rook, Bishop, Knight, Pawn, None};
 
 inline Piece operator++(Piece& p, int){
     Piece q = p;
-    p = static_cast<Piece>(static_cast<uint8_t>(p) + 1);
+    p = static_cast<Piece>(p + 1);
     return q;
 }
 
 inline Piece operator--(Piece& p, int){
     Piece q = p;
-    p = static_cast<Piece>(static_cast<uint8_t>(p) - 1);
+    p = static_cast<Piece>(p - 1);
     return q;
 }
 
@@ -50,7 +50,7 @@ enum Square : uint8_t{
 };
 
 constexpr Square operator+=(Square& s, const uint8_t& a){
-    s = static_cast<Square>(static_cast<uint8_t>(s) + a);
+    s = static_cast<Square>(s + a);
     return s;
 }
 

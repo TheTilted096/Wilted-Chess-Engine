@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "Attacks.h"
 #include "Position.h"
 
 constexpr std::size_t MOVELIST_SIZE = 128;
@@ -15,11 +14,6 @@ class Generator{
         Generator();
 
         void assign(Position* pp){ pos = pp; }
-
-        bool isAttacked(const Square&, const Color&) const;
-        bool isChecked(const Color&) const;
-
-        bool illegal() const;
 
         Count countLegal();
 

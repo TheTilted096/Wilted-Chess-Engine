@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Attacks.h"
 #include "Move.h"
 #include "Zobrist.h"
 
@@ -28,6 +29,11 @@ class Position{
 
         Piece pieceAt(const Square&) const;
         bool insufficient() const;
+
+        bool isAttacked(const Square&, const Color&) const;
+        bool isChecked(const Color&) const;
+
+        bool illegal() const;
 
         Count sinceReset() const{ return halfMoves[clock]; }
 
@@ -67,10 +73,10 @@ class Position{
         void makeMove(const Move& m);
         void unmakeMove();
 
-        std::string moveName(const Move& m) const;
+        std::string moveName(const Move& m, bool toFlip = false) const;
 
         bool isFRC = false;
-        void setFRC(){ 
+        void setFRC(){
             isFRC = true; 
             //std::cout << "generated\n";
             makeCastleTable({'H', 'A', 'h', 'a'});

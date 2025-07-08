@@ -4,70 +4,6 @@
 
 Generator::Generator(){}
 
-bool Generator::isAttacked(const Square& sq, const Color& c) const{
-    Bitboard checkers;
-    
-    checkers = Attacks::PawnAttacks[!c][sq] & pos->those(c, Pawn);
-    if (checkers){ return true; }
-
-    checkers = Attacks::KnightAttacks[sq] & pos->those(c, Knight);
-    if (checkers){ return true; }
-
-    checkers = Attacks::KingAttacks[sq] & pos->those(c, King);
-    if (checkers){ return true; }
-
-    Bitboard occ = pos->occupied();
-    Bitboard army = pos->sides[c];
-    checkers = Attacks::rookAttacks(sq, occ) & pos->straightPieces() & army;
-    if (checkers){ return true; }
-
-    checkers = Attacks::bishopAttacks(sq, occ) & pos->diagonalPieces() & army;
-    return !!checkers;
-}
-
-bool Generator::isChecked(const Color& c) const{
-    Square k = getLeastBit(pos->those(c, King));
-
-    return isAttacked(k, flip(c));
-}
-
-bool Generator::illegal() const{
-    Color us = flip(pos->toMove); //easier to think about from nstm
-
-    uint8_t cat = pos->lastPlayed().castling();
-    if (cat){ //Kingside = 1, Queenside = 2, choose the relevant one
-        Bitboard extra = (cat - 1) ? pos->queenSafeMask[us] : pos->kingSafeMask[us];
-        Square s;
-        while (extra){
-            s = popLeastBit(extra);
-            if (isAttacked(s, flip(us))){
-                return true;
-            }
-        }
-
-        if (pos->isFRC){ //castling rook "blocks"
-            Bitboard backRankers = (0xFFULL << (us * 56)) & pos->straightPieces() & pos->sides[!us];
-            if (backRankers){
-                Square target = pos->lastPlayed().from();
-                Square fakeDest = pos->lastPlayed().to(); //king destination
-                Square fakeFile = (cat - 1) ? pos->queenRookTo[us] : pos->kingRookTo[us]; //rook destination
-
-                Bitboard occ = (pos->occupied() ^ squareBitboard(fakeDest) ^ squareBitboard(fakeFile));
-
-                Square agro = (cat - 1) ? getLeastBit(backRankers) : getMostBit(backRankers);
-                Bitboard seen = Attacks::rookAttacks(agro, occ);
-                if (seen & squareBitboard(target)){
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    return isChecked(us);
-}
-
 template <bool captureOnly> Count Generator::generate(MoveList& moveList){
     Count totalMoves = 0;
 
@@ -459,7 +395,7 @@ Count Generator::countLegal(){
     for (Count i = 0; i < pl; i++){
         pos->makeMove(ml[i]);
         //std::cout << ml[i].toString() << '\n';
-        if (illegal()){
+        if (pos->illegal()){
             pos->unmakeMove();
             //std::cout << "Legality Prune\n";
             continue;
