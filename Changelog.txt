@@ -11,3 +11,4 @@ Changelog
 07-03-2025 ... 0.3.0.0 ... Quiescent Search ..................... (248.0 +/- 67.6), (8 + 0.08), (SPRT, 137), (Local)
 07-04-2025 ... 0.3.1.0 ... Principal Variation Search ........... (50.1 +/- 24.4) , (8 + 0.08), (SPRT, 642), (Local)
 07-05-2025 ... 0.3.1.1 ... Makefile Workaround
+07-08-2025 ... 0.3.1.2 ... Refactors and Cleanups; Prepare for TT and Multithread
