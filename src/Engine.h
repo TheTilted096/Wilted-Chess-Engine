@@ -6,12 +6,16 @@ class Engine{
     public:
         //TeaTable ttable;
 
-        Searcher master;
+        Master master;
+
+        Princes pvtable;
+        Timeman timer;
+        bool stopFlag;
         
         Engine();
 
         void newGame();
         void bench();
 
-        Score go(Depth, uint64_t, bool);
+        template <bool> Score go(Depth, uint64_t);
 };

@@ -28,11 +28,12 @@ Hash Teacup::eHash(){
 
 void Teacup::reset(){
     data = 0ULL;
+    hash = 0ULL;
 }
 
 void Teacup::update(Score s, NodeType nt, Depth d, Hash h, Move m){
     data = m.info;
-    data |= (static_cast<uint64_t>(s) << 32);
+    data |= (static_cast<uint64_t>(s) << 32); //do the mate score thing later
     data |= (static_cast<uint64_t>(d) << 48);
     data |= (static_cast<uint64_t>(nt) << 54);
 

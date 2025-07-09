@@ -6,13 +6,16 @@
 //#include "TeaTable.h"
 #include "Timeman.h"
 
-class Searcher{
+template <bool isMaster> class Searcher{
     public:
         Position pos;
         Generator gen;
         Evaluator eva;
         
-        Princes pvt;
+        //shared items, only modified by master
+        Princes* pvt;
+        Timeman* tim;
+        bool* stopSearch;
 
         //TeaTable* ttref;
 
@@ -20,14 +23,12 @@ class Searcher{
         uint64_t hardNodeMax;
         uint64_t lifeNodes;
 
-        Move bestMove;   
-        //Index movesDeep; //indicates how deep into search stack
-
-        Timeman tim;
+        Move bestMove;
 
         Searcher();
 
         //void assign(TeaTable*);
+        void assign(Princes*, Timeman*, bool*);
 
         bool invokeMove(const Move& m);
         void revokeMove(const Move& m);
@@ -38,7 +39,7 @@ class Searcher{
 
         Score quiesce(Score, Score); //Index by Ply? - Could be useful for searchstack
         template <bool> Score alphabeta(Score, Score, Depth, Index);
-        Score search(Depth, uint64_t, bool);
+        template <bool> Score search(Depth, uint64_t);
 
         void maybeForceStop();
 
@@ -46,3 +47,9 @@ class Searcher{
 
         Move getBest(){ return bestMove; }
 };
+
+extern template class Searcher<true>;
+extern template class Searcher<false>;
+
+using Master = Searcher<true>;
+using Worker = Searcher<false>;

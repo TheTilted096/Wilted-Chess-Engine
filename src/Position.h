@@ -130,3 +130,13 @@ class Position{
         void makeCastleTable(const std::array<char, 4>& parts);
 
 };
+
+/*
+//struct for reversible elements - use for master thread restore position after search. 
+struct Reversible{ 
+    std::array<Bitboard, 2> sds;
+    std::array<Bitboard, 6> pcs;
+    Color tmv;
+    Index clk;
+};
+*/

@@ -2,12 +2,13 @@
 
 #include "Engine.h"
 
-Engine::Engine(){
-    //master.assign(&ttable);
+Engine::Engine() : master(), pvtable(), timer(), stopFlag(false){
+    master.assign(&pvtable, &timer, &stopFlag);
 }
 
 void Engine::newGame(){
     //ttable.clear();
+    pvtable.clearAll();
     master.newGame();
 }
 
@@ -23,21 +24,36 @@ void Engine::bench(){
         "6k1/8/6p1/8/8/6P1/4qQKP/8 b - - 5 49"
     };
 
-    auto benchStart = std::chrono::steady_clock::now();
+    //auto benchStart = std::chrono::steady_clock::now();
+
+    timer.start();
 
     for (std::string tester : marks){
         newGame();
+        stopFlag = false;
+        
         master.pos.readFen(tester);
-        master.search(7, ~0ULL, false);
+        master.search<false>(7, ~0ULL);
     }
 
-    auto benchEnd = std::chrono::steady_clock::now();
-    int64_t dur = 1 + std::chrono::duration_cast<std::chrono::microseconds>(benchEnd - benchStart).count();
+    //auto benchEnd = std::chrono::steady_clock::now();
+    //int64_t dur = 1 + std::chrono::duration_cast<std::chrono::microseconds>(benchEnd - benchStart).count();
+    int64_t dur = timer.elapsed();
     int64_t nps = 1000000 * master.lifeNodes / dur;
 
     std::cout << master.lifeNodes << " nodes " << nps << " nps " << std::endl;
 }
 
-Score Engine::go(Depth d, uint64_t nl, bool out){
-    return master.search(d, nl, out);
+template <bool out> Score Engine::go(Depth d, uint64_t nl){
+    stopFlag = false;
+    timer.start();
+
+    d = std::min(MAX_PLY, d);
+
+    Score result = master.search<out>(d, nl);
+
+    return result;
 }
+
+template Score Engine::go<true>(Depth, uint64_t);
+template Score Engine::go<false>(Depth, uint64_t);

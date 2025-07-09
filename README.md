@@ -6,6 +6,8 @@ Base of future chess engine projects
 
 # To-Do's and Notes
 
+remember to do the mate score in tt update
+
 possibly create compound class between Generator and Position
 
 movelist/scoredmovelist wrapper
@@ -45,5 +47,9 @@ dev names will be x-x-x-x-dev, updates numbers if passed
 uses PEXT for slider generation, no other supported yet
 
 supports only shredder fen, plays 960 if UCI_Chess960 is set. otherwise, undefined behavior
+
+'go depth' will only limit the main thread
+
+'go nodes' will restrict to single thread
 
 

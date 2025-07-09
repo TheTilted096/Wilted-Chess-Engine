@@ -29,8 +29,8 @@ int main(int argc, char* argv[]){
         if (command == "uci"){
             std::cout << "id name " << versionStr << '\n';
             std::cout << "id author TheTilted096\n";
-            std::cout << "option name Threads type spin default 1 min 1 max 1\n";
-            //std::cout << "option name Hash type spin default 32 min 32 max 32\n";
+            //std::cout << "option name Threads type spin default 1 min 1 max 1\n";
+            std::cout << "option name Hash type spin default 32 min 32 max 32\n";
             std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "uciok" << std::endl;
         }
@@ -112,8 +112,8 @@ int main(int argc, char* argv[]){
                 if (param == "nodes"){ searchLimits >> param; thinkNodes = stoi(param); }
             }
 
-            engine.master.tim.setBounds(thinkBase, thinkrement);
-            engine.go(thinkDepth, thinkNodes, true);
+            engine.timer.setBounds(thinkBase, thinkrement);
+            engine.go<true>(thinkDepth, thinkNodes);
         }
 
         if (command.substr(0, 5) == "perft"){
