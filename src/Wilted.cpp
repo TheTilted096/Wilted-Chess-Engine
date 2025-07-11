@@ -13,11 +13,13 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
-    std::string versionStr = "Wilted 0.3.1.2";
+    std::string versionStr = "Wilted 0.3.1.3";
 
     std::cout << versionStr << " by TheTilted096\n";
 
     std::string command, param;
+
+    bool minPrint = false;
 
     while (true){
         getline(std::cin, command);
@@ -30,8 +32,9 @@ int main(int argc, char* argv[]){
             std::cout << "id name " << versionStr << '\n';
             std::cout << "id author TheTilted096\n";
             //std::cout << "option name Threads type spin default 1 min 1 max 1\n";
-            std::cout << "option name Hash type spin default 32 min 32 max 32\n";
+            //std::cout << "option name Hash type spin default 32 min 32 max 32\n";
             std::cout << "option name UCI_Chess960 type check default false\n";
+            std::cout << "option name Minimal type check default false\n";
             std::cout << "uciok" << std::endl;
         }
 
@@ -90,8 +93,18 @@ int main(int argc, char* argv[]){
             }
         }
 
-        if (command == "setoption name UCI_Chess960 value true"){ mainpos.setFRC(); }
-        if (command == "setoption name UCI_Chess960 value false"){ mainpos.stopFRC(); }
+        if (command.substr(0, 9) == "setoption"){
+            if (command.substr(15, 12) == "UCI_Chess960"){
+                if (command.substr(34) == "true"){ mainpos.setFRC(); }
+                if (command.substr(34) == "false"){ mainpos.stopFRC(); }
+            }
+
+            if (command.substr(15, 7) == "Minimal"){
+                if (command.substr(29) == "true"){ minPrint = true; }
+                if (command.substr(29) == "false"){ minPrint = false; }
+            }
+
+        }
 
         if (command.substr(0, 2) == "go"){
             std::stringstream searchLimits(command);
@@ -113,7 +126,7 @@ int main(int argc, char* argv[]){
             }
 
             engine.timer.setBounds(thinkBase, thinkrement);
-            engine.go<true>(thinkDepth, thinkNodes);
+            engine.go<true>(thinkDepth, thinkNodes, minPrint);
         }
 
         if (command.substr(0, 5) == "perft"){

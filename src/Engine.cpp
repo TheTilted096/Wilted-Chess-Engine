@@ -33,7 +33,7 @@ void Engine::bench(){
         stopFlag = false;
         
         master.pos.readFen(tester);
-        master.search<false>(7, ~0ULL);
+        master.search<false>(7, ~0ULL, false);
     }
 
     //auto benchEnd = std::chrono::steady_clock::now();
@@ -44,16 +44,16 @@ void Engine::bench(){
     std::cout << master.lifeNodes << " nodes " << nps << " nps " << std::endl;
 }
 
-template <bool out> Score Engine::go(Depth d, uint64_t nl){
+template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
     stopFlag = false;
     timer.start();
 
     d = std::min(MAX_PLY, d);
 
-    Score result = master.search<out>(d, nl);
+    Score result = master.search<out>(d, nl, mp);
 
     return result;
 }
 
-template Score Engine::go<true>(Depth, uint64_t);
-template Score Engine::go<false>(Depth, uint64_t);
+template Score Engine::go<true>(Depth, uint64_t, bool);
+template Score Engine::go<false>(Depth, uint64_t, bool);

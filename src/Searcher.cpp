@@ -273,7 +273,7 @@ template Score Searcher<false>::alphabeta<false>(Score, Score, Depth, Index);
 
 template <bool isMaster>
 template <bool output>
-Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim){
+Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint){
     eva.refresh();
     nodes = 0;
 
@@ -297,18 +297,20 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim){
             currentBest = bestMove;
 
             if constexpr (isMaster and output){
-                std::cout << "info depth " << (int)d << " score cp " << searchScore 
-                    << " nodes " << nodes;
+                if (!minPrint){
+                    std::cout << "info depth " << (int)d << " score cp " << searchScore 
+                        << " nodes " << nodes;
 
-                dur = tim->elapsed();
-                nps = 1000000 * nodes / dur;
+                    dur = tim->elapsed();
+                    nps = 1000000 * nodes / dur;
 
-                std::cout << " nps " << nps << " time " << (dur / 1000);
-                std::cout << " pv ";
-                for (int i = 0; i < pvt->heights[0]; i++){
-                    std::cout << pos.moveName(pvt->vars[i], i & 1) << ' ';
+                    std::cout << " nps " << nps << " time " << (dur / 1000);
+                    std::cout << " pv ";
+                    for (int i = 0; i < pvt->heights[0]; i++){
+                        std::cout << pos.moveName(pvt->vars[i], i & 1) << ' ';
+                    }
+                    std::cout << std::endl;
                 }
-                std::cout << std::endl;
             }
 
             if constexpr (isMaster){ //only master should be checking time
@@ -344,10 +346,10 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim){
     return searchScore;
 }
 
-template Score Searcher<true>::search<true>(Depth, uint64_t);
-template Score Searcher<true>::search<false>(Depth, uint64_t);
-template Score Searcher<false>::search<true>(Depth, uint64_t);
-template Score Searcher<false>::search<false>(Depth, uint64_t);
+template Score Searcher<true>::search<true>(Depth, uint64_t, bool);
+template Score Searcher<true>::search<false>(Depth, uint64_t, bool);
+template Score Searcher<false>::search<true>(Depth, uint64_t, bool);
+template Score Searcher<false>::search<false>(Depth, uint64_t, bool);
 
 template class Searcher<true>;
 template class Searcher<false>;

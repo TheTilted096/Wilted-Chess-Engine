@@ -6,6 +6,8 @@ Base of future chess engine projects
 
 # To-Do's and Notes
 
+remember to change the version no in 3 places
+
 remember to do the mate score in tt update
 
 possibly create compound class between Generator and Position

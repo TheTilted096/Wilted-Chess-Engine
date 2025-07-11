@@ -39,7 +39,7 @@ template <bool isMaster> class Searcher{
 
         Score quiesce(Score, Score); //Index by Ply? - Could be useful for searchstack
         template <bool> Score alphabeta(Score, Score, Depth, Index);
-        template <bool> Score search(Depth, uint64_t);
+        template <bool> Score search(Depth, uint64_t, bool);
 
         void maybeForceStop();
 

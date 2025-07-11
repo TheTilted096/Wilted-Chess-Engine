@@ -17,5 +17,5 @@ class Engine{
         void newGame();
         void bench();
 
-        template <bool> Score go(Depth, uint64_t);
+        template <bool> Score go(Depth, uint64_t, bool);
 };
