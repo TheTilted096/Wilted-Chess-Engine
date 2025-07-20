@@ -11,14 +11,14 @@ class Teacup{ //TTentry
         uint64_t data; //move 0-31, score 32-47, depth 48-53, nodetype 54-55
         uint64_t hash; //use high multiplication trick later
 
-        Score eScore();
+        Score eScore(Index ply = 0);
         NodeType enType();
         Depth eDepth();
         Hash eHash();
         Move eMove();
 
         Teacup();
-        void update(Score, NodeType, Depth, Hash, Move);
+        void update(Score, NodeType, Depth, Hash, Move, Index);
         void reset();
 };
 
@@ -38,6 +38,11 @@ class TeaTable{ //Transposition Table
         Teacup& operator[](std::size_t ind){
             return storage[ind];
         }
+
+        Teacup& at(std::size_t ind){ return storage[ind]; }
+
+        std::size_t find(const Hash& h){ return (h % capacity); }
+        Teacup& probe(const Hash& h){ return storage[find(h)]; }
 
         ~TeaTable();  
 };

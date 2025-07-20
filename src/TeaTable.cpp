@@ -6,8 +6,16 @@
 
 Teacup::Teacup(){ reset(); }
 
-Score Teacup::eScore(){
-    return static_cast<Score>((data >> 32) & 0xFFFFULL);
+Score Teacup::eScore(Index ply){
+    Score sc = static_cast<Score>((data >> 32) & 0xFFFFULL);
+
+    if (sc > MIN_VICTORY){
+        return sc - ply;
+    }
+    if (sc < MIN_DEFEAT){
+        return sc + ply;
+    }
+    return sc;
 }
 
 NodeType Teacup::enType(){
@@ -31,8 +39,11 @@ void Teacup::reset(){
     hash = 0ULL;
 }
 
-void Teacup::update(Score s, NodeType nt, Depth d, Hash h, Move m){
+void Teacup::update(Score s, NodeType nt, Depth d, Hash h, Move m, Index ply){
     data = m.info;
+    if (s > MIN_VICTORY){ s += ply; }
+    if (s < MIN_DEFEAT){ s -= ply; }
+
     data |= (static_cast<uint64_t>(s) << 32); //do the mate score thing later
     data |= (static_cast<uint64_t>(d) << 48);
     data |= (static_cast<uint64_t>(nt) << 54);

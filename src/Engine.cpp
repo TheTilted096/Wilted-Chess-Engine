@@ -3,11 +3,11 @@
 #include "Engine.h"
 
 Engine::Engine() : master(), pvtable(), timer(), stopFlag(false){
-    master.assign(&pvtable, &timer, &stopFlag);
+    master.assign(&pvtable, &timer, &stopFlag, &ttable);
 }
 
 void Engine::newGame(){
-    //ttable.clear();
+    ttable.clear();
     pvtable.clearAll();
     master.newGame();
 }

@@ -13,7 +13,7 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
-    std::string versionStr = "Wilted 0.3.1.3";
+    std::string versionStr = "Wilted 0.4.0.0";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]){
             std::cout << "id name " << versionStr << '\n';
             std::cout << "id author TheTilted096\n";
             //std::cout << "option name Threads type spin default 1 min 1 max 1\n";
-            //std::cout << "option name Hash type spin default 32 min 32 max 32\n";
+            std::cout << "option name Hash type spin default 32 min 1 max 128\n";
             std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "option name Minimal type check default false\n";
             std::cout << "uciok" << std::endl;
@@ -102,6 +102,12 @@ int main(int argc, char* argv[]){
             if (command.substr(15, 7) == "Minimal"){
                 if (command.substr(29) == "true"){ minPrint = true; }
                 if (command.substr(29) == "false"){ minPrint = false; }
+            }
+
+            if (command.substr(15, 4) == "Hash"){
+                std::size_t s = std::stoi(command.substr(19));
+                engine.ttable.resize(s);
+                std::cout << "chungus\n";
             }
 
         }

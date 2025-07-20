@@ -3,7 +3,7 @@
 #include "Evaluator.h"
 #include "Generator.h"
 #include "Princes.h"
-//#include "TeaTable.h"
+#include "TeaTable.h"
 #include "Timeman.h"
 
 template <bool isMaster> class Searcher{
@@ -17,7 +17,7 @@ template <bool isMaster> class Searcher{
         Timeman* tim;
         bool* stopSearch;
 
-        //TeaTable* ttref;
+        TeaTable* ttref;
 
         uint64_t nodes;
         uint64_t hardNodeMax;
@@ -27,8 +27,7 @@ template <bool isMaster> class Searcher{
 
         Searcher();
 
-        //void assign(TeaTable*);
-        void assign(Princes*, Timeman*, bool*);
+        void assign(Princes*, Timeman*, bool*, TeaTable*);
 
         bool invokeMove(const Move& m);
         void revokeMove(const Move& m);

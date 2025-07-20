@@ -4,9 +4,9 @@
 
 class Engine{
     public:
-        //TeaTable ttable;
-
         Master master;
+
+        TeaTable ttable;
 
         Princes pvtable;
         Timeman timer;

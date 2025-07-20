@@ -21,10 +21,11 @@ Searcher<isMaster>::Searcher() : pos(), gen(), eva() {
 }
 
 template <bool isMaster> 
-void Searcher<isMaster>::assign(Princes* p, Timeman* t, bool* s){
+void Searcher<isMaster>::assign(Princes* p, Timeman* t, bool* s, TeaTable* ts){
     pvt = p;
     tim = t;
     stopSearch = s;
+    ttref = ts;
 }
 
 template <bool isMaster> 
@@ -200,6 +201,24 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         }
     }
 
+    Teacup& probedEntry = ttref->probe(pos.thisHash());
+    Move ttMove; //perhaps init with Move::Invalid
+
+    if (probedEntry.eHash() == pos.thisHash()){
+        score = probedEntry.eScore();
+        ttMove = probedEntry.eMove();
+
+        NodeType nt = probedEntry.enType();
+        if ((probedEntry.eDepth() >= depth) and (repeats == 1) 
+                and !isPV and !rootNode){
+            if (nt == NodeType::Exact){ return score; }
+
+            if ((nt == NodeType::Cut) and (score >= beta)){ return score; }
+
+            if ((nt == NodeType::All) and (score <= alpha)){ return score; }
+        }
+    }
+
     bool inCheck = pos.isChecked(pos.toMove); //maybe clean up these functions
 
     MoveList moves;
@@ -210,6 +229,9 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     sortMoves(moves, movePower, moveCount);
     
     Count numLegal = 0;
+
+    NodeType nodeflag = NodeType::All; //assume fail low unless otherwise
+    Move localBestMove;
 
     for (Index i = 0; i < moveCount; i++){
 
@@ -240,6 +262,10 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         if (score > alpha){ // PV Node
             alpha = score;
 
+            nodeflag = NodeType::Exact;
+
+            localBestMove = moves[i];
+
             if (rootNode){ // other threads can still have bestmove
                 bestMove = moves[i];
             }
@@ -250,6 +276,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         }
 
         if (score >= beta){ //Cut Node
+            probedEntry.update(score, NodeType::Cut, depth, pos.thisHash(), moves[i], ply); //update TT in cut node
+
             return score;
         }
 
@@ -259,6 +287,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         if (inCheck){ return ply + DEFEAT; } // mate in ply
         return DRAW; //if not in check but we had no moves, its a stalemate
     }
+
+    probedEntry.update(bestScore, nodeflag, depth, pos.thisHash(), localBestMove, ply);
 
     return bestScore;
 }

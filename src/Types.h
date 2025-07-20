@@ -76,7 +76,7 @@ constexpr Score VICTORY = 20000;
 constexpr Score DEFEAT = -20000;
 constexpr Score DRAW = 0;
 
-constexpr Score FORCE_VICTORY = 19000;
-constexpr Score FORCE_DEFEAT = -19000;
+constexpr Score MIN_VICTORY = 19000;
+constexpr Score MIN_DEFEAT = -19000;
 
 constexpr Index MAX_PLY = 16; //maximum PV/search length
