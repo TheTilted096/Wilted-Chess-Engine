@@ -32,7 +32,7 @@ template <bool isMaster> class Searcher{
         bool invokeMove(const Move& m);
         void revokeMove(const Move& m);
 
-        void scoreMoves(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&);
+        void scoreMoves(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&, const Move&);
         void scoreCaptures(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&);
         void sortMoves(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&);
 

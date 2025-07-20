@@ -50,8 +50,13 @@ void Searcher<isMaster>::revokeMove(const Move& m){
 }
 
 template <bool isMaster> 
-void Searcher<isMaster>::scoreMoves(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len){
+void Searcher<isMaster>::scoreMoves(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len, const Move& ttm){
     for (Index i = 0; i < len; i++){
+        if (ml[i] == ttm){
+            points[i] = (1U << 30);
+            continue;
+        }
+
         if (ml[i].captured()){ //capture
             points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16); //MVV LVA
             continue;
@@ -202,10 +207,10 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     }
 
     Teacup& probedEntry = ttref->probe(pos.thisHash());
-    Move ttMove; //perhaps init with Move::Invalid
+    Move ttMove = Move::Invalid; //perhaps init with Move::Invalid
 
     if (probedEntry.eHash() == pos.thisHash()){
-        score = probedEntry.eScore();
+        score = probedEntry.eScore(ply);
         ttMove = probedEntry.eMove();
 
         NodeType nt = probedEntry.enType();
@@ -225,13 +230,13 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     Count moveCount = gen.generateMoves(moves);
 
     std::array<uint32_t, MOVELIST_SIZE> movePower;
-    scoreMoves(moves, movePower, moveCount);
+    scoreMoves(moves, movePower, moveCount, ttMove);
     sortMoves(moves, movePower, moveCount);
     
     Count numLegal = 0;
 
     NodeType nodeflag = NodeType::All; //assume fail low unless otherwise
-    Move localBestMove;
+    Move localBestMove = Move::Invalid;
 
     for (Index i = 0; i < moveCount; i++){
 

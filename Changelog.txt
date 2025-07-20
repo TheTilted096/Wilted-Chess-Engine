@@ -14,3 +14,4 @@ Changelog
 07-08-2025 ... 0.3.1.2 ... Refactors and Cleanups; Prepare for TT and Multithread
 07-10-2025 ... 0.3.1.3 ... Added Minimal UCI Option, Prevents timeouts in low tc and limited threads
 07-19-2025 ... 0.4.0.0 ... Transposition Table (Cutoffs) ........ (51.9 +/- 24.9) , (8 + 0.08), (SPRT, 636), (Local)
+07-19-2025 ... 0.4.1.0 ... TT Move .............................. (92.4 +/- 34.5) , (8 + 0.08), (SPRT, 331), (Local)

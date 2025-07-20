@@ -33,7 +33,7 @@ void Engine::bench(){
         stopFlag = false;
         
         master.pos.readFen(tester);
-        master.search<false>(7, ~0ULL, false);
+        master.search<false>(8, ~0ULL, false);
     }
 
     //auto benchEnd = std::chrono::steady_clock::now();
