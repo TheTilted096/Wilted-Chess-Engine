@@ -13,7 +13,7 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
-    std::string versionStr = "Wilted 0.4.1.0";
+    std::string versionStr = "Wilted 0.4.1.1";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -105,9 +105,8 @@ int main(int argc, char* argv[]){
             }
 
             if (command.substr(15, 4) == "Hash"){
-                std::size_t s = std::stoi(command.substr(19));
+                std::size_t s = std::stoi(command.substr(26));
                 engine.ttable.resize(s);
-                std::cout << "chungus\n";
             }
 
         }
