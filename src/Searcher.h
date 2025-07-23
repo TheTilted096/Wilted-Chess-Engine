@@ -15,19 +15,28 @@ template <bool isMaster> class Searcher{
         //shared items, only modified by master
         Princes* pvt;
         Timeman* tim;
-        bool* stopSearch;
+
+        //bool* stopSearch;
+        std::atomic<bool>* stopSearch; //thread-safe writes
 
         TeaTable* ttref;
 
-        uint64_t nodes;
-        uint64_t hardNodeMax;
-        uint64_t lifeNodes;
+        std::atomic<uint64_t>* nodesptr; //holds nodecount
+        std::vector<std::atomic<uint64_t>>* nodesVecPtr; //used by master thread to read node counts of workers
+
+        uint64_t hardNodeMax; 
+        //only master thread uses this, but all threads have it nonetheless...unfortunately
 
         Move bestMove;
 
         Searcher();
 
-        void assign(Princes*, Timeman*, bool*, TeaTable*);
+        void assign(std::atomic<uint64_t>*, std::atomic<bool>*, TeaTable*);   
+        void promote(Princes*, Timeman*, std::vector<std::atomic<uint64_t>>*);
+        
+        uint64_t nodes(){ return *nodesptr; }
+        void clearNodes(){ *nodesptr = 0ULL; }
+        void addNode(){ (*nodesptr)++; }
 
         bool invokeMove(const Move& m);
         void revokeMove(const Move& m);

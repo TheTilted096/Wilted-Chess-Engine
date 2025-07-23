@@ -4,28 +4,36 @@
 
 template <bool isMaster> 
 Searcher<isMaster>::Searcher() : pos(), gen(), eva() {
-    nodes = 0ULL;
     hardNodeMax = ~0ULL;
-    lifeNodes = 0ULL;
 
     bestMove = Move::Invalid;
 
     gen.assign(&pos);
     eva.assign(&pos);
 
-    pvt = nullptr;
+    pvt = nullptr; //promoted
     tim = nullptr;
-    stopSearch = nullptr;
+    nodesVecPtr = nullptr;
+
+    stopSearch = nullptr; //assigned
+    nodesptr = nullptr;
+    ttref = nullptr;
 
     newGame();
 }
 
 template <bool isMaster> 
-void Searcher<isMaster>::assign(Princes* p, Timeman* t, bool* s, TeaTable* ts){
-    pvt = p;
-    tim = t;
+void Searcher<isMaster>::assign(std::atomic<uint64_t>* n, std::atomic<bool>* s, TeaTable* ts){
     stopSearch = s;
     ttref = ts;
+    nodesptr = n;
+}
+
+template <bool isMaster>
+void Searcher<isMaster>::promote(Princes* p, Timeman* t, std::vector<std::atomic<uint64_t>>* nv){
+    pvt = p;
+    tim = t;
+    nodesVecPtr = nv;
 }
 
 template <bool isMaster> 
@@ -38,7 +46,7 @@ bool Searcher<isMaster>::invokeMove(const Move& m){
     }
 
     eva.doMove(m);
-    nodes++;
+    addNode();
 
     return true;
 }
@@ -102,13 +110,13 @@ void Searcher<isMaster>::newGame(){
 template <bool isMaster> 
 void Searcher<isMaster>::maybeForceStop(){
     if constexpr (isMaster){ //master handles actual stop conditions
-        if (tim->timeKept and (nodes % 2048 == 0)){
+        if (tim->timeKept and (nodes() % 2048 == 0)){
             if (tim->exceedHard()){
                 *stopSearch = true;
             }
         }
 
-        if (nodes > hardNodeMax){
+        if (nodes() > hardNodeMax){
             *stopSearch = true;
         }
     }
@@ -310,7 +318,7 @@ template <bool isMaster>
 template <bool output>
 Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint){
     eva.refresh();
-    nodes = 0;
+    clearNodes();
 
     std::array<Bitboard, 2> sidesi = pos.sides;
     std::array<Bitboard, 6> piecesi = pos.pieces;
@@ -334,10 +342,10 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
             if constexpr (isMaster and output){
                 if (!minPrint){
                     std::cout << "info depth " << (int)d << " score cp " << searchScore 
-                        << " nodes " << nodes;
+                        << " nodes " << nodes();
 
                     dur = tim->elapsed();
-                    nps = 1000000 * nodes / dur;
+                    nps = 1000000 * nodes() / dur;
 
                     std::cout << " nps " << nps << " time " << (dur / 1000);
                     std::cout << " pv ";
@@ -365,9 +373,9 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
 
     if constexpr (isMaster and output){
         dur = tim->elapsed();
-        nps = 1000000 * nodes / dur;
+        nps = 1000000 * nodes() / dur;
 
-        std::cout << "info nodes " << nodes << " nps " << nps << std::endl;
+        std::cout << "info nodes " << nodes() << " nps " << nps << std::endl;
         std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
     }
 
@@ -375,8 +383,6 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     pos.pieces = piecesi;
     pos.toMove = toMovei;
     pos.clock = clocki;
-
-    lifeNodes += nodes;
 
     return searchScore;
 }

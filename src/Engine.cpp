@@ -2,8 +2,11 @@
 
 #include "Engine.h"
 
-Engine::Engine() : master(), pvtable(), timer(), stopFlag(false){
-    master.assign(&pvtable, &timer, &stopFlag, &ttable);
+Engine::Engine() : master(), pvtable(), timer(), stopFlag(false), workCount(0){
+    masterNodes = 0ULL;
+    
+    master.assign(&masterNodes, &stopFlag, &ttable);
+    master.promote(&pvtable, &timer, &workerNodes);
 }
 
 void Engine::newGame(){
@@ -26,6 +29,8 @@ void Engine::bench(){
 
     //auto benchStart = std::chrono::steady_clock::now();
 
+    uint64_t total = 0ULL;
+
     timer.start();
 
     for (std::string tester : marks){
@@ -34,14 +39,15 @@ void Engine::bench(){
         
         master.pos.readFen(tester);
         master.search<false>(8, ~0ULL, false);
+        total += master.nodes();
     }
 
     //auto benchEnd = std::chrono::steady_clock::now();
     //int64_t dur = 1 + std::chrono::duration_cast<std::chrono::microseconds>(benchEnd - benchStart).count();
     int64_t dur = timer.elapsed();
-    int64_t nps = 1000000 * master.lifeNodes / dur;
+    int64_t nps = 1000000 * total / dur;
 
-    std::cout << master.lifeNodes << " nodes " << nps << " nps " << std::endl;
+    std::cout << total << " nodes " << nps << " nps " << std::endl;
 }
 
 template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){

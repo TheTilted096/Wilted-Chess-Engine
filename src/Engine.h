@@ -10,7 +10,12 @@ class Engine{
 
         Princes pvtable;
         Timeman timer;
-        bool stopFlag;
+
+        std::atomic<bool> stopFlag;
+        
+        Count workCount;
+        std::vector<std::atomic<uint64_t>> workerNodes;
+        std::atomic<uint64_t> masterNodes;
         
         Engine();
 
