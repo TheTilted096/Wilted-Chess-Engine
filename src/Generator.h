@@ -4,7 +4,6 @@
 
 #include "Position.h"
 
-constexpr std::size_t MOVELIST_SIZE = 128;
 using MoveList = std::array<Move, MOVELIST_SIZE>;
 
 class Generator{

@@ -18,6 +18,14 @@ struct MultiArrayHelper<T, J>{
 template <typename T, std::size_t J, std::size_t... K> using Table = typename MultiArrayHelper<T, J, K...>::type;
 //"Table" might be changed later
 
+template <typename T> struct alignas(64) AlignedAtomic{
+    std::atomic<T> value;
+};
+
+using AlignedAtomicU64 = AlignedAtomic<uint64_t>;
+
+using MoveScoreList = std::array<uint32_t, MOVELIST_SIZE>;
+
 constexpr Hash randomize(Hash &s){
     Hash x = s;
     

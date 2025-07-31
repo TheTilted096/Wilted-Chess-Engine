@@ -4,9 +4,7 @@
 
 template <bool isMaster> 
 Searcher<isMaster>::Searcher() : pos(), gen(), eva() {
-    nodes = 0ULL;
     hardNodeMax = ~0ULL;
-    lifeNodes = 0ULL;
 
     bestMove = Move::Invalid;
 
@@ -17,15 +15,22 @@ Searcher<isMaster>::Searcher() : pos(), gen(), eva() {
     tim = nullptr;
     stopSearch = nullptr;
 
+    nodesptr = nullptr;
+
     newGame();
 }
 
 template <bool isMaster> 
-void Searcher<isMaster>::assign(Princes* p, Timeman* t, bool* s, TeaTable* ts){
-    pvt = p;
-    tim = t;
+void Searcher<isMaster>::assign(std::atomic<bool>* s, TeaTable* ts, std::atomic<uint64_t>* nc){
     stopSearch = s;
     ttref = ts;
+    nodesptr = nc;
+}
+
+template <bool isMaster>
+void Searcher<isMaster>::promote(Princes* p, Timeman* t){
+    pvt = p;
+    tim = t;
 }
 
 template <bool isMaster> 
@@ -38,7 +43,7 @@ bool Searcher<isMaster>::invokeMove(const Move& m){
     }
 
     eva.doMove(m);
-    nodes++;
+    addNode();
 
     return true;
 }
@@ -49,8 +54,8 @@ void Searcher<isMaster>::revokeMove(const Move& m){
     eva.undoMove(m);
 }
 
-template <bool isMaster> 
-void Searcher<isMaster>::scoreMoves(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len, const Move& ttm){
+template <bool isMaster>
+void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const Index& len, const Move& ttm){
     for (Index i = 0; i < len; i++){
         if (ml[i] == ttm){
             points[i] = (1U << 30);
@@ -67,14 +72,14 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, std::array<uint32_t, MOVELIST_
 }
 
 template <bool isMaster>
-void Searcher<isMaster>::scoreCaptures(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len){
+void Searcher<isMaster>::scoreCaptures(MoveList& ml, MoveScoreList& points, const Index& len){
     for (Index i = 0; i < len; i++){
         points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16);
     }
 }
 
 template <bool isMaster> 
-void Searcher<isMaster>::sortMoves(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len){
+void Searcher<isMaster>::sortMoves(MoveList& ml, MoveScoreList& points, const Index& len){
     uint32_t keyPoints;
     Move keyMove;
 
@@ -96,20 +101,20 @@ void Searcher<isMaster>::sortMoves(MoveList& ml, std::array<uint32_t, MOVELIST_S
 
 template <bool isMaster> 
 void Searcher<isMaster>::newGame(){
-    pos.setStartPos();
+    //pos.setStartPos();
 }
 
 template <bool isMaster> 
 void Searcher<isMaster>::maybeForceStop(){
     if constexpr (isMaster){ //master handles actual stop conditions
-        if (tim->timeKept and (nodes % 2048 == 0)){
+        if (tim->timeKept and (nodes() % 2048 == 0)){
             if (tim->exceedHard()){
-                *stopSearch = true;
+                disable();
             }
         }
 
-        if (nodes > hardNodeMax){
-            *stopSearch = true;
+        if (nodes() > hardNodeMax){
+            disable();
         }
     }
 
@@ -138,7 +143,7 @@ Score Searcher<isMaster>::quiesce(Score alpha, Score beta){
     MoveList captures;
     Count captureCount = gen.generateCaptures(captures);
 
-    std::array<uint32_t, MOVELIST_SIZE> capturePower;
+    MoveScoreList capturePower;
     scoreCaptures(captures, capturePower, captureCount);
     sortMoves(captures, capturePower, captureCount);
 
@@ -229,7 +234,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     MoveList moves;
     Count moveCount = gen.generateMoves(moves);
 
-    std::array<uint32_t, MOVELIST_SIZE> movePower;
+    MoveScoreList movePower;
     scoreMoves(moves, movePower, moveCount, ttMove);
     sortMoves(moves, movePower, moveCount);
     
@@ -310,12 +315,7 @@ template <bool isMaster>
 template <bool output>
 Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint){
     eva.refresh();
-    nodes = 0;
-
-    std::array<Bitboard, 2> sidesi = pos.sides;
-    std::array<Bitboard, 6> piecesi = pos.pieces;
-    Color toMovei = pos.toMove;
-    Index clocki = pos.clock;
+    clearNodes();
 
     hardNodeMax = nodeLim;
 
@@ -333,11 +333,13 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
 
             if constexpr (isMaster and output){
                 if (!minPrint){
+                    uint64_t pn = nodes();
+
                     std::cout << "info depth " << (int)d << " score cp " << searchScore 
-                        << " nodes " << nodes;
+                        << " nodes " << pn;
 
                     dur = tim->elapsed();
-                    nps = 1000000 * nodes / dur;
+                    nps = 1000000 * pn / dur;
 
                     std::cout << " nps " << nps << " time " << (dur / 1000);
                     std::cout << " pv ";
@@ -350,7 +352,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
 
             if constexpr (isMaster){ //only master should be checking time
                 if (tim->timeKept and tim->exceedSoft()){
-                    *stopSearch = true;
+                    disable();
                     break;
                 }
             }
@@ -360,23 +362,18 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     }
 
     if constexpr (isMaster){
-        *stopSearch = true; //search has stopped, regardless.
+        disable(); //search has stopped, regardless.
     }
 
     if constexpr (isMaster and output){
-        dur = tim->elapsed();
-        nps = 1000000 * nodes / dur;
+        uint64_t pn = nodes();
 
-        std::cout << "info nodes " << nodes << " nps " << nps << std::endl;
+        dur = tim->elapsed();
+        nps = 1000000 * pn / dur;
+
+        std::cout << "info nodes " << pn << " nps " << nps << std::endl;
         std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
     }
-
-    pos.sides = sidesi;
-    pos.pieces = piecesi;
-    pos.toMove = toMovei;
-    pos.clock = clocki;
-
-    lifeNodes += nodes;
 
     return searchScore;
 }

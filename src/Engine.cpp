@@ -2,14 +2,32 @@
 
 #include "Engine.h"
 
-Engine::Engine() : master(), pvtable(), timer(), stopFlag(false){
-    master.assign(&pvtable, &timer, &stopFlag, &ttable);
+Engine::Engine() : master(), mainpos(), maingen(), pvtable(), timer(){
+    stopFlag = false;
+
+    maingen.assign(&mainpos);
+
+    destruct = false;
+    startgame = false;
+    pulse = 0U;
+    workerCount = 0;
+    useWorkers = true;
+    hasWorkers = false;
+
+    masterNodes = 0ULL;
+
+    clearWorkerNodes();
+
+    master.assign(&stopFlag, &ttable, &masterNodes);
+    master.promote(&pvtable, &timer);
 }
 
 void Engine::newGame(){
     ttable.clear();
     pvtable.clearAll();
     master.newGame();
+
+    mainpos.setStartPos();
 }
 
 void Engine::bench(){
@@ -26,6 +44,8 @@ void Engine::bench(){
 
     //auto benchStart = std::chrono::steady_clock::now();
 
+    uint64_t lifeNodes = 0ULL;
+
     timer.start();
 
     for (std::string tester : marks){
@@ -34,14 +54,16 @@ void Engine::bench(){
         
         master.pos.readFen(tester);
         master.search<false>(8, ~0ULL, false);
+
+        lifeNodes += master.nodes();
     }
 
     //auto benchEnd = std::chrono::steady_clock::now();
     //int64_t dur = 1 + std::chrono::duration_cast<std::chrono::microseconds>(benchEnd - benchStart).count();
     int64_t dur = timer.elapsed();
-    int64_t nps = 1000000 * master.lifeNodes / dur;
+    int64_t nps = 1000000 * lifeNodes / dur;
 
-    std::cout << master.lifeNodes << " nodes " << nps << " nps " << std::endl;
+    std::cout << lifeNodes << " nodes " << nps << " nps " << std::endl;
 }
 
 template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
@@ -50,6 +72,8 @@ template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
 
     d = std::min(MAX_PLY, d);
 
+    master.downloadPos(mainpos);
+
     Score result = master.search<out>(d, nl, mp);
 
     return result;
@@ -57,3 +81,15 @@ template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
 
 template Score Engine::go<true>(Depth, uint64_t, bool);
 template Score Engine::go<false>(Depth, uint64_t, bool);
+
+void Engine::runWorker(Count id){
+
+}
+
+void Engine::createPool(Count nt){
+
+}
+
+void Engine::drainPool(){
+
+}

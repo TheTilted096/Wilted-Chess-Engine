@@ -3,17 +3,21 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <bit>
 #include <cassert>
 #include <chrono>
+#include <condition_variable>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
 #include <immintrin.h>
 #include <iostream>
+#include <mutex>
 #include <random>
 #include <sstream>
 #include <string>
+#include <thread>
 
 using Bitboard = uint64_t;
 using Hash = uint64_t;
@@ -70,6 +74,8 @@ using Depth = uint8_t;
 
 using Score = int16_t;
 
+constexpr std::size_t MOVELIST_SIZE = 128;
+
 constexpr Score SCORE_INF = 21000;
 
 constexpr Score VICTORY = 20000;
@@ -80,3 +86,5 @@ constexpr Score MIN_VICTORY = 19000;
 constexpr Score MIN_DEFEAT = -19000;
 
 constexpr Index MAX_PLY = 16; //maximum PV/search length
+
+constexpr std::size_t MAX_THREADS = 4;
