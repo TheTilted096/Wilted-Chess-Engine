@@ -15,8 +15,8 @@ class Engine{
         Timeman timer;
         std::atomic<bool> stopFlag;
 
-        std::atomic<uint64_t> masterNodes;
-        std::array<AlignedAtomicU64, MAX_THREADS - 1> workerNodes;
+        AlignedAtomicU64 masterNodes;
+        SharedArray<uint64_t> workerNodes;
 
         std::vector<std::thread> threadPool;
         Count workerCount;
@@ -28,20 +28,22 @@ class Engine{
 
         std::atomic<uint32_t> pulse;
 
-        bool useWorkers; // use the threads (false in go nodes, ex)
+        std::atomic<bool> useWorkers; // use the threads (false in go nodes, ex)
         bool hasWorkers; // has more than 1 thread
 
         std::mutex mute;
         std::condition_variable sync;
+        std::condition_variable masterSync;
         
         Engine();
+        ~Engine();
 
         void newGame();
         void bench();
 
         void clearWorkerNodes(){ for (AlignedAtomicU64& a : workerNodes){ a.value = 0ULL; }}
 
-        void runWorker(Count);
+        void runWorker(Index);
         void createPool(Count);
         void drainPool();
 

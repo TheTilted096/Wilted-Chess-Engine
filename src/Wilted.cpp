@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
         if (command == "uci"){
             std::cout << "id name " << versionStr << '\n';
             std::cout << "id author TheTilted096\n";
-            std::cout << "option name Threads type spin default 1 min 1 max 4\n";
+            std::cout << "option name Threads type spin default 1 min 1 max 8\n";
             std::cout << "option name Hash type spin default 32 min 1 max 128\n";
             std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "option name Minimal type check default false\n";
@@ -134,6 +134,7 @@ int main(int argc, char* argv[]){
             }
 
             engine.timer.setBounds(thinkBase, thinkrement);
+            engine.useWorkers = (thinkNodes == ~0ULL);
             engine.go<true>(thinkDepth, thinkNodes, minPrint);
         }
 

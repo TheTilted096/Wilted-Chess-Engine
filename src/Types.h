@@ -87,4 +87,4 @@ constexpr Score MIN_DEFEAT = -19000;
 
 constexpr Index MAX_PLY = 16; //maximum PV/search length
 
-constexpr std::size_t MAX_THREADS = 4;
+constexpr std::size_t MAX_THREADS = 8;

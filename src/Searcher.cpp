@@ -16,6 +16,7 @@ Searcher<isMaster>::Searcher() : pos(), gen(), eva() {
     stopSearch = nullptr;
 
     nodesptr = nullptr;
+    nodesArrPtr = nullptr;
 
     newGame();
 }
@@ -28,9 +29,10 @@ void Searcher<isMaster>::assign(std::atomic<bool>* s, TeaTable* ts, std::atomic<
 }
 
 template <bool isMaster>
-void Searcher<isMaster>::promote(Princes* p, Timeman* t){
+void Searcher<isMaster>::promote(Princes* p, Timeman* t, SharedArray<uint64_t>* av){
     pvt = p;
     tim = t;
+    nodesArrPtr = av;
 }
 
 template <bool isMaster> 
@@ -315,7 +317,7 @@ template <bool isMaster>
 template <bool output>
 Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint){
     eva.refresh();
-    clearNodes();
+    //clearNodes();
 
     hardNodeMax = nodeLim;
 
@@ -333,7 +335,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
 
             if constexpr (isMaster and output){
                 if (!minPrint){
-                    uint64_t pn = nodes();
+                    uint64_t pn = pooledNodes();
 
                     std::cout << "info depth " << (int)d << " score cp " << searchScore 
                         << " nodes " << pn;
@@ -366,7 +368,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     }
 
     if constexpr (isMaster and output){
-        uint64_t pn = nodes();
+        uint64_t pn = pooledNodes();
 
         dur = tim->elapsed();
         nps = 1000000 * pn / dur;
