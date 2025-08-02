@@ -19,21 +19,21 @@ class Engine{
         SharedArray<uint64_t> workerNodes;
 
         std::vector<std::thread> threadPool;
-        Count workerCount;
+        Count workerCount; // number of workers
 
-        std::atomic<Count> workersReady;
+        std::atomic<Count> workersReady; // number of workers ready
 
-        std::atomic<bool> destruct;
-        std::atomic<bool> startgame;
+        std::atomic<bool> destruct; // destroy all worker threads
+        std::atomic<bool> startgame; //ucinewgame
 
-        std::atomic<uint32_t> pulse;
+        std::atomic<uint32_t> pulse; // signals new job for workers
 
         std::atomic<bool> useWorkers; // use the threads (false in go nodes, ex)
         bool hasWorkers; // has more than 1 thread
 
         std::mutex mute;
         std::condition_variable sync;
-        std::condition_variable masterSync;
+        std::condition_variable masterSync; // master waits on this condition variable
         
         Engine();
         ~Engine();

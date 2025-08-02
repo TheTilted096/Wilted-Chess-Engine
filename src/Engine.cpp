@@ -18,8 +18,9 @@ Engine::Engine() : master(), mainpos(), maingen(), pvtable(), timer(){
     masterNodes.value = 0ULL;
     clearWorkerNodes();
 
-    master.assign(&stopFlag, &ttable, &masterNodes.value);
-    master.promote(&pvtable, &timer, &workerNodes);
+    master.assign(&stopFlag, &ttable, &masterNodes.value); // assign search object to stopflag, tt, and node counters
+    master.promote(&pvtable, &timer, &workerNodes); 
+    // give master thread access to pvtable, timeman, and the node counts of workers
 }
 
 Engine::~Engine(){
@@ -46,7 +47,7 @@ void Engine::newGame(){
         {
             std::unique_lock<std::mutex> lock(mute);
             masterSync.wait(lock, [&]{ return (workersReady == workerCount); });
-            std::cout << "Master done waiting for newGame\n";
+            //std::cout << "Master done waiting for newGame\n";
         }
 
         startgame = false;
@@ -87,7 +88,7 @@ void Engine::bench(){
     int64_t dur = timer.elapsed();
     int64_t nps = 1000000 * lifeNodes / dur;
 
-    std::cout << lifeNodes << " nodes " << nps << " nps " << std::endl;
+    //std::cout << lifeNodes << " nodes " << nps << " nps " << std::endl;
 }
 
 template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
@@ -104,7 +105,7 @@ template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
     return result;
     */
 
-    if (hasWorkers and useWorkers){
+    if (hasWorkers and useWorkers){ // useWorkers false in 'go nodes', for ex
         {
             std::lock_guard<std::mutex> guard(mute);
             stopFlag = false;
@@ -154,11 +155,11 @@ void Engine::runWorker(Index id){
             std::unique_lock<std::mutex> lock(mute);
             sync.wait(lock, [&]{ return (pulse > lastPulse); });
             lastPulse = pulse;
-            std::cout << (int)id << ": lastPulse = " << lastPulse << '\n';
+            //std::cout << (int)id << ": lastPulse = " << lastPulse << '\n';
         }
 
         if (destruct){
-            std::cout << (int)id << ": returning...\n";
+            //std::cout << (int)id << ": returning...\n";
             return;
         }
 
@@ -167,7 +168,7 @@ void Engine::runWorker(Index id){
             {
                 std::lock_guard<std::mutex> guard(mute);
                 workersReady++;
-                std::cout << (int)id << ": NewGame finished\n";
+                //std::cout << (int)id << ": NewGame finished\n";
             }
             masterSync.notify_one(); //only one thread; master
             continue;
@@ -179,7 +180,7 @@ void Engine::runWorker(Index id){
             {
                 std::lock_guard<std::mutex> guard(mute);
                 workersReady++;
-                std::cout << (int)id << ": search finished\n";
+                //std::cout << (int)id << ": search finished\n";
             }
             masterSync.notify_one();
         }
