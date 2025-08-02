@@ -47,5 +47,8 @@ class Engine{
         void createPool(Count);
         void drainPool();
 
+        //void workerPing();
+        //void workerPing(std::string);
+
         template <bool> Score go(Depth, uint64_t, bool);
 };

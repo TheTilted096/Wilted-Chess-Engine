@@ -377,6 +377,8 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
         std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
     }
 
+    //if constexpr (isMaster){ std::cout << "end of master search func\n"; }
+
     return searchScore;
 }
 

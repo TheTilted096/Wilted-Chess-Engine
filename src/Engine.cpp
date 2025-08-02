@@ -40,6 +40,7 @@ void Engine::newGame(){
             startgame = true;
             workersReady = 0;
             pulse++;
+            //std::cout << "Master sent command for newGame\n";
         }
 
         sync.notify_all();
@@ -88,7 +89,7 @@ void Engine::bench(){
     int64_t dur = timer.elapsed();
     int64_t nps = 1000000 * lifeNodes / dur;
 
-    //std::cout << lifeNodes << " nodes " << nps << " nps " << std::endl;
+    std::cout << lifeNodes << " nodes " << nps << " nps " << std::endl;
 }
 
 template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
@@ -112,6 +113,7 @@ template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
             workersReady = 0;
             clearWorkerNodes();
             pulse++;
+            //std::cout << "Master notified workers for search\n";
         }
         sync.notify_all();
     } else {
@@ -125,13 +127,17 @@ template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
 
     timer.start();
     Score sc = master.search<out>(d, nl, mp);
+    //std::cout << "Master Search Done\n";
 
     if (hasWorkers and useWorkers){
         {
             std::unique_lock<std::mutex> lock(mute);
             masterSync.wait(lock, [&]{ return (workersReady == workerCount); });
+            //std::cout << "Master waiting on worker search end\n";
         }
     }
+
+    //std::cout << "\nbestmove " << master.pos.moveName(master.bestMove) << std::endl;
 
     return sc;
 }
@@ -153,6 +159,7 @@ void Engine::runWorker(Index id){
     while (true){
         {
             std::unique_lock<std::mutex> lock(mute);
+            //std::cout << (int)id << " sleeping...\n";
             sync.wait(lock, [&]{ return (pulse > lastPulse); });
             lastPulse = pulse;
             //std::cout << (int)id << ": lastPulse = " << lastPulse << '\n';
@@ -175,6 +182,10 @@ void Engine::runWorker(Index id){
         }
 
         if (useWorkers and !stopFlag){
+            {
+                std::lock_guard<std::mutex> guard(mute);
+                //std::cout << (int)id << ": started search\n";
+            }
             w.downloadPos(mainpos);
             w.searchInfinite();
             {
@@ -183,7 +194,15 @@ void Engine::runWorker(Index id){
                 //std::cout << (int)id << ": search finished\n";
             }
             masterSync.notify_one();
+            continue;
         }
+
+        {
+            std::lock_guard<std::mutex> guard(mute);
+            workersReady++;
+            //std::cout << (int)id << ": empty task\n";
+        }
+        masterSync.notify_one();
     }
 }
 
