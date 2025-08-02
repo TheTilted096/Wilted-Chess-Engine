@@ -21,7 +21,6 @@ template <bool isMaster> class Searcher{
 
         uint64_t nodes;
         uint64_t hardNodeMax;
-        uint64_t lifeNodes;
 
         Move bestMove;
 
@@ -32,15 +31,16 @@ template <bool isMaster> class Searcher{
         bool invokeMove(const Move& m);
         void revokeMove(const Move& m);
 
-        void scoreMoves(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&, const Move&);
-        void scoreCaptures(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&);
-        void sortMoves(MoveList&, std::array<uint32_t, MOVELIST_SIZE>&, const Index&);
+        void scoreMoves(MoveList&, MoveScoreList&, const Index&, const Move&);
+        void scoreCaptures(MoveList&, MoveScoreList&, const Index&);
+        void sortMoves(MoveList&, MoveScoreList&, const Index&);
 
         Score quiesce(Score, Score); //Index by Ply? - Could be useful for searchstack
         template <bool> Score alphabeta(Score, Score, Depth, Index);
         template <bool> Score search(Depth, uint64_t, bool);
 
         void maybeForceStop();
+        void disable(){ *stopSearch = true; }
 
         void newGame();
 

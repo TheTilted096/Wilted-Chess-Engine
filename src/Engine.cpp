@@ -26,6 +26,8 @@ void Engine::bench(){
 
     //auto benchStart = std::chrono::steady_clock::now();
 
+    uint64_t lifeNodes = 0ULL;
+
     timer.start();
 
     for (std::string tester : marks){
@@ -34,14 +36,15 @@ void Engine::bench(){
         
         master.pos.readFen(tester);
         master.search<false>(8, ~0ULL, false);
+        lifeNodes += master.nodes;
     }
 
     //auto benchEnd = std::chrono::steady_clock::now();
     //int64_t dur = 1 + std::chrono::duration_cast<std::chrono::microseconds>(benchEnd - benchStart).count();
     int64_t dur = timer.elapsed();
-    int64_t nps = 1000000 * master.lifeNodes / dur;
+    int64_t nps = 1000000 * lifeNodes / dur;
 
-    std::cout << master.lifeNodes << " nodes " << nps << " nps " << std::endl;
+    std::cout << lifeNodes << " nodes " << nps << " nps " << std::endl;
 }
 
 template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){

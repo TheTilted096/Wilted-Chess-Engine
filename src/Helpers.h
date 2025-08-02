@@ -18,6 +18,8 @@ struct MultiArrayHelper<T, J>{
 template <typename T, std::size_t J, std::size_t... K> using Table = typename MultiArrayHelper<T, J, K...>::type;
 //"Table" might be changed later
 
+using MoveScoreList = std::array<uint32_t, MOVELIST_SIZE>;
+
 constexpr Hash randomize(Hash &s){
     Hash x = s;
     

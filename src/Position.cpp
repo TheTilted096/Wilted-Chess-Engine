@@ -21,6 +21,20 @@ Position::Position(const Position& p){
     plays = p.plays;
 
     clock = p.clock;
+    
+    isFRC = p.isFRC;
+
+    if ((kingRookFrom != p.kingRookFrom) or (queenRookFrom != p.queenRookFrom)){
+
+        kingRookFrom = p.kingRookFrom;
+        queenRookFrom = p.queenRookFrom;
+        kingSafeMask = p.kingSafeMask;
+        queenSafeMask = p.queenSafeMask;
+        kingOccMask = p.kingOccMask;
+        queenOccMask = p.queenOccMask;
+        rightsChange = p.rightsChange;
+        castleStrings = p.castleStrings;
+    }
 }
 
 void Position::empty(){

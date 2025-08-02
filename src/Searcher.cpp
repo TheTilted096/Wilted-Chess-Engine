@@ -6,7 +6,6 @@ template <bool isMaster>
 Searcher<isMaster>::Searcher() : pos(), gen(), eva() {
     nodes = 0ULL;
     hardNodeMax = ~0ULL;
-    lifeNodes = 0ULL;
 
     bestMove = Move::Invalid;
 
@@ -50,7 +49,7 @@ void Searcher<isMaster>::revokeMove(const Move& m){
 }
 
 template <bool isMaster> 
-void Searcher<isMaster>::scoreMoves(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len, const Move& ttm){
+void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const Index& len, const Move& ttm){
     for (Index i = 0; i < len; i++){
         if (ml[i] == ttm){
             points[i] = (1U << 30);
@@ -67,14 +66,14 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, std::array<uint32_t, MOVELIST_
 }
 
 template <bool isMaster>
-void Searcher<isMaster>::scoreCaptures(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len){
+void Searcher<isMaster>::scoreCaptures(MoveList& ml, MoveScoreList& points, const Index& len){
     for (Index i = 0; i < len; i++){
         points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16);
     }
 }
 
 template <bool isMaster> 
-void Searcher<isMaster>::sortMoves(MoveList& ml, std::array<uint32_t, MOVELIST_SIZE>& points, const Index& len){
+void Searcher<isMaster>::sortMoves(MoveList& ml, MoveScoreList& points, const Index& len){
     uint32_t keyPoints;
     Move keyMove;
 
@@ -104,12 +103,12 @@ void Searcher<isMaster>::maybeForceStop(){
     if constexpr (isMaster){ //master handles actual stop conditions
         if (tim->timeKept and (nodes % 2048 == 0)){
             if (tim->exceedHard()){
-                *stopSearch = true;
+                disable();
             }
         }
 
         if (nodes > hardNodeMax){
-            *stopSearch = true;
+            disable();
         }
     }
 
@@ -138,7 +137,7 @@ Score Searcher<isMaster>::quiesce(Score alpha, Score beta){
     MoveList captures;
     Count captureCount = gen.generateCaptures(captures);
 
-    std::array<uint32_t, MOVELIST_SIZE> capturePower;
+    MoveScoreList capturePower;
     scoreCaptures(captures, capturePower, captureCount);
     sortMoves(captures, capturePower, captureCount);
 
@@ -229,7 +228,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     MoveList moves;
     Count moveCount = gen.generateMoves(moves);
 
-    std::array<uint32_t, MOVELIST_SIZE> movePower;
+    MoveScoreList movePower;
     scoreMoves(moves, movePower, moveCount, ttMove);
     sortMoves(moves, movePower, moveCount);
     
@@ -350,7 +349,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
 
             if constexpr (isMaster){ //only master should be checking time
                 if (tim->timeKept and tim->exceedSoft()){
-                    *stopSearch = true;
+                    disable();
                     break;
                 }
             }
@@ -360,7 +359,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     }
 
     if constexpr (isMaster){
-        *stopSearch = true; //search has stopped, regardless.
+        disable(); //search has stopped, regardless.
     }
 
     if constexpr (isMaster and output){
@@ -375,8 +374,6 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     pos.pieces = piecesi;
     pos.toMove = toMovei;
     pos.clock = clocki;
-
-    lifeNodes += nodes;
 
     return searchScore;
 }

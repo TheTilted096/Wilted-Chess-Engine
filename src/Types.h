@@ -70,6 +70,8 @@ using Depth = uint8_t;
 
 using Score = int16_t;
 
+constexpr std::size_t MOVELIST_SIZE = 128;
+
 constexpr Score SCORE_INF = 21000;
 
 constexpr Score VICTORY = 20000;
