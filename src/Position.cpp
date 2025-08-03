@@ -495,6 +495,29 @@ void Position::unmakeMove(){
     clock--;
 }
 
+void Position::passMove(){
+    clock++;
+    plays[clock] = Move::Null;
+    castleRights[clock] = castleRights[clock - 1];
+    hashes[clock] = hashes[clock - 1] ^ Zobrist::turnKey;
+
+    enPassant[clock] = XX;
+
+    Square lastPassant = enPassant[clock - 1];
+    if (lastPassant != XX){
+        hashes[clock] ^= Zobrist::passantKeys[lastPassant & 7];
+    }
+
+    halfMoves[clock] = halfMoves[clock - 1] + 1;
+
+    toMove = flip(toMove);
+}
+
+void Position::unpassMove(){
+    toMove = flip(toMove);
+    clock--;
+}
+
 void Position::deduceCastling(std::string given){
     Square wk = static_cast<Square>(getLeastBit(those(White, King)) & 7); //white king file
     Square bk = getLeastBit(those(Black, King)); //black king file

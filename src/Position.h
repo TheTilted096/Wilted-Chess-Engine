@@ -49,6 +49,8 @@ class Position{
         Bitboard diagonalPieces() const{ return pieces[Bishop] | pieces[Queen]; }
         Bitboard straightPieces() const{ return pieces[Rook] | pieces[Queen]; }
 
+        bool onlyPawns(){ return !(sides[toMove] ^ (sides[toMove] & (pieces[King] | pieces[Pawn]))); }
+
         uint8_t ourRights() const{ return (castleRights[clock] >> (2 * !toMove)) & 3; }
         uint8_t thoseRights(const Color& c) const{ return (castleRights[clock] >> (2 * !c)) & 3; }
         Square thisPassant() const{ return enPassant[clock]; }
@@ -72,6 +74,9 @@ class Position{
 
         void makeMove(const Move& m);
         void unmakeMove();
+
+        void passMove();
+        void unpassMove();
 
         std::string moveName(const Move& m, bool toFlip = false) const;
 

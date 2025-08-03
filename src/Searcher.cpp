@@ -227,16 +227,31 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
     bool inCheck = pos.isChecked(pos.toMove); //maybe clean up these functions
 
-    Score presentEval = eva.judge(); // static eval
+    sta[ply].presentEval = eva.judge(); // static eval
 
     if (!rootNode){
-        Score margin = RFPbase + RFPmult * depth;
+        Score margin = RFPbase + RFPmult * depth; //Reverse Futility Pruning
         if ((depth < maxRFPdepth) and !inCheck and !isPV
-                and (presentEval - beta > margin)){
+                and (sta[ply].presentEval - beta > margin)){
 
-            return (presentEval + beta) / 2;
+            return (sta[ply].presentEval + beta) / 2;
+        }
+
+        // Null Move Pruning
+        sta[ply].nmp = !sta[ply - 1].nmp and (depth > minNMPdepth)
+                and !isPV and !inCheck and !pos.onlyPawns();
+
+        if (sta[ply].nmp){
+            pos.passMove();
+            Score nullScore = -alphabeta<false>(-beta, -beta + 1, depth - NMPreduce, ply + 1);
+            pos.unpassMove();
+
+            if (nullScore >= beta){
+                return nullScore;
+            }
         }
     }
+
 
     MoveList moves;
     Count moveCount = gen.generateMoves(moves);

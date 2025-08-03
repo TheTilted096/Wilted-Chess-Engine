@@ -7,6 +7,12 @@
 #include "TeaTable.h"
 #include "Timeman.h"
 
+struct Sentry{
+    bool nmp = false;
+    Score presentEval;
+    //Move killer;
+};
+
 template <bool isMaster> class Searcher{
     public:
         Position pos;
@@ -14,6 +20,8 @@ template <bool isMaster> class Searcher{
         Evaluator eva;
 
         History his;
+
+        std::array<Sentry, MAX_PLY> sta;
         
         //shared items, only modified by master
         Princes* pvt;
@@ -52,6 +60,8 @@ template <bool isMaster> class Searcher{
         const Score RFPbase = 40;
         const Score RFPmult = 60;
         const Depth maxRFPdepth = 6;
+        const Depth minNMPdepth = 3;
+        const Depth NMPreduce = 3;
 };
 
 extern template class Searcher<true>;
