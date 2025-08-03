@@ -253,7 +253,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         noisy = moves[i].captured();
 
         if (numLegal == 1){
-            score = -alphabeta<true>(-beta, -alpha, depth - 1, ply + 1);
+            score = -alphabeta<isPV>(-beta, -alpha, depth - 1, ply + 1);
         } else {
             score = -alphabeta<false>(-alpha - 1, -alpha, depth - 1, ply + 1);
 

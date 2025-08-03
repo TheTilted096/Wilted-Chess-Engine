@@ -8,17 +8,11 @@ Base of future chess engine projects
 
 add some search features, then try smp again
 
-pass isPV correctly in pvs
-
 remember to change the version no in 3 places
-
-remember to do the mate score in tt update
 
 investigate infrequent time losses
 
 investigate speed changes from TT
-
-possibly create compound class between Generator and Position
 
 movelist/scoredmovelist wrapper
 
