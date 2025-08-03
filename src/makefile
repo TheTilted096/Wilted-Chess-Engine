@@ -1,7 +1,7 @@
-EXE := Wilted-0-4-1-2
+EXE := Wilted-0-5-0-0
 #no evalfile yet
 ARCH := native
-SOURCES := Wilted.cpp Engine.cpp TeaTable.cpp Searcher.cpp Evaluator.cpp Generator.cpp Position.cpp
+SOURCES := Wilted.cpp Engine.cpp History.cpp TeaTable.cpp Searcher.cpp Evaluator.cpp Generator.cpp Position.cpp
 
 CXX := clang++
 
@@ -23,8 +23,8 @@ $(EXE):
 
 # During Development, frequent compilation
 
-engine: Wilted.o Position.o Generator.o Evaluator.o Searcher.o Engine.o TeaTable.o
-	$(CXX) Wilted.o Engine.o TeaTable.o Searcher.o Evaluator.o Generator.o Position.o $(CXXFLAGS) -o $(EXE)
+engine: Wilted.o Position.o Generator.o Evaluator.o Searcher.o Engine.o TeaTable.o History.o
+	$(CXX) Wilted.o Engine.o TeaTable.o Searcher.o Evaluator.o Generator.o Position.o History.o $(CXXFLAGS) -o $(EXE)
 
 Wilted.o: Wilted.cpp
 	$(CXX) $(CXXFLAGS) -c Wilted.cpp -o Wilted.o
@@ -43,6 +43,9 @@ Searcher.o: Searcher.h Timeman.h Princes.h Searcher.cpp
 
 TeaTable.o: TeaTable.h TeaTable.cpp
 	$(CXX) $(CXXFLAGS) -c TeaTable.cpp -o TeaTable.o
+
+History.o: History.h History.cpp
+	$(CXX) $(CXXFLAGS) -c History.cpp -o History.o
 
 Engine.o: Engine.h Engine.cpp
 	$(CXX) $(CXXFLAGS) -c Engine.cpp -o Engine.o

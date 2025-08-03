@@ -2,6 +2,7 @@
 
 #include "Evaluator.h"
 #include "Generator.h"
+#include "History.h"
 #include "Princes.h"
 #include "TeaTable.h"
 #include "Timeman.h"
@@ -11,6 +12,8 @@ template <bool isMaster> class Searcher{
         Position pos;
         Generator gen;
         Evaluator eva;
+
+        History his;
         
         //shared items, only modified by master
         Princes* pvt;

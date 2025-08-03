@@ -16,3 +16,5 @@ Changelog
 07-19-2025 ... 0.4.0.0 ... Transposition Table (Cutoffs) ........ (51.9 +/- 24.9) , (8 + 0.08), (SPRT, 636), (Local)
 07-19-2025 ... 0.4.1.0 ... TT Move .............................. (92.4 +/- 34.5) , (8 + 0.08), (SPRT, 331), (Local)
 07-19-2025 ... 0.4.1.1 ... Fix TT Resize UCI and Adjust Bench
+08-02-2025 ... 0.4.1.2 ... Add Non-Functional Changes from Multithread2
+08-02-2025 ... 0.5.0.0 ... Quiet History ........................ (39.9 +/- 19.9) , (8 + 0.08), (SPRT, 936), (https://sscg13.pythonanywhere.com/test/651/)

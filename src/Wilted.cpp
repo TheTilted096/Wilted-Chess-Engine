@@ -13,7 +13,7 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
-    std::string versionStr = "Wilted 0.4.1.2";
+    std::string versionStr = "Wilted 0.5.0.0";
 
     std::cout << versionStr << " by TheTilted096\n";
 

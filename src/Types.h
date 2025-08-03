@@ -82,3 +82,5 @@ constexpr Score MIN_VICTORY = 19000;
 constexpr Score MIN_DEFEAT = -19000;
 
 constexpr Index MAX_PLY = 16; //maximum PV/search length
+
+constexpr int16_t QUIET_HISTORY_LIM = 16384;

@@ -3,7 +3,7 @@
 #include "Searcher.h"
 
 template <bool isMaster> 
-Searcher<isMaster>::Searcher() : pos(), gen(), eva() {
+Searcher<isMaster>::Searcher() : pos(), gen(), eva(), his() {
     nodes = 0ULL;
     hardNodeMax = ~0ULL;
 
@@ -61,7 +61,8 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
             continue;
         }
 
-        points[i] = ml[i].moving(); //LVA
+        //points[i] = ml[i].moving(); //LVA
+        points[i] = his.quietEntry(ml[i], pos.toMove);
     }
 }
 
@@ -96,6 +97,7 @@ void Searcher<isMaster>::sortMoves(MoveList& ml, MoveScoreList& points, const In
 template <bool isMaster> 
 void Searcher<isMaster>::newGame(){
     pos.setStartPos();
+    //his.empty();
 }
 
 template <bool isMaster> 
@@ -237,6 +239,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     NodeType nodeflag = NodeType::All; //assume fail low unless otherwise
     Move localBestMove = Move::Invalid;
 
+    bool noisy;
+
     for (Index i = 0; i < moveCount; i++){
 
         maybeForceStop();
@@ -245,6 +249,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         if (!legal){ continue; }
 
         numLegal++;
+
+        noisy = moves[i].captured();
 
         if (numLegal == 1){
             score = -alphabeta<true>(-beta, -alpha, depth - 1, ply + 1);
@@ -255,7 +261,6 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 score = -alphabeta<true>(-beta, -alpha, depth - 1, ply + 1);
             }
         }
-        
         
         revokeMove(moves[i]);
 
@@ -281,6 +286,10 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
         if (score >= beta){ //Cut Node
             probedEntry.update(score, NodeType::Cut, depth, pos.thisHash(), moves[i], ply); //update TT in cut node
+
+            if (!noisy){
+                his.updateQuiet(moves[i], pos.toMove, static_cast<int16_t>(depth) * static_cast<int16_t>(depth)); //depth squared
+            }
 
             return score;
         }
@@ -309,6 +318,7 @@ template <bool isMaster>
 template <bool output>
 Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint){
     eva.refresh();
+    his.empty();
     nodes = 0;
 
     std::array<Bitboard, 2> sidesi = pos.sides;
