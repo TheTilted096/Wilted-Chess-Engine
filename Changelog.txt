@@ -20,3 +20,4 @@ Changelog
 08-02-2025 ... 0.5.0.0 ... Quiet History ........................ (39.9 +/- 19.9) , (8 + 0.08), (SPRT, 936), (https://sscg13.pythonanywhere.com/test/651/)
 08-02-2025 ... 0.5.1.0 ... Fix TT Score Casting ................. (71.8 +/- 26.1) , (8 + 0.08), (SPRT, 422), (https://sscg13.pythonanywhere.com/test/652/)
 08-02-2025 ... 0.5.2.0 ... Pass isPV Correctly in PVS ........... (46.4 +/- 21.1) , (8 + 0.08), (SPRT, 784), (https://sscg13.pythonanywhere.com/test/653/)
+08-02-2025 ... 0.6.0.0 ... Reverse Futility Pruning ............. (177.7 +/- 47.7), (8 + 0.08), (SPRT, 242), (https://sscg13.pythonanywhere.com/test/654/)

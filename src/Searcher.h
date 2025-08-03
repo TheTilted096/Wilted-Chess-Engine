@@ -48,6 +48,10 @@ template <bool isMaster> class Searcher{
         void newGame();
 
         Move getBest(){ return bestMove; }
+        
+        const Score RFPbase = 40;
+        const Score RFPmult = 60;
+        const Depth maxRFPdepth = 6;
 };
 
 extern template class Searcher<true>;

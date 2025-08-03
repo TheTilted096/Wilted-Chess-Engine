@@ -227,6 +227,17 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
     bool inCheck = pos.isChecked(pos.toMove); //maybe clean up these functions
 
+    Score presentEval = eva.judge(); // static eval
+
+    if (!rootNode){
+        Score margin = RFPbase + RFPmult * depth;
+        if ((depth < maxRFPdepth) and !inCheck and !isPV
+                and (presentEval - beta > margin)){
+
+            return (presentEval + beta) / 2;
+        }
+    }
+
     MoveList moves;
     Count moveCount = gen.generateMoves(moves);
 
