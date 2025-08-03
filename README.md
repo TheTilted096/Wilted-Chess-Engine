@@ -6,6 +6,10 @@ Base of future chess engine projects
 
 # To-Do's and Notes
 
+add some search features, then try smp again
+
+pass isPV correctly in pvs
+
 remember to change the version no in 3 places
 
 remember to do the mate score in tt update

@@ -13,7 +13,7 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
-    std::string versionStr = "Wilted 0.5.0.0";
+    std::string versionStr = "Wilted 0.5.1.0";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
         if (command == "uci"){
             std::cout << "id name " << versionStr << '\n';
             std::cout << "id author TheTilted096\n";
-            //std::cout << "option name Threads type spin default 1 min 1 max 1\n";
+            std::cout << "option name Threads type spin default 1 min 1 max 1\n";
             std::cout << "option name Hash type spin default 32 min 1 max 128\n";
             std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "option name Minimal type check default false\n";
