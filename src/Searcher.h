@@ -62,6 +62,8 @@ template <bool isMaster> class Searcher{
         const Depth maxRFPdepth = 6;
         const Depth minNMPdepth = 3;
         const Depth NMPreduce = 3;
+        const int ASPbase = 50; //use int32 to really avoid overflows
+        const int ASPmult = 2;
 };
 
 extern template class Searcher<true>;

@@ -22,3 +22,4 @@ Changelog
 08-02-2025 ... 0.5.2.0 ... Pass isPV Correctly in PVS ........... (46.4 +/- 21.1) , (8 + 0.08), (SPRT, 784), (https://sscg13.pythonanywhere.com/test/653/)
 08-02-2025 ... 0.6.0.0 ... Reverse Futility Pruning ............. (177.7 +/- 47.7), (8 + 0.08), (SPRT, 242), (https://sscg13.pythonanywhere.com/test/654/)
 08-02-2025 ... 0.6.1.0 ... Null Move Pruning .................... (54.9 +/- 23.7) , (8 + 0.08), (SPRT, 606), (https://sscg13.pythonanywhere.com/test/659/)
+08-03-2025 ... 0.6.2.0 ... Aspiration Windows ................... (8.2 +/- 6.5)   , (8 + 0.08), (SPRT, 7048),(https://sscg13.pythonanywhere.com/test/666/)

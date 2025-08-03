@@ -14,6 +14,8 @@ investigate infrequent time losses
 
 investigate speed changes from TT
 
+only one delta for aspiration window?
+
 movelist/scoredmovelist wrapper
 
 pickmove instead of sort all at once

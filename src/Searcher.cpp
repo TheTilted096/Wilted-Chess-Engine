@@ -360,11 +360,41 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     int64_t dur;
     int64_t nps;
 
+    Score alpha = -SCORE_INF;
+    Score beta = SCORE_INF;
+    bool aspFail;
+    int prevScore;
+
     try {
+        prevScore = alphabeta<true>(alpha, beta, 0, 0); // depth 0 to get an initial assessment
+        // this could be depth 1, but I did not want to copy the rest of the loop body
+
         for (Depth d = 1; d <= depthLim; d++){
-            searchScore = alphabeta<true>(-SCORE_INF, SCORE_INF, d, 0);
+            aspFail = true; 
+            int aspAlpha = ASPbase, aspBeta = ASPbase;
+
+            while (aspFail){ // cast to integer to be sure of no overflow
+                alpha = std::max(prevScore - aspAlpha, (int)(-SCORE_INF));
+                beta = std::min(prevScore + aspBeta, (int)(SCORE_INF));
+
+                searchScore = alphabeta<true>(alpha, beta, d, 0);
+
+                if (searchScore < alpha){ //failed low, must expand window down
+                    aspAlpha *= ASPmult;
+                    continue;
+                }
+                if (searchScore > beta){ //failed high, must expand window high
+                    aspBeta *= ASPmult;
+                    continue;
+                }
+
+                aspFail = false; //otherwise, it passed
+            }
+
+            //searchScore = alphabeta<true>(-SCORE_INF, SCORE_INF, d, 0);
             
             currentBest = bestMove;
+            prevScore = searchScore;
 
             if constexpr (isMaster and output){
                 if (!minPrint){
