@@ -35,7 +35,7 @@ void Engine::bench(){
         stopFlag = false;
         
         master.pos.readFen(tester);
-        master.search<false>(8, ~0ULL, false);
+        master.search<false>(14, ~0ULL, false);
         lifeNodes += master.nodes;
     }
 

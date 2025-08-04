@@ -65,6 +65,10 @@ template <bool isMaster> class Searcher{
         const Depth NMPreduce = 3;
         const int ASPbase = 50; //use int32 to really avoid overflows
         const int ASPmult = 2;
+        const Depth minLMRdepth = 2;
+        const double LMRbase = 0.4;
+        const double LMRmult = 0.6;
+        Table<Depth, MAX_PLY, 128> LMRtable;
 };
 
 extern template class Searcher<true>;
