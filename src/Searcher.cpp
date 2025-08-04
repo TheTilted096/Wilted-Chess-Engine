@@ -3,8 +3,7 @@
 #include "Searcher.h"
 
 template <bool isMaster> 
-Searcher<isMaster>::Searcher() : pos(), gen(), eva(), his() {
-    nodes = 0ULL;
+Searcher<isMaster>::Searcher(){
     hardNodeMax = ~0ULL;
 
     bestMove = Move::Invalid;
@@ -26,11 +25,16 @@ Searcher<isMaster>::Searcher() : pos(), gen(), eva(), his() {
 }
 
 template <bool isMaster> 
-void Searcher<isMaster>::assign(Princes* p, Timeman* t, bool* s, TeaTable* ts){
-    pvt = p;
-    tim = t;
+void Searcher<isMaster>::assign(std::atomic<bool>* s, TeaTable* ts, std::atomic<uint64_t>* np){
     stopSearch = s;
     ttref = ts;
+    nodesptr = np;
+}
+
+template <bool isMaster>
+void Searcher<isMaster>::promote(Princes* p, Timeman* t){
+    pvt = p;
+    tim = t;
 }
 
 template <bool isMaster> 
@@ -43,7 +47,7 @@ bool Searcher<isMaster>::invokeMove(const Move& m){
     }
 
     eva.doMove(m);
-    nodes++;
+    addNode();
 
     return true;
 }
@@ -113,25 +117,26 @@ void Searcher<isMaster>::clearStack(){
 
 template <bool isMaster> 
 void Searcher<isMaster>::newGame(){
-    pos.setStartPos();
+    //pos.setStartPos();
     //his.empty();
+    clearStack();
 }
 
 template <bool isMaster> 
 void Searcher<isMaster>::maybeForceStop(){
     if constexpr (isMaster){ //master handles actual stop conditions
-        if (tim->timeKept and (nodes % 2048 == 0)){
+        if (tim->timeKept and (nodes() % 2048 == 0)){
             if (tim->exceedHard()){
                 disable();
             }
         }
 
-        if (nodes > hardNodeMax){
+        if (nodes() > hardNodeMax){
             disable();
         }
     }
 
-    if (*stopSearch){
+    if (stopped()){
         throw "stopSearch raised";
     }
 }
@@ -380,12 +385,6 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     eva.refresh();
     his.empty();
     clearStack();
-    nodes = 0;
-
-    std::array<Bitboard, 2> sidesi = pos.sides;
-    std::array<Bitboard, 6> piecesi = pos.pieces;
-    Color toMovei = pos.toMove;
-    Index clocki = pos.clock;
 
     hardNodeMax = nodeLim;
 
@@ -433,11 +432,13 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
 
             if constexpr (isMaster and output){
                 if (!minPrint){
+                    uint64_t pn = nodes();
+
                     std::cout << "info depth " << (int)d << " score cp " << searchScore 
-                        << " nodes " << nodes;
+                        << " nodes " << pn;
 
                     dur = tim->elapsed();
-                    nps = 1000000 * nodes / dur;
+                    nps = 1000000 * pn / dur;
 
                     std::cout << " nps " << nps << " time " << (dur / 1000);
                     std::cout << " pv ";
@@ -464,17 +465,13 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     }
 
     if constexpr (isMaster and output){
+        uint64_t pn = nodes();
         dur = tim->elapsed();
-        nps = 1000000 * nodes / dur;
+        nps = 1000000 * pn / dur;
 
-        std::cout << "info nodes " << nodes << " nps " << nps << std::endl;
+        std::cout << "info nodes " << pn << " nps " << nps << std::endl;
         std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
     }
-
-    pos.sides = sidesi;
-    pos.pieces = piecesi;
-    pos.toMove = toMovei;
-    pos.clock = clocki;
 
     return searchScore;
 }

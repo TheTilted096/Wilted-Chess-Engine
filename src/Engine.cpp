@@ -2,14 +2,21 @@
 
 #include "Engine.h"
 
-Engine::Engine() : master(), pvtable(), timer(), stopFlag(false){
-    master.assign(&pvtable, &timer, &stopFlag, &ttable);
+Engine::Engine() : stopFlag(false){
+    maingen.assign(&mainpos);
+
+    master.assign(&stopFlag, &ttable, &masterNodes.value);
+    master.promote(&pvtable, &timer);
+
+    newGame();
 }
 
 void Engine::newGame(){
     ttable.clear();
     pvtable.clearAll();
     master.newGame();
+
+    mainpos.setStartPos();
 }
 
 void Engine::bench(){
@@ -34,9 +41,12 @@ void Engine::bench(){
         newGame();
         stopFlag = false;
         
-        master.pos.readFen(tester);
+        mainpos.readFen(tester);
+        master.downloadPos(mainpos);
+        master.clearNodes();
+
         master.search<false>(14, ~0ULL, false);
-        lifeNodes += master.nodes;
+        lifeNodes += master.nodes();
     }
 
     //auto benchEnd = std::chrono::steady_clock::now();
@@ -52,6 +62,9 @@ template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
     timer.start();
 
     d = std::min(MAX_PLY, d);
+
+    master.downloadPos(mainpos);
+    master.clearNodes();
 
     Score result = master.search<out>(d, nl, mp);
 

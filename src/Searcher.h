@@ -26,21 +26,28 @@ template <bool isMaster> class Searcher{
         //shared items, only modified by master
         Princes* pvt;
         Timeman* tim;
-        bool* stopSearch;
+        std::atomic<bool>* stopSearch;
 
         TeaTable* ttref;
 
-        uint64_t nodes;
+        std::atomic<uint64_t>* nodesptr;
         uint64_t hardNodeMax;
 
         Move bestMove;
 
         Searcher();
 
-        void assign(Princes*, Timeman*, bool*, TeaTable*);
+        void assign(std::atomic<bool>*, TeaTable*, std::atomic<uint64_t>*);
+        void promote(Princes*, Timeman*);
+
+        void downloadPos(const Position& p){ pos = p; }
 
         bool invokeMove(const Move& m);
         void revokeMove(const Move& m);
+
+        void clearNodes(){ *nodesptr = 0ULL; }
+        void addNode(){ (*nodesptr)++; }
+        uint64_t nodes(){ return *nodesptr; }
 
         void scoreMoves(MoveList&, MoveScoreList&, const Index&, const Move&, const Index&);
         void scoreCaptures(MoveList&, MoveScoreList&, const Index&);
@@ -52,6 +59,7 @@ template <bool isMaster> class Searcher{
 
         void maybeForceStop();
         void disable(){ *stopSearch = true; }
+        bool stopped(){ return *stopSearch; }
 
         void clearStack();
         void newGame();

@@ -6,11 +6,16 @@ class Engine{
     public:
         Master master;
 
+        Position mainpos;
+        Generator maingen;
+
         TeaTable ttable;
 
         Princes pvtable;
         Timeman timer;
-        bool stopFlag;
+        std::atomic<bool> stopFlag;
+
+        AlignedAtomicU64 masterNodes;
         
         Engine();
 

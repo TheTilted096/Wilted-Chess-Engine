@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <bit>
 #include <cassert>
 #include <chrono>
@@ -85,3 +86,5 @@ constexpr Score MIN_DEFEAT = -19000;
 constexpr Index MAX_PLY = 48; //maximum PV/search length
 
 constexpr int16_t QUIET_HISTORY_LIM = 16384;
+
+constexpr Count MAX_THREADS = 8;
