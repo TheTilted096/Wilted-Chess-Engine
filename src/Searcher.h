@@ -10,7 +10,7 @@
 struct Sentry{
     bool nmp = false;
     Score presentEval;
-    //Move killer;
+    Move killer;
 };
 
 template <bool isMaster> class Searcher{
@@ -21,7 +21,7 @@ template <bool isMaster> class Searcher{
 
         History his;
 
-        std::array<Sentry, MAX_PLY> sta;
+        std::array<Sentry, MAX_PLY + 1> sta;
         
         //shared items, only modified by master
         Princes* pvt;
@@ -42,7 +42,7 @@ template <bool isMaster> class Searcher{
         bool invokeMove(const Move& m);
         void revokeMove(const Move& m);
 
-        void scoreMoves(MoveList&, MoveScoreList&, const Index&, const Move&);
+        void scoreMoves(MoveList&, MoveScoreList&, const Index&, const Move&, const Index&);
         void scoreCaptures(MoveList&, MoveScoreList&, const Index&);
         void sortMoves(MoveList&, MoveScoreList&, const Index&);
 
@@ -53,6 +53,7 @@ template <bool isMaster> class Searcher{
         void maybeForceStop();
         void disable(){ *stopSearch = true; }
 
+        void clearStack();
         void newGame();
 
         Move getBest(){ return bestMove; }

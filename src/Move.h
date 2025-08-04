@@ -66,7 +66,7 @@ class Move{
 
         bool resets() const{ return (captured() or (moving() == Pawn)); }
 
-        bool operator==(const Move& m){
+        bool operator==(const Move& m) const{
             return info == m.info;
         }
   

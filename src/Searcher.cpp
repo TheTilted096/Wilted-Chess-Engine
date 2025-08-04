@@ -49,7 +49,7 @@ void Searcher<isMaster>::revokeMove(const Move& m){
 }
 
 template <bool isMaster> 
-void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const Index& len, const Move& ttm){
+void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const Index& len, const Move& ttm, const Index& p){
     for (Index i = 0; i < len; i++){
         if (ml[i] == ttm){
             points[i] = (1U << 30);
@@ -58,6 +58,11 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
 
         if (ml[i].captured()){ //capture
             points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16); //MVV LVA
+            continue;
+        }
+
+        if (ml[i] == sta[p].killer){
+            points[i] = (1U << 24);
             continue;
         }
 
@@ -92,6 +97,12 @@ void Searcher<isMaster>::sortMoves(MoveList& ml, MoveScoreList& points, const In
         points[j] = keyPoints;
         ml[j] = keyMove;
     }
+}
+
+template <bool isMaster>
+void Searcher<isMaster>::clearStack(){
+    sta[0].nmp = false;
+    sta[0].killer = Move::Null;
 }
 
 template <bool isMaster> 
@@ -176,10 +187,6 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
     bool rootNode = (ply == 0);
 
-    if constexpr (isMaster){ //master reports pv
-        pvt->clearLine(ply);
-    }
-
     Count repeats = pos.repetitions(0);
     if (repeats > 2){
         return DRAW;
@@ -252,12 +259,15 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         }
     }
 
+    if constexpr (isMaster){ //master reports pv
+        pvt->clearLine(ply);
+    }
 
     MoveList moves;
     Count moveCount = gen.generateMoves(moves);
 
     MoveScoreList movePower;
-    scoreMoves(moves, movePower, moveCount, ttMove);
+    scoreMoves(moves, movePower, moveCount, ttMove, ply);
     sortMoves(moves, movePower, moveCount);
     
     Count numLegal = 0;
@@ -266,6 +276,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     Move localBestMove = Move::Invalid;
 
     bool noisy;
+    sta[ply + 1].killer = Move::Invalid;
 
     for (Index i = 0; i < moveCount; i++){
 
@@ -315,6 +326,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
             if (!noisy){
                 his.updateQuiet(moves[i], pos.toMove, static_cast<int16_t>(depth) * static_cast<int16_t>(depth)); //depth squared
+
+                sta[ply].killer = moves[i];
             }
 
             return score;
@@ -345,6 +358,7 @@ template <bool output>
 Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint){
     eva.refresh();
     his.empty();
+    clearStack();
     nodes = 0;
 
     std::array<Bitboard, 2> sidesi = pos.sides;
