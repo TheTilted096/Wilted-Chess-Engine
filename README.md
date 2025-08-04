@@ -8,7 +8,7 @@ Base of future chess engine projects
 
 add some search features, then try smp again
 
-remember to change the version no in 3 places
+remember to change the version no in FOUR places
 
 investigate infrequent time losses
 
@@ -47,6 +47,12 @@ perhaps neaten up deduceCastling() to remove some conditionals
 1st - very important
 
 dev names will be x-x-x-x-dev, updates numbers if passed
+
+major plans: 
+
+1.0.0.0 - the end of the beginning
+
+2.0.0.0 - NNUE
 
 # specifications
 
