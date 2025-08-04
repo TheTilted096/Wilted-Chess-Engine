@@ -16,6 +16,12 @@ Searcher<isMaster>::Searcher() : pos(), gen(), eva(), his() {
     tim = nullptr;
     stopSearch = nullptr;
 
+    for (Depth i = 0; i < MAX_PLY; i++){
+        for (Index j = 0; j < 128; j++){
+            LMRtable[i][j] = LMRbase + LMRmult * log(i + 1) * log(j + 1);
+        }
+    }
+
     newGame();
 }
 
@@ -292,8 +298,23 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         if (numLegal == 1){
             score = -alphabeta<isPV>(-beta, -alpha, depth - 1, ply + 1);
         } else {
-            score = -alphabeta<false>(-alpha - 1, -alpha, depth - 1, ply + 1);
+            Depth r = 0;
+            if ((depth > minLMRdepth) and !noisy){
+                r = LMRtable[depth][numLegal];
+            }
 
+            // search at reduced depth and null window
+            // cast to int and max(0) to avoid underflows.
+            score = -alphabeta<false>(-alpha - 1, -alpha, std::max(0, static_cast<int>(depth) - 1 - r), ply + 1);
+
+            // if the move does better than expected and we actually reduced the move
+            // search null window full depth
+            if ((score > alpha) and (r > 0)){
+                score = -alphabeta<false>(-alpha - 1, -alpha, depth - 1, ply + 1);
+            }
+
+            // the move passes null window search at full depth
+            // search the move at full depth and window. isPV must be true to have an actual full window.
             if ((score > alpha) and isPV){
                 score = -alphabeta<true>(-beta, -alpha, depth - 1, ply + 1);
             }

@@ -6,6 +6,7 @@
 #include <bit>
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -81,6 +82,6 @@ constexpr Score DRAW = 0;
 constexpr Score MIN_VICTORY = 19000;
 constexpr Score MIN_DEFEAT = -19000;
 
-constexpr Index MAX_PLY = 32; //maximum PV/search length
+constexpr Index MAX_PLY = 48; //maximum PV/search length
 
 constexpr int16_t QUIET_HISTORY_LIM = 16384;
