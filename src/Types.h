@@ -8,14 +8,17 @@
 #include <cassert>
 #include <chrono>
 #include <cmath>
+#include <condition_variable>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
 #include <immintrin.h>
 #include <iostream>
+#include <mutex>
 #include <random>
 #include <sstream>
 #include <string>
+#include <thread>
 
 using Bitboard = uint64_t;
 using Hash = uint64_t;

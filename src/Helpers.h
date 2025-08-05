@@ -26,6 +26,8 @@ template <typename T> struct alignas(64) AlignedAtomic{
 
 using AlignedAtomicU64 = AlignedAtomic<uint64_t>;
 
+template <typename T> using SharedArray = std::array<AlignedAtomic<T>, MAX_THREADS - 1>;
+
 
 constexpr Hash randomize(Hash &s){
     Hash x = s;

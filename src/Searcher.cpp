@@ -15,6 +15,9 @@ Searcher<isMaster>::Searcher(){
     tim = nullptr;
     stopSearch = nullptr;
 
+    nodesptr = nullptr;
+    nodesArrPtr = nullptr;
+
     for (Depth i = 0; i < MAX_PLY; i++){
         for (Index j = 0; j < 128; j++){
             LMRtable[i][j] = LMRbase + LMRmult * log(i + 1) * log(j + 1);
@@ -32,9 +35,10 @@ void Searcher<isMaster>::assign(std::atomic<bool>* s, TeaTable* ts, std::atomic<
 }
 
 template <bool isMaster>
-void Searcher<isMaster>::promote(Princes* p, Timeman* t){
+void Searcher<isMaster>::promote(Princes* p, Timeman* t, SharedArray<uint64_t>* sa){
     pvt = p;
     tim = t;
+    nodesArrPtr = sa;
 }
 
 template <bool isMaster> 
@@ -193,6 +197,10 @@ Score Searcher<isMaster>::quiesce(Score alpha, Score beta){
 template <bool isMaster>
 template <bool isPV> 
 Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
+    if constexpr (isMaster){ //master reports pv
+        pvt->clearLine(ply);
+    }
+
     Score score = DEFEAT;
     Score bestScore = DEFEAT;
 
@@ -268,10 +276,6 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 return nullScore;
             }
         }
-    }
-
-    if constexpr (isMaster){ //master reports pv
-        pvt->clearLine(ply);
     }
 
     MoveList moves;
@@ -432,7 +436,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
 
             if constexpr (isMaster and output){
                 if (!minPrint){
-                    uint64_t pn = nodes();
+                    uint64_t pn = pooledNodes();
 
                     std::cout << "info depth " << (int)d << " score cp " << searchScore 
                         << " nodes " << pn;
@@ -465,12 +469,12 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     }
 
     if constexpr (isMaster and output){
-        uint64_t pn = nodes();
+        uint64_t pn = pooledNodes();
         dur = tim->elapsed();
         nps = 1000000 * pn / dur;
 
         std::cout << "info nodes " << pn << " nps " << nps << std::endl;
-        std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
+        //std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
     }
 
     return searchScore;

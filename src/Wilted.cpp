@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
         if (command == "uci"){
             std::cout << "id name " << versionStr << '\n';
             std::cout << "id author TheTilted096\n";
-            std::cout << "option name Threads type spin default 1 min 1 max 1\n";
+            std::cout << "option name Threads type spin default 1 min 1 max 8\n";
             std::cout << "option name Hash type spin default 32 min 1 max 128\n";
             std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "option name Minimal type check default false\n";
@@ -105,6 +105,11 @@ int main(int argc, char* argv[]){
             if (command.substr(15, 4) == "Hash"){
                 std::size_t s = std::stoi(command.substr(26));
                 engine.ttable.resize(s);
+            }
+
+            if (command.substr(15, 7) == "Threads"){
+                std::size_t s = std::stoi(command.substr(29));
+                engine.createPool(s);
             }
 
         }

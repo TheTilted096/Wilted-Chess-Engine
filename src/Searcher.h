@@ -33,12 +33,14 @@ template <bool isMaster> class Searcher{
         std::atomic<uint64_t>* nodesptr;
         uint64_t hardNodeMax;
 
+        SharedArray<uint64_t>* nodesArrPtr;
+
         Move bestMove;
 
         Searcher();
 
         void assign(std::atomic<bool>*, TeaTable*, std::atomic<uint64_t>*);
-        void promote(Princes*, Timeman*);
+        void promote(Princes*, Timeman*, SharedArray<uint64_t>*);
 
         void downloadPos(const Position& p){ pos = p; }
 
@@ -49,6 +51,14 @@ template <bool isMaster> class Searcher{
         void addNode(){ (*nodesptr)++; }
         uint64_t nodes(){ return *nodesptr; }
 
+        uint64_t pooledNodes(){
+            uint64_t s = nodes();
+            for (AlignedAtomicU64& a : *nodesArrPtr){
+                s += a.value;
+            }
+            return s;
+        }
+
         void scoreMoves(MoveList&, MoveScoreList&, const Index&, const Move&, const Index&);
         void scoreCaptures(MoveList&, MoveScoreList&, const Index&);
         void sortMoves(MoveList&, MoveScoreList&, const Index&);
@@ -56,6 +66,7 @@ template <bool isMaster> class Searcher{
         Score quiesce(Score, Score); //Index by Ply? - Could be useful for searchstack
         template <bool> Score alphabeta(Score, Score, Depth, Index);
         template <bool> Score search(Depth, uint64_t, bool);
+        Score searchInfinite(){ return search<false>(MAX_PLY, ~0ULL, true); }
 
         void maybeForceStop();
         void disable(){ *stopSearch = true; }
