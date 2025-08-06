@@ -6,7 +6,7 @@ class Princes{
     public:
         static constexpr std::size_t PRINCE_SIZE = (MAX_PLY) * (MAX_PLY + 1) / 2;
         Move vars[PRINCE_SIZE]; //perhaps make this impl less C-style
-        Index heights[MAX_PLY];
+        Index heights[MAX_PLY + 1];
 
         Princes(){ clearAll(); }
 

@@ -6,13 +6,13 @@ Base of future chess engine projects
 
 # To-Do's and Notes
 
-add some search features, then try smp again
-
 remember to change the version no in FOUR places
 
 investigate infrequent time losses
 
 investigate speed changes from TT
+
+inspect and slightly clean up smp code?
 
 only one delta for aspiration window?
 

@@ -3,8 +3,7 @@
 #include "Searcher.h"
 
 template <bool isMaster> 
-Searcher<isMaster>::Searcher() : pos(), gen(), eva(), his() {
-    nodes = 0ULL;
+Searcher<isMaster>::Searcher(){
     hardNodeMax = ~0ULL;
 
     bestMove = Move::Invalid;
@@ -16,6 +15,9 @@ Searcher<isMaster>::Searcher() : pos(), gen(), eva(), his() {
     tim = nullptr;
     stopSearch = nullptr;
 
+    nodesptr = nullptr;
+    nodesArrPtr = nullptr;
+
     for (Depth i = 0; i < MAX_PLY; i++){
         for (Index j = 0; j < 128; j++){
             LMRtable[i][j] = LMRbase + LMRmult * log(i + 1) * log(j + 1);
@@ -26,11 +28,17 @@ Searcher<isMaster>::Searcher() : pos(), gen(), eva(), his() {
 }
 
 template <bool isMaster> 
-void Searcher<isMaster>::assign(Princes* p, Timeman* t, bool* s, TeaTable* ts){
-    pvt = p;
-    tim = t;
+void Searcher<isMaster>::assign(std::atomic<bool>* s, TeaTable* ts, std::atomic<uint64_t>* np){
     stopSearch = s;
     ttref = ts;
+    nodesptr = np;
+}
+
+template <bool isMaster>
+void Searcher<isMaster>::promote(Princes* p, Timeman* t, SharedArray<uint64_t>* sa){
+    pvt = p;
+    tim = t;
+    nodesArrPtr = sa;
 }
 
 template <bool isMaster> 
@@ -43,7 +51,7 @@ bool Searcher<isMaster>::invokeMove(const Move& m){
     }
 
     eva.doMove(m);
-    nodes++;
+    addNode();
 
     return true;
 }
@@ -113,25 +121,26 @@ void Searcher<isMaster>::clearStack(){
 
 template <bool isMaster> 
 void Searcher<isMaster>::newGame(){
-    pos.setStartPos();
+    //pos.setStartPos();
     //his.empty();
+    clearStack();
 }
 
 template <bool isMaster> 
 void Searcher<isMaster>::maybeForceStop(){
     if constexpr (isMaster){ //master handles actual stop conditions
-        if (tim->timeKept and (nodes % 2048 == 0)){
+        if (tim->timeKept and (nodes() % 2048 == 0)){
             if (tim->exceedHard()){
                 disable();
             }
         }
 
-        if (nodes > hardNodeMax){
+        if (nodes() > hardNodeMax){
             disable();
         }
     }
 
-    if (*stopSearch){
+    if (stopped()){
         throw "stopSearch raised";
     }
 }
@@ -188,6 +197,10 @@ Score Searcher<isMaster>::quiesce(Score alpha, Score beta){
 template <bool isMaster>
 template <bool isPV> 
 Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
+    if constexpr (isMaster){ //master reports pv
+        pvt->clearLine(ply);
+    }
+
     Score score = DEFEAT;
     Score bestScore = DEFEAT;
 
@@ -263,10 +276,6 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 return nullScore;
             }
         }
-    }
-
-    if constexpr (isMaster){ //master reports pv
-        pvt->clearLine(ply);
     }
 
     MoveList moves;
@@ -380,12 +389,6 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     eva.refresh();
     his.empty();
     clearStack();
-    nodes = 0;
-
-    std::array<Bitboard, 2> sidesi = pos.sides;
-    std::array<Bitboard, 6> piecesi = pos.pieces;
-    Color toMovei = pos.toMove;
-    Index clocki = pos.clock;
 
     hardNodeMax = nodeLim;
 
@@ -433,11 +436,13 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
 
             if constexpr (isMaster and output){
                 if (!minPrint){
+                    uint64_t pn = pooledNodes();
+
                     std::cout << "info depth " << (int)d << " score cp " << searchScore 
-                        << " nodes " << nodes;
+                        << " nodes " << pn;
 
                     dur = tim->elapsed();
-                    nps = 1000000 * nodes / dur;
+                    nps = 1000000 * pn / dur;
 
                     std::cout << " nps " << nps << " time " << (dur / 1000);
                     std::cout << " pv ";
@@ -464,17 +469,13 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
     }
 
     if constexpr (isMaster and output){
+        uint64_t pn = pooledNodes();
         dur = tim->elapsed();
-        nps = 1000000 * nodes / dur;
+        nps = 1000000 * pn / dur;
 
-        std::cout << "info nodes " << nodes << " nps " << nps << std::endl;
-        std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
+        std::cout << "info nodes " << pn << " nps " << nps << std::endl;
+        //std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
     }
-
-    pos.sides = sidesi;
-    pos.pieces = piecesi;
-    pos.toMove = toMovei;
-    pos.clock = clocki;
 
     return searchScore;
 }

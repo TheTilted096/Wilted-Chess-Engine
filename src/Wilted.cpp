@@ -5,15 +5,13 @@
 
 int main(int argc, char* argv[]){
     Engine engine;
-    Position& mainpos = engine.master.pos;
-    Generator& maingen = engine.master.gen;
 
     if ((argc == 2) and (std::string(argv[1]) == "bench")){
         engine.bench();
         return 0;
     }
 
-    std::string versionStr = "Wilted 0.7.0.0";
+    std::string versionStr = "Wilted 0.8.0.0";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -31,7 +29,7 @@ int main(int argc, char* argv[]){
         if (command == "uci"){
             std::cout << "id name " << versionStr << '\n';
             std::cout << "id author TheTilted096\n";
-            std::cout << "option name Threads type spin default 1 min 1 max 1\n";
+            std::cout << "option name Threads type spin default 1 min 1 max 8\n";
             std::cout << "option name Hash type spin default 32 min 1 max 128\n";
             std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "option name Minimal type check default false\n";
@@ -47,7 +45,7 @@ int main(int argc, char* argv[]){
         }
 
         if (command.substr(0, 17) == "position startpos"){
-            mainpos.setStartPos();
+            engine.mainpos.setStartPos();
 
             int movesStart = command.find("moves");
             if (movesStart == 18){ //if there is a moves xx string
@@ -58,12 +56,12 @@ int main(int argc, char* argv[]){
 
                 while (!extras.eof()){
                     extras >> param;
-                    given = maingen.unalgebraic(param);
+                    given = engine.maingen.unalgebraic(param);
                     if (!given.bad()){
-                        mainpos.makeMove(given);
+                        engine.mainpos.makeMove(given);
                     }
                     if (given.resets()){
-                        mainpos.forget();
+                        engine.mainpos.forget();
                     }
                 }
             }
@@ -72,7 +70,7 @@ int main(int argc, char* argv[]){
         if (command.substr(0, 12) == "position fen"){
             int movesStart = command.find("moves"); //should return -1 (ULL) if not found
 
-            mainpos.readFen(command.substr(13, movesStart - 13));
+            engine.mainpos.readFen(command.substr(13, movesStart - 13));
 
             if (movesStart != -1){
 
@@ -82,12 +80,12 @@ int main(int argc, char* argv[]){
 
                 while (!extras.eof()){
                     extras >> param;
-                    given = maingen.unalgebraic(param);
+                    given = engine.maingen.unalgebraic(param);
                     if (!given.bad()){
-                        mainpos.makeMove(given);
+                        engine.mainpos.makeMove(given);
                     }
                     if (given.resets()){
-                        mainpos.forget();
+                        engine.mainpos.forget();
                     }
                 }
             }
@@ -95,8 +93,8 @@ int main(int argc, char* argv[]){
 
         if (command.substr(0, 9) == "setoption"){
             if (command.substr(15, 12) == "UCI_Chess960"){
-                if (command.substr(34) == "true"){ mainpos.setFRC(); }
-                if (command.substr(34) == "false"){ mainpos.stopFRC(); }
+                if (command.substr(34) == "true"){ engine.mainpos.setFRC(); }
+                if (command.substr(34) == "false"){ engine.mainpos.stopFRC(); }
             }
 
             if (command.substr(15, 7) == "Minimal"){
@@ -109,13 +107,18 @@ int main(int argc, char* argv[]){
                 engine.ttable.resize(s);
             }
 
+            if (command.substr(15, 7) == "Threads"){
+                std::size_t s = std::stoi(command.substr(29));
+                engine.createPool(s);
+            }
+
         }
 
         if (command.substr(0, 2) == "go"){
             std::stringstream searchLimits(command);
 
-            std::string ot = mainpos.toMove ? "wtime" : "btime";
-            std::string oi = mainpos.toMove ? "winc" : "binc";
+            std::string ot = engine.mainpos.toMove ? "wtime" : "btime";
+            std::string oi = engine.mainpos.toMove ? "winc" : "binc";
 
             uint32_t thinkBase = ~0U;
             uint32_t thinkrement = 0U; // increment 0 unless specified
@@ -137,7 +140,7 @@ int main(int argc, char* argv[]){
         if (command.substr(0, 5) == "perft"){
             Depth d = std::stoi(command.substr(6));
 
-            Performer perf(&mainpos);
+            Performer perf(&engine.mainpos);
 
             perf.run(d);
         }
@@ -149,11 +152,11 @@ int main(int argc, char* argv[]){
         }
 
         if (command == "printpieces"){
-            mainpos.print();
+            engine.mainpos.print();
         }
 
         if (command == "printzobrist"){
-            mainpos.showZobrist();
+            engine.mainpos.showZobrist();
         }
 
         if (command == "test"){

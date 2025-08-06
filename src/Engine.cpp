@@ -2,14 +2,55 @@
 
 #include "Engine.h"
 
-Engine::Engine() : master(), pvtable(), timer(), stopFlag(false){
-    master.assign(&pvtable, &timer, &stopFlag, &ttable);
+Engine::Engine(){
+    stopFlag = false;
+
+    destruct = false;
+    startgame = false;
+    pulse = 0U;
+    workerCount = 0;
+    workersReady = 0;
+    useWorkers = true;
+    hasWorkers = false;
+
+    masterNodes.value = 0ULL;
+    clearWorkerNodes();
+
+    maingen.assign(&mainpos);
+
+    master.assign(&stopFlag, &ttable, &masterNodes.value);
+    master.promote(&pvtable, &timer, &workerNodes);
+
+    newGame();
+}
+
+Engine::~Engine(){
+    drainPool();
 }
 
 void Engine::newGame(){
     ttable.clear();
     pvtable.clearAll();
     master.newGame();
+
+    mainpos.setStartPos();
+
+    if (hasWorkers){
+        {
+            std::lock_guard<std::mutex> guard(mute);
+            startgame = true;
+            //assert(workersReady == workerCount);
+            workersReady = 0;
+            pulse++;
+        }
+
+        sync.notify_all();
+        
+        masterIdle();
+        //assert(workersReady == workerCount);
+
+        startgame = false;
+    }
 }
 
 void Engine::bench(){
@@ -34,9 +75,12 @@ void Engine::bench(){
         newGame();
         stopFlag = false;
         
-        master.pos.readFen(tester);
+        mainpos.readFen(tester);
+        master.downloadPos(mainpos);
+        master.clearNodes();
+
         master.search<false>(14, ~0ULL, false);
-        lifeNodes += master.nodes;
+        lifeNodes += master.nodes();
     }
 
     //auto benchEnd = std::chrono::steady_clock::now();
@@ -48,14 +92,146 @@ void Engine::bench(){
 }
 
 template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
+    /* old singlethreaded code
     stopFlag = false;
     timer.start();
 
     d = std::min(MAX_PLY, d);
 
+    master.downloadPos(mainpos);
+    master.clearNodes();
+
     Score result = master.search<out>(d, nl, mp);
 
     return result;
+    */
+
+    useWorkers = (nl == ~0ULL);
+
+    if (hasWorkers and useWorkers){
+        {
+            std::lock_guard<std::mutex> guard(mute);
+            stopFlag = false;
+            clearWorkerNodes();
+            //assert(workersReady == workerCount);
+            workersReady = 0;
+            pulse++;
+        }
+        sync.notify_all();
+    } else {
+        stopFlag = false;
+    }
+
+    d = std::min(MAX_PLY, d);
+
+    master.downloadPos(mainpos);
+    master.clearNodes();
+
+    timer.start();
+
+    Score sc = master.search<out>(d, nl, mp);
+
+    if (hasWorkers and useWorkers){
+        masterIdle();
+        //assert(workerCount == workersReady);
+    }
+
+    master.reportBest();
+
+    return sc;
+}
+
+void Engine::masterIdle(){
+    std::unique_lock<std::mutex> lock(mute);
+    masterSync.wait(lock, [&]{ return (workersReady == workerCount); });
+}
+
+void Engine::runWorker(Index id){
+    Worker w;
+    w.assign(&stopFlag, &ttable, &workerNodes[id].value);
+
+    uint32_t lastPulse;
+    {
+        std::lock_guard<std::mutex> guard(mute);
+        lastPulse = pulse;
+        workersReady++;
+    }
+
+    masterSync.notify_one();
+
+    while (true){
+        {
+            std::unique_lock<std::mutex> lock(mute);
+            sync.wait(lock, [&]{ return (pulse > lastPulse); });
+            lastPulse = pulse;
+        }
+
+        if (destruct){
+            return;
+        }
+
+        if (startgame){ //ucinewgame
+            w.newGame();
+            workerPing();
+            masterSync.notify_one(); //only one thread; master
+            continue;
+        }
+
+        if (useWorkers and !stopFlag){
+            w.downloadPos(mainpos);
+            w.searchInfinite();
+            workerPing();
+            masterSync.notify_one();
+            continue;
+        }
+
+        workerPing();
+        masterSync.notify_one();
+    }
+}
+
+void Engine::workerPing(){
+    std::lock_guard<std::mutex> guard(mute);
+    workersReady++;
+}
+
+void Engine::createPool(Count nt){
+    drainPool();
+
+    clearWorkerNodes();
+    //assert(workersReady == workerCount);
+
+    for (Index i = 0; i < nt - 1; i++){
+        workerPool.emplace_back(&Engine::runWorker, this, i);
+    }
+
+    hasWorkers = nt - 1;
+    workerCount = nt - 1;
+
+    masterIdle();
+    //assert(workersReady == workerCount);
+}
+
+void Engine::drainPool(){
+    {
+        std::lock_guard<std::mutex> guard(mute);
+        //assert(workersReady == workerCount);
+        destruct = true;
+        pulse++;
+    }
+
+    sync.notify_all();
+
+    for (std::thread& t : workerPool){
+        t.join();
+    }
+
+    workerPool.clear(); //safely clear out vector
+
+    workerCount = 0;
+    workersReady = 0;
+
+    destruct = false;
 }
 
 template Score Engine::go<true>(Depth, uint64_t, bool);

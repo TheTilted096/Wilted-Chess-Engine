@@ -20,6 +20,15 @@ template <typename T, std::size_t J, std::size_t... K> using Table = typename Mu
 
 using MoveScoreList = std::array<uint32_t, MOVELIST_SIZE>;
 
+template <typename T> struct alignas(64) AlignedAtomic{
+    std::atomic<T> value;
+};
+
+using AlignedAtomicU64 = AlignedAtomic<uint64_t>;
+
+template <typename T> using SharedArray = std::array<AlignedAtomic<T>, MAX_THREADS - 1>;
+
+
 constexpr Hash randomize(Hash &s){
     Hash x = s;
     
