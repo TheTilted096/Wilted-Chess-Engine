@@ -338,6 +338,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         if (score > alpha){ // PV Node
             alpha = score;
 
+            //std::cout << pos.moveName(moves[i]) << '\n';
+
             nodeflag = NodeType::Exact;
 
             localBestMove = moves[i];
@@ -415,18 +417,23 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
                 alpha = std::max(prevScore - aspAlpha, (int)(-SCORE_INF));
                 beta = std::min(prevScore + aspBeta, (int)(SCORE_INF));
 
+                //std::cout << "\n[" << alpha << ", " << beta << "]\n";
+
                 searchScore = alphabeta<true>(alpha, beta, d, 0);
 
-                if (searchScore < alpha){ //failed low, must expand window down
+                //std::cout << "searchScore: " << searchScore << '\n';
+
+                if (searchScore <= alpha){ //failed low, must expand window down
                     aspAlpha *= ASPmult;
                     continue;
                 }
-                if (searchScore > beta){ //failed high, must expand window high
+                if (searchScore >= beta){ //failed high, must expand window high
                     aspBeta *= ASPmult;
                     continue;
                 }
 
                 aspFail = false; //otherwise, it passed
+                //std::cout << "Aspirations Passed\n";
             }
 
             //searchScore = alphabeta<true>(-SCORE_INF, SCORE_INF, d, 0);
@@ -446,8 +453,19 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
 
                     std::cout << " nps " << nps << " time " << (dur / 1000);
                     std::cout << " pv ";
-                    for (int i = 0; i < pvt->heights[0]; i++){
-                        std::cout << pos.moveName(pvt->vars[i], i & 1) << ' ';
+
+                    if (pvt->lens[0] > d){
+                        std::cout << "\nPV too long\n";
+                        exit(1);
+                    }
+
+                    if (pvt->lens[0] == 0){
+                        std::cout << "\nzero length pv\n";
+                        exit(1);
+                    }
+
+                    for (int i = 0; i < pvt->lens[0]; i++){
+                        std::cout << pos.moveName(pvt->vars[0][i], i & 1) << ' ';
                     }
                     std::cout << std::endl;
                 }

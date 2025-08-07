@@ -26,3 +26,4 @@ Changelog
 08-03-2025 ... 0.6.3.0 ... Killer Move .......................... (24.3 +/- 14.8) , (8 + 0.08), (SPRT, 1432),(https://sscg13.pythonanywhere.com/test/670/)
 08-03-2025 ... 0.7.0.0 ... Late Move Reductions ................. (64.3 +/- 25.2) , (8 + 0.08), (SPRT, 552), (https://sscg13.pythonanywhere.com/test/672/)
 08-06-2025 ... 0.8.0.0 ... SMP with Threadpool (2v1 elo shown) .. (83.8 +/- 17.3) , (8 + 0.08), (N = 1000) , (https://sscg13.pythonanywhere.com/test/690/) 
+08-06-2025 ... 0.8.0.1 ... Fix PV Table

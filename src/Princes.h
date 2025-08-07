@@ -4,31 +4,18 @@
 
 class Princes{
     public:
-        static constexpr std::size_t PRINCE_SIZE = (MAX_PLY) * (MAX_PLY + 1) / 2;
-        Move vars[PRINCE_SIZE]; //perhaps make this impl less C-style
-        Index heights[MAX_PLY + 1];
+        Table<Move, MAX_PLY + 1, MAX_PLY + 1> vars;
+        std::array<Index, MAX_PLY + 1> lens;
 
         Princes(){ clearAll(); }
 
-        Move* line(int k){ //gets pvs at depth k
-            return &vars[k * (2 * MAX_PLY + 1 - k) / 2];
-        }
+        void clearLine(Index k){ lens[k] = 0; }
 
-        void clearLine(int k){
-            heights[k] = 0;
-        }
-
-        void clearAll(){
-            for (int i = 0; i < MAX_PLY; i++){
-                heights[i] = 0;
-            }
-        }
+        void clearAll(){ lens.fill(0); }
 
         void write(const Move& m, Index ply){
-            Move* tail = line(ply + 1);
-            Move* start = line(ply);
-            start[0] = m;
-            std::memcpy(start + 1, tail, sizeof(Move) * heights[ply + 1]);
-            heights[ply] = heights[ply + 1] + 1;
+           vars[ply][0] = m;
+           std::copy_n(vars[ply + 1].begin(), lens[ply + 1], vars[ply].begin() + 1);
+           lens[ply] = lens[ply + 1] + 1;                       
         }
 };
