@@ -454,6 +454,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
                     std::cout << " nps " << nps << " time " << (dur / 1000);
                     std::cout << " pv ";
 
+                    /*
                     if (pvt->lens[0] > d){
                         std::cout << "\nPV too long\n";
                         exit(1);
@@ -463,6 +464,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
                         std::cout << "\nzero length pv\n";
                         exit(1);
                     }
+                    */
 
                     for (int i = 0; i < pvt->lens[0]; i++){
                         std::cout << pos.moveName(pvt->vars[0][i], i & 1) << ' ';
