@@ -225,12 +225,11 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         return quiesce(alpha, beta);
     }
 
-    if constexpr (!isPV){ //mate distance pruning
-        Score ma = std::max(alpha, static_cast<Score>(DEFEAT + ply));
-        Score mb = std::min(beta, static_cast<Score>(VICTORY - ply - 1));
-        if (ma >= mb){
-            return ma;
-        }
+    // Mate Distance Pruning
+    alpha = std::max(alpha, static_cast<Score>(DEFEAT + ply));
+    beta = std::min(beta, static_cast<Score>(VICTORY - ply - 1));
+    if (alpha >= beta){
+        return alpha;
     }
 
     Teacup& probedEntry = ttref->probe(pos.thisHash());

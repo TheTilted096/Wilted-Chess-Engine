@@ -6,6 +6,14 @@ Base of future chess engine projects
 
 # To-Do's and Notes
 
+create uci handler
+clean some things (perhaps some functions overlaying the raw search function)
+support vanilla + bullet
+introduce (bad) tapered eval
+write datagen and tuner
+profit
+mald over search
+
 remember to change the version no in FOUR places
 
 investigate infrequent time losses
