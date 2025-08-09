@@ -40,6 +40,7 @@ class Position{
         Bitboard those(const Color& c, const Piece& p) const{ return sides[c] & pieces[p]; }
         Bitboard our(const Piece& p) const{ return sides[toMove] & pieces[p]; }
         Bitboard their(const Piece& p) const{ return sides[!toMove] & pieces[p]; }
+        Bitboard any(const Piece& p) const{ return pieces[p]; }
 
         Bitboard thoses(const Color& c) const{ return sides[c]; }
         Bitboard ours() const{ return sides[toMove]; }
