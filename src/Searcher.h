@@ -65,8 +65,14 @@ template <bool isMaster> class Searcher{
 
         Score quiesce(Score, Score); //Index by Ply? - Could be useful for searchstack
         template <bool> Score alphabeta(Score, Score, Depth, Index);
-        template <bool> Score search(Depth, uint64_t, bool);
-        Score searchInfinite(){ return search<false>(MAX_PLY, ~0ULL, true); }
+        template <bool> Score search(Depth, uint64_t, uint64_t, bool);
+        
+        Score searchSilent(Depth d, uint64_t nl, uint64_t snl){ return search<false>(d, nl, snl, true); } // search with no output
+
+        Score searchDepth(Depth d){ return searchSilent(d, ~0ULL, ~0ULL); } // bench
+        Score searchInfinite(){ return searchDepth(MAX_PLY); } // worker thread
+        Score searchSoftly(uint64_t snl){ return searchSilent(MAX_PLY, ~0ULL, snl); } // datagen soft node limit
+        
 
         void maybeForceStop();
         void disable(){ *stopSearch = true; }

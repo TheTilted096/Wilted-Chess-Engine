@@ -386,7 +386,7 @@ template Score Searcher<false>::alphabeta<false>(Score, Score, Depth, Index);
 
 template <bool isMaster>
 template <bool output>
-Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint){
+Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t softNodeLim, bool minPrint){
     eva.refresh();
     his.empty();
     clearStack();
@@ -477,6 +477,11 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
                     disable();
                     break;
                 }
+
+                if (nodes() > softNodeLim){ //soft nodes
+                    disable();
+                    break;
+                }
             }
         }
     } catch (const char* e){
@@ -496,13 +501,13 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, bool minPrint
         //std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
     }
 
-    return searchScore;
+    return prevScore; // return score of last complete depth search
 }
 
-template Score Searcher<true>::search<true>(Depth, uint64_t, bool);
-template Score Searcher<true>::search<false>(Depth, uint64_t, bool);
-template Score Searcher<false>::search<true>(Depth, uint64_t, bool);
-template Score Searcher<false>::search<false>(Depth, uint64_t, bool);
+template Score Searcher<true>::search<true>(Depth, uint64_t, uint64_t, bool);
+template Score Searcher<true>::search<false>(Depth, uint64_t, uint64_t, bool);
+template Score Searcher<false>::search<true>(Depth, uint64_t, uint64_t, bool);
+template Score Searcher<false>::search<false>(Depth, uint64_t, uint64_t, bool);
 
 template class Searcher<true>;
 template class Searcher<false>;

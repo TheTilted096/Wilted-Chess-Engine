@@ -3,7 +3,7 @@
 #include "Interface.h"
 
 void Interface::loop(Engine& e){
-    std::string versionStr = "Wilted 0.8.0.3";
+    std::string versionStr = "Wilted 0.8.0.4";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -21,6 +21,7 @@ void Interface::loop(Engine& e){
             std::cout << "option name Hash type spin default 32 min 1 max 128\n";
             std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "option name Minimal type check default false\n";
+            std::cout << "option name Softnodes type check default value false\n";
             std::cout << "uciok" << std::endl;
         }
 
@@ -54,17 +55,25 @@ void Interface::loop(Engine& e){
             uint32_t thinkrement = 0U; // increment 0 unless specified
             Depth thinkDepth = MAX_PLY;
             uint64_t thinkNodes = ~0ULL;
+            uint64_t softThinkNodes = ~0ULL;
 
             while (!searchLimits.eof()){
                 searchLimits >> param;
                 if (param == ot){ searchLimits >> param; thinkBase = stoi(param); }
                 if (param == oi){ searchLimits >> param; thinkrement = stoi(param); }
                 if (param == "depth"){ searchLimits >> param; thinkDepth = stoi(param); }
-                if (param == "nodes"){ searchLimits >> param; thinkNodes = stoi(param); }
+                if (param == "nodes"){ 
+                    searchLimits >> param; 
+                    if (asSoftNodes){
+                        softThinkNodes = stoi(param);
+                    } else {
+                        thinkNodes = stoi(param); 
+                    }
+                }
             }
 
             e.timer.setBounds(thinkBase, thinkrement);
-            e.go<true>(thinkDepth, thinkNodes, minPrint);            
+            e.go<true>(thinkDepth, thinkNodes, softThinkNodes, minPrint);            
         }
 
         if (command.substr(0, 5) == "perft"){
@@ -157,6 +166,11 @@ void Interface::setoption(Engine& e){
     if (command.substr(15, 7) == "Minimal"){
         if (command.substr(29) == "true"){ minPrint = true; }
         if (command.substr(29) == "false"){ minPrint = false; }
+    }
+
+    if (command.substr(15, 9) == "Softnodes"){
+        if (command.substr(31) == "true"){ asSoftNodes = true; }
+        if (command.substr(31) == "false"){ asSoftNodes = false; }
     }
 
     if (command.substr(15, 4) == "Hash"){

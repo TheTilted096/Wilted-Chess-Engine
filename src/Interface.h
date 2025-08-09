@@ -6,7 +6,8 @@
 class Interface{
     public:
         std::string command, param;
-        bool minPrint;
+        bool minPrint = false;
+        bool asSoftNodes = false;
 
         void loop(Engine&);
         void positionStartpos(Engine&);
@@ -14,7 +15,4 @@ class Interface{
         void setoption(Engine&);
 
         //void go(Engine&);
-
-
-
 };

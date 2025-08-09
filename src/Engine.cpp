@@ -79,7 +79,8 @@ void Engine::bench(){
         master.downloadPos(mainpos);
         master.clearNodes();
 
-        master.search<false>(14, ~0ULL, false);
+        //master.search<false>(14, ~0ULL, ~0ULL, false);
+        master.searchDepth(14);
         lifeNodes += master.nodes();
     }
 
@@ -91,7 +92,7 @@ void Engine::bench(){
     std::cout << lifeNodes << " nodes " << nps << " nps " << std::endl;
 }
 
-template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
+template <bool out> Score Engine::go(Depth d, uint64_t nl, uint64_t snl, bool mp){
     /* old singlethreaded code
     stopFlag = false;
     timer.start();
@@ -129,7 +130,7 @@ template <bool out> Score Engine::go(Depth d, uint64_t nl, bool mp){
 
     timer.start();
 
-    Score sc = master.search<out>(d, nl, mp);
+    Score sc = master.search<out>(d, nl, snl, mp);
 
     if (hasWorkers and useWorkers){
         masterIdle();
@@ -234,5 +235,5 @@ void Engine::drainPool(){
     destruct = false;
 }
 
-template Score Engine::go<true>(Depth, uint64_t, bool);
-template Score Engine::go<false>(Depth, uint64_t, bool);
+template Score Engine::go<true>(Depth, uint64_t, uint64_t, bool);
+template Score Engine::go<false>(Depth, uint64_t, uint64_t, bool);

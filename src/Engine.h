@@ -49,5 +49,5 @@ class Engine{
         void workerPing(); // signal ready to master
         void masterIdle(); // make master wait for workers
         
-        template <bool> Score go(Depth, uint64_t, bool);
+        template <bool> Score go(Depth, uint64_t, uint64_t, bool);
 };
