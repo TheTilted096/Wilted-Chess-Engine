@@ -28,3 +28,4 @@ Changelog
 08-06-2025 ... 0.8.0.0 ... SMP with Threadpool (2v1 elo shown) .. (83.8 +/- 17.3) , (8 + 0.08), (N = 1000) , (https://sscg13.pythonanywhere.com/test/690/) 
 08-06-2025 ... 0.8.0.1 ... Fix PV Table
 08-08-2025 ... 0.8.0.2 ... Mate Distance Prune in PV nodes
+08-08-2025 ... 0.8.0.3 ... Move UCI into Interface Object

@@ -221,15 +221,15 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         return DRAW;
     }
 
-    if (depth == 0){
-        return quiesce(alpha, beta);
-    }
-
     // Mate Distance Pruning
     alpha = std::max(alpha, static_cast<Score>(DEFEAT + ply));
     beta = std::min(beta, static_cast<Score>(VICTORY - ply - 1));
     if (alpha >= beta){
         return alpha;
+    }
+
+    if (depth == 0){
+        return quiesce(alpha, beta);
     }
 
     Teacup& probedEntry = ttref->probe(pos.thisHash());

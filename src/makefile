@@ -1,7 +1,7 @@
-EXE := Wilted-0-8-0-2
+EXE := Wilted-0-8-0-3
 #no evalfile yet
 ARCH := native
-SOURCES := Wilted.cpp Engine.cpp History.cpp TeaTable.cpp Searcher.cpp Evaluator.cpp Generator.cpp Position.cpp
+SOURCES := Wilted.cpp Interface.cpp Engine.cpp History.cpp TeaTable.cpp Searcher.cpp Evaluator.cpp Performer.cpp Generator.cpp Position.cpp
 
 CXX := clang++
 
@@ -23,8 +23,8 @@ $(EXE):
 
 # During Development, frequent compilation
 
-engine: Wilted.o Position.o Generator.o Evaluator.o Searcher.o Engine.o TeaTable.o History.o
-	$(CXX) Wilted.o Engine.o TeaTable.o Searcher.o Evaluator.o Generator.o Position.o History.o $(CXXFLAGS) -o $(EXE)
+engine: Wilted.o Position.o Generator.o Performer.o Evaluator.o Searcher.o Engine.o TeaTable.o History.o Interface.o
+	$(CXX) Wilted.o Engine.o TeaTable.o Searcher.o Evaluator.o Performer.o Generator.o Position.o History.o Interface.o $(CXXFLAGS) -o $(EXE)
 
 Wilted.o: Wilted.cpp
 	$(CXX) $(CXXFLAGS) -c Wilted.cpp -o Wilted.o
@@ -34,6 +34,9 @@ Position.o: Position.h Position.cpp
 
 Generator.o: Generator.h Generator.cpp
 	$(CXX) $(CXXFLAGS) -c Generator.cpp -o Generator.o
+
+Performer.o: Performer.h Performer.cpp
+	$(CXX) $(CXXFLAGS) -c Performer.cpp -o Performer.o
 
 Evaluator.o: Evaluator.h Evaluator.cpp
 	$(CXX) $(CXXFLAGS) -c Evaluator.cpp -o Evaluator.o
@@ -49,6 +52,9 @@ History.o: History.h History.cpp
 
 Engine.o: Engine.h Engine.cpp
 	$(CXX) $(CXXFLAGS) -c Engine.cpp -o Engine.o
+	
+Interface.o: Interface.h Interface.cpp
+	$(CXX) $(CXXFLAGS) -c Interface.cpp -o Interface.o
 
 clean: # Works on Windows
 	del *.o;
