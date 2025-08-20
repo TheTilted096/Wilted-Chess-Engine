@@ -115,7 +115,7 @@ void Searcher<isMaster>::sortMoves(MoveList& ml, MoveScoreList& points, const In
 
 template <bool isMaster>
 void Searcher<isMaster>::clearStack(){
-    sta[0].nmp = false;
+    //sta[0].nmp = false;
     sta[0].killer = Move::Null;
 }
 

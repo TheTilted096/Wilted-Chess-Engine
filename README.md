@@ -18,6 +18,10 @@ remember to change the version no in FOUR places
 
 investigate infrequent time losses
 
+rethink standard library include locations
+
+isLegal()
+
 investigate speed changes from TT
 
 inspect and slightly clean up smp code?
@@ -33,12 +37,6 @@ switch to safer method of exiting search
 re organize, maybe a sub-folder
 
 investiate slowdowns, -(5-10%) perft, slower incremental psqt
-
-write a perftsuite function
-
-rethink standard library include locations
-
-isLegal()
 
 lazy updates...?
 

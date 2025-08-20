@@ -73,14 +73,9 @@ void Engine::bench(){
 
     for (std::string tester : marks){
         newGame();
-        stopFlag = false;
         
         mainpos.readFen(tester);
-        master.downloadPos(mainpos);
-        master.clearNodes();
-
-        //master.search<false>(14, ~0ULL, ~0ULL, false);
-        master.searchDepth(14);
+        goDepth(14);
         lifeNodes += master.nodes();
     }
 
@@ -107,7 +102,7 @@ template <bool out> Score Engine::go(Depth d, uint64_t nl, uint64_t snl, bool mp
     return result;
     */
 
-    useWorkers = (nl == ~0ULL);
+    useWorkers = (nl == ~0ULL) and (snl == ~0ULL);
 
     if (hasWorkers and useWorkers){
         {
@@ -138,6 +133,30 @@ template <bool out> Score Engine::go(Depth d, uint64_t nl, uint64_t snl, bool mp
     }
 
     master.reportBest();
+
+    return sc;
+}
+
+Score Engine::goSoftly(uint64_t snl){
+    useWorkers = false;
+
+    stopFlag = false;
+    master.downloadPos(mainpos);
+    master.clearNodes();
+
+    Score sc = master.searchSoftly(snl);
+
+    return sc;
+}
+
+Score Engine::goDepth(Depth d){
+    useWorkers = false;
+
+    stopFlag = false;
+    master.downloadPos(mainpos);
+    master.clearNodes();
+
+    Score sc = master.searchDepth(d);
 
     return sc;
 }

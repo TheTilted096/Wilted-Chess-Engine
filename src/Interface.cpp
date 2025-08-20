@@ -3,7 +3,7 @@
 #include "Interface.h"
 
 void Interface::loop(Engine& e){
-    std::string versionStr = "Wilted 0.8.1.0";
+    std::string versionStr = "Wilted 0.8.1.1";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -90,6 +90,69 @@ void Interface::loop(Engine& e){
             if (param == "printzobrist"){
                 e.mainpos.showZobrist();
             }
+            if (param.substr(0, 10) == "perftsuite"){
+                param = command.substr(18);
+                Position pp;
+
+                int f = param.find("fischer");
+
+                std::ifstream suite(param);
+
+                if (f != -1){
+                    std::cout << "FRC Suite Detected\n";
+                    pp.setFRC();
+                }
+
+                uint32_t l = 0;
+                Depth d;
+                uint64_t tnc, enc;
+                std::string fl;
+
+                Performer perf(&pp);
+
+                uint64_t lifetime = 0ULL;
+
+                auto start = std::chrono::steady_clock::now();
+
+                while (std::getline(suite, param)){
+                    f = param.find(';');
+                    fl = param.substr(0, f);
+                    pp.readFen(fl);
+                    std::istringstream sline(param.substr(f));
+                    
+                    d = 1;
+
+                    while ((sline >> param)){
+                        sline >> param;
+                        tnc = std::stoull(param); // string to u64, i think
+                        
+                        enc = perf.perft<false>(d);    
+                        
+                        if (enc != tnc){
+                            std::cout << fl << '\n';
+                            std::cout << "Depth: " << (int)d << "   Target: " << tnc << "   Obtained: " << enc << '\n';
+                            exit(1);
+                        }
+
+                        lifetime += enc;
+
+                        //std::cout << "Depth " << (int)d << " complete\n";
+                        d++;
+                    }
+
+                    l++;
+
+                    if (l % 10 == 0){
+                        std::cout << l << " positions complete.\n";
+                    }
+                }
+
+                auto end = std::chrono::steady_clock::now();
+                double dur = 1 + std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+                int64_t nps = (lifetime / dur) * 1000000;
+                std::cout << nps << " nps\n\n";
+            }
             if (param == "randompsqt"){ // generates randomized psqt
                 srand(time(0));
                 std::ofstream spam("spam.txt");
@@ -120,8 +183,8 @@ void Interface::positionStartpos(Engine& e){
 
         Move given;
 
-        while (!extras.eof()){
-            extras >> param;
+        while (extras >> param){
+            //std::cout << "PART:" << param << '\n';
             given = e.maingen.unalgebraic(param);
             if (!given.bad()){
                 e.mainpos.makeMove(given);
@@ -144,8 +207,7 @@ void Interface::positionFen(Engine& e){
 
         Move given;
 
-        while (!extras.eof()){
-            extras >> param;
+        while (extras >> param){
             given = e.maingen.unalgebraic(param);
             if (!given.bad()){
                 e.mainpos.makeMove(given);

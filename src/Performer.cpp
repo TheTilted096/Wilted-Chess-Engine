@@ -7,7 +7,7 @@ Performer::Performer(Position* pp){
     posptr = pp;
 }
 
-template <bool rootNode> uint64_t Performer::perft(const Depth& depth){
+template <bool output> uint64_t Performer::perft(const Depth& depth){
     if (depth == 0){
         return 1ULL;
     }
@@ -34,14 +34,14 @@ template <bool rootNode> uint64_t Performer::perft(const Depth& depth){
 
         posptr->unmakeMove();
 
-        if constexpr (rootNode){
+        if constexpr (output){
             std::cout << posptr->moveName(mlist[i]) << ": " << /*mlist[i].info << " : " << */next << '\n';
         }
 
         nodes += next;
     }
 
-    if constexpr (rootNode){
+    if constexpr (output){
         std::cout << '\n' << nodes << " nodes\n";
     }
 
@@ -57,6 +57,6 @@ void Performer::run(const Depth& depth){
 
     double dur = 1 + std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
-    int nps = (all / dur) * 1000000;
+    int64_t nps = (all / dur) * 1000000;
     std::cout << nps << " nps\n\n";
 }

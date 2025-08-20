@@ -34,6 +34,7 @@ class Position{
         bool isChecked(const Color&) const;
 
         bool illegal() const;
+        //bool isLegal(const Move&) const;
 
         Count sinceReset() const{ return halfMoves[clock]; }
 
@@ -83,13 +84,17 @@ class Position{
 
         bool isFRC = false;
         void setFRC(){
-            isFRC = true; 
-            //std::cout << "generated\n";
-            makeCastleTable({'H', 'A', 'h', 'a'});
+            if (!isFRC){
+                isFRC = true;
+                makeCastleTable({'H', 'A', 'h', 'a'});
+            }
         }
         void stopFRC(){
-            isFRC = false;
-            restoreCastling();
+            if (isFRC){
+                isFRC = false;
+                restoreCastling();
+                setStartPos();
+            }
         }
 
         void deduceCastling(std::string);

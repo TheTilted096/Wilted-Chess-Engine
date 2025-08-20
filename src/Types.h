@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <vector>
 
 using Bitboard = uint64_t;
 using Hash = uint64_t;

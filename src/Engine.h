@@ -50,4 +50,8 @@ class Engine{
         void masterIdle(); // make master wait for workers
         
         template <bool> Score go(Depth, uint64_t, uint64_t, bool);
+        Score goSoftly(uint64_t);
+        Score goDepth(Depth);
+
+        Move bestMove(){ return master.getBest(); }
 };

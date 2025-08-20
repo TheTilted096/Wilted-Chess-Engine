@@ -9,32 +9,8 @@ Position::Position(){
 }
 
 Position::Position(const Position& p){
-    sides = p.sides;
-    pieces = p.pieces;
-
-    toMove = p.toMove;
-
-    castleRights = p.castleRights;
-    enPassant = p.enPassant;
-    halfMoves = p.halfMoves;
-    hashes = p.hashes;
-    plays = p.plays;
-
-    clock = p.clock;
-    
-    isFRC = p.isFRC;
-
-    if ((kingRookFrom != p.kingRookFrom) or (queenRookFrom != p.queenRookFrom)){
-
-        kingRookFrom = p.kingRookFrom;
-        queenRookFrom = p.queenRookFrom;
-        kingSafeMask = p.kingSafeMask;
-        queenSafeMask = p.queenSafeMask;
-        kingOccMask = p.kingOccMask;
-        queenOccMask = p.queenOccMask;
-        rightsChange = p.rightsChange;
-        castleStrings = p.castleStrings;
-    }
+    std::cout << "debug -- chungus\n";
+    exit(1);
 }
 
 void Position::empty(){
@@ -48,6 +24,11 @@ void Position::empty(){
     enPassant[0] = XX;
     castleRights[0] = 0;
     halfMoves[0] = 0;
+
+    if (isFRC){ 
+        restoreCastling(); 
+        makeCastleTable({'H', 'A', 'h', 'a'});
+    }
 }
 
 void Position::setStartPos(){
@@ -65,9 +46,15 @@ void Position::setStartPos(){
 
     clock = 0;
 
-    enPassant[0] = XX; 
-    castleRights[0] = 15;
+    enPassant[0] = XX;
     halfMoves[0] = 0;
+
+    if (isFRC){
+        restoreCastling();
+        makeCastleTable({'H', 'A', 'h', 'a'});
+    }
+
+    castleRights[0] = 15;
 
     beginZobrist();
 }
@@ -155,6 +142,12 @@ bool Position::illegal() const{
     return isChecked(us);
 }
 
+/*
+bool Position::isLegal(const Move& m) const{
+    
+}
+*/
+
 void Position::readFen(std::string fen){
     //Example: rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1
 
@@ -195,15 +188,16 @@ void Position::readFen(std::string fen){
     toMove = static_cast<Color>(feed[0] & 1); //'w' = 119 and 'b' = 98, which have different last bit
 
     segments >> feed; //castling rights
-    for (ind = 0; ind < 16; ind++){
-        if (castleStrings[ind] == feed){
-            castleRights[0] = ind;
-            break;
-        }
-    }
-    if (isFRC and (ind == 16)){
+
+    if (isFRC){
         deduceCastling(feed);
-        assert(castleRights[0] != 0);
+    } else { //standard chess can be looked up
+        for (ind = 0; ind < 16; ind++){
+            if (castleStrings[ind] == feed){
+                castleRights[0] = ind;
+                break;
+            }
+        }
     }
 
     segments >> feed; //EP Square
@@ -272,7 +266,7 @@ std::string Position::makeFen() const{
     //half moves
     result += std::to_string(halfMoves[clock]);
 
-    result += " 65536";
+    result += " 4095";
 
     return result;
 }
@@ -519,6 +513,11 @@ void Position::unpassMove(){
 }
 
 void Position::deduceCastling(std::string given){
+    if (given == "-"){ //nothing can be deduced from no castling rights
+        castleRights[clock] = 0;
+        return;
+    }
+
     Square wk = static_cast<Square>(getLeastBit(those(White, King)) & 7); //white king file
     Square bk = getLeastBit(those(Black, King)); //black king file
  
@@ -656,12 +655,16 @@ void Position::deduceCastling(std::string given){
 void Position::restoreCastling(){
     kingRookFrom[Black] = h8;
     kingRookFrom[White] = h1;
+    queenRookFrom[Black] = a8;
+    queenRookFrom[White] = a1;
     kingSafeMask[Black] = 0x70ULL;
     kingSafeMask[White] = 0x70ULL << 56;
     queenSafeMask[Black] = 0x1CULL;
     queenSafeMask[White] = 0x1CULL << 56;
     kingOccMask[Black] = 0x60ULL;
     kingOccMask[White] = 0x60ULL << 56;
+    queenOccMask[Black] = 0xEULL;
+    queenOccMask[White] = 0xEULL << 56;
     rightsChange.fill(0);
     rightsChange[a8] = 8;
     rightsChange[e8] = 12;
@@ -671,7 +674,7 @@ void Position::restoreCastling(){
     rightsChange[h1] = 1;
 
     makeCastleTable({'K', 'Q', 'k', 'q'});
-    castleRights[clock] = 0;
+    //castleRights[clock] = 0;
 }
 
 void Position::makeCastleTable(const std::array<char, 4>& parts){

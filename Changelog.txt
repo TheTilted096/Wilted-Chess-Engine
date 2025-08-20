@@ -31,3 +31,5 @@ Changelog
 08-08-2025 ... 0.8.0.3 ... Move UCI into Interface Object
 08-09-2025 ... 0.8.0.4 ... Alias Search Functions, Soft Node Limit
 08-09-2025 ... 0.8.1.0 ... Introduce Tapered Eval
+08-18-2025 ... 0.8.1.1 ... Perftsuite, FRC Fixes, Specialize Search Functions, Start Datagen
+08-21-2025 ... 0.8.1.2 ... Data Generation
