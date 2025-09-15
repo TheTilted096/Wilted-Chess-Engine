@@ -30,10 +30,10 @@ class Position{
         Piece pieceAt(const Square&) const;
         bool insufficient() const;
 
-        bool isAttacked(const Square&, const Color&) const;
-        bool isChecked(const Color&) const;
+        Bitboard isAttacked(const Square&, const Color&) const;
+        Bitboard isChecked(const Color&) const;
 
-        bool illegal() const;
+        //bool illegal() const;
         //bool isLegal(const Move&) const;
 
         Count sinceReset() const{ return halfMoves[clock]; }
@@ -141,13 +141,3 @@ class Position{
         void makeCastleTable(const std::array<char, 4>& parts);
 
 };
-
-/*
-//struct for reversible elements - use for master thread restore position after search. 
-struct Reversible{ 
-    std::array<Bitboard, 2> sds;
-    std::array<Bitboard, 6> pcs;
-    Color tmv;
-    Index clk;
-};
-*/

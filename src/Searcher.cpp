@@ -42,18 +42,20 @@ void Searcher<isMaster>::promote(Princes* p, Timeman* t, SharedArray<uint64_t>* 
 }
 
 template <bool isMaster> 
-bool Searcher<isMaster>::invokeMove(const Move& m){
+void Searcher<isMaster>::invokeMove(const Move& m){
     pos.makeMove(m);
 
+    /*
     if (pos.illegal()){
         pos.unmakeMove();
         return false;
     }
+    */
 
     eva.doMove(m);
     addNode();
 
-    return true;
+    //return true;
 }
 
 template <bool isMaster> 
@@ -173,8 +175,10 @@ Score Searcher<isMaster>::quiesce(Score alpha, Score beta){
 
         maybeForceStop(); //check if the thread should stop
 
-        bool legal = invokeMove(captures[i]);
-        if (!legal){ continue; }
+        //bool legal = invokeMove(captures[i]);
+        //if (!legal){ continue; }
+
+        invokeMove(captures[i]);
 
         score = -quiesce(-beta, -alpha);
 
@@ -296,8 +300,10 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
         maybeForceStop();
 
-        bool legal = invokeMove(moves[i]);
-        if (!legal){ continue; }
+        //bool legal = invokeMove(moves[i]);
+        //if (!legal){ continue; }
+
+        invokeMove(moves[i]);
 
         numLegal++;
 

@@ -14,7 +14,12 @@ class Generator{
 
         void assign(Position* pp){ pos = pp; }
 
-        Count countLegal();
+        //Count countLegal();
+
+        template <Piece, bool> void spreadMoves(MoveList&, Count&, const Square&, Bitboard&);
+
+        template <Color, bool, Count> Count genCheckCase(MoveList&, const Bitboard&);
+        template <Color, bool> Count genColorCase(MoveList&);
 
         template <bool> Count generate(MoveList&);
 

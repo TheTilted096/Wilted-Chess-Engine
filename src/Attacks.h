@@ -203,18 +203,44 @@ inline Bitboard rookAttacks(const Square& sq, const Bitboard& occ){
     return RookAttacks[RookOffset[sq] + _pext_u64(occ, RookMasks[sq])];
 }
 
-//Bishop Attacks
-static constexpr Bitboard hqBishopAttack(const Square& sq, const Bitboard& occ){
-    Bitboard ldiag = 0x8040201008040201ULL;
-    Bitboard rdiag = 0x102040810204080ULL;
+constexpr std::array<Bitboard, 64> LeftDiags = [](){
+    std::array<Bitboard, 64> lds{};
 
-    Bitboard sqfile = 0x101010101010101ULL << (sq & 7);
+    Bitboard ldiag = 0x8040201008040201ULL;
     
+    Bitboard sqfile;
+    int d;
+
+    for (int i = 0; i < 64; i++){
+        sqfile = 0x101010101010101ULL << (i & 7);
+        d = std::countr_zero<Bitboard>(sqfile & ldiag) - i;
+        lds[i] = (d >= 0) ? (ldiag >> d) : (ldiag << -d);
+    }
+
+    return lds;
+}();
+
+constexpr std::array<Bitboard, 64> RightDiags = [](){
+    std::array<Bitboard, 64> lds{};
+
+    Bitboard rdiag = 0x102040810204080ULL;
+    Bitboard sqfile;
+    int d;
+
+    for (int i = 0; i < 64; i++){
+        sqfile = 0x101010101010101ULL << (i & 7);
+        d = std::countr_zero<Bitboard>(sqfile & rdiag) - i;
+        lds[i] = (d >= 0) ? (rdiag >> d) : (rdiag << -d);
+    }
+
+    return lds;
+}();
+
+//Bishop Attacks
+static constexpr Bitboard hqBishopAttack(const Square& sq, const Bitboard& occ){   
     Bitboard forward, reverse;
     //right diagonal
-    int d = __builtin_ctzll(sqfile & rdiag) - sq;
-    //std::cout << d << '\n';
-    Bitboard mask = (d >= 0) ? (rdiag >> d) : (rdiag << -d);
+    Bitboard mask = RightDiags[sq];
     forward = occ & mask;
     reverse = __builtin_bswap64(forward);
     forward -= 2 * (1ULL << sq);
@@ -224,9 +250,7 @@ static constexpr Bitboard hqBishopAttack(const Square& sq, const Bitboard& occ){
 
     Bitboard result = forward; //save right diagonal attacks
 
-    d = __builtin_ctzll(sqfile & ldiag) - sq;
-    //std::cout << d << '\n';
-    mask = (d >= 0) ? (ldiag >> d) : (ldiag << -d);
+    mask = LeftDiags[sq];
     forward = occ & mask;
     reverse = __builtin_bswap64(forward);
     forward -= 2 * (1ULL << sq);
@@ -312,5 +336,89 @@ inline Bitboard bishopAttacks(const Square& sq, const Bitboard& occ){
 inline Bitboard queenAttacks(const Square& sq, const Bitboard& occ){
     return (bishopAttacks(sq, occ) | rookAttacks(sq, occ));
 }
+
+constexpr Table<Bitboard, 64, 64> RayBetween = [](){
+    Table<Bitboard, 64, 64> rys{};
+
+    Bitboard dest, mask, sqbb;
+    Square j;
+
+    for (Square i = a8; i < XX; i++){
+        sqbb = squareBitboard(i);
+
+        mask = 0x101010101010101ULL << (i & 7);
+        dest = mask ^ sqbb;
+        while (dest){
+            j = popLeastBit(dest);
+            rys[i][j] = squareBitboard(std::max(i, j)) - (squareBitboard(std::min(i, j)) << 1);
+            rys[i][j] &= mask;
+        }
+
+        dest = (0xFFULL << (i & 56)) ^ sqbb;
+        while (dest){
+            j = popLeastBit(dest);
+            rys[i][j] = squareBitboard(std::max(i, j)) - (squareBitboard(std::min(i, j)) << 1);
+        }
+    
+        mask = LeftDiags[i];
+        dest = mask ^ sqbb;
+        while (dest){
+            j = popLeastBit(dest);
+            rys[i][j] = squareBitboard(std::max(i, j)) - (squareBitboard(std::min(i, j)) << 1);
+            rys[i][j] &= mask;
+        }
+
+        mask = RightDiags[i];
+        dest = mask ^ sqbb;
+        while (dest){
+            j = popLeastBit(dest);
+            rys[i][j] = squareBitboard(std::max(i, j)) - (squareBitboard(std::min(i, j)) << 1);
+            rys[i][j] &= mask;
+        }
+    }
+
+    return rys;
+}();
+
+constexpr Table<Bitboard, 64, 64> RayIncluding = [](){
+    Table<Bitboard, 64, 64> rys{};
+
+    Bitboard dest, mask, sqbb;
+    Square j;
+
+    for (Square i = a8; i < XX; i++){
+        sqbb = squareBitboard(i);
+
+        mask = 0x101010101010101ULL << (i & 7);
+        dest = mask ^ sqbb;
+        while (dest){
+            j = popLeastBit(dest);
+            rys[i][j] = mask;
+        }
+
+        mask = (0xFFULL << (i & 56));
+        dest = mask ^ sqbb;
+        while (dest){
+            j = popLeastBit(dest);
+            rys[i][j] = mask;
+        }
+    
+        mask = LeftDiags[i];
+        dest = mask ^ sqbb;
+        while (dest){
+            j = popLeastBit(dest);
+            rys[i][j] = mask;
+        }
+
+        mask = RightDiags[i];
+        dest = mask ^ sqbb;
+        while (dest){
+            j = popLeastBit(dest);
+            rys[i][j] = mask;
+        }
+    }
+
+    return rys;
+}();
 
 } //namespace

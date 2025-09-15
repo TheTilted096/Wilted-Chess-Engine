@@ -3,7 +3,7 @@
 #include "Interface.h"
 
 void Interface::loop(Engine& e){
-    std::string versionStr = "Wilted 0.8.1.1";
+    std::string versionStr = "Wilted 0.8.2.0";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -120,9 +120,10 @@ void Interface::loop(Engine& e){
                     pp.readFen(fl);
                     std::istringstream sline(param.substr(f));
                     
-                    d = 1;
+                    //d = 1;
 
                     while ((sline >> param)){
+                        d = std::stoi(param.substr(2));
                         sline >> param;
                         tnc = std::stoull(param); // string to u64, i think
                         
@@ -137,7 +138,7 @@ void Interface::loop(Engine& e){
                         lifetime += enc;
 
                         //std::cout << "Depth " << (int)d << " complete\n";
-                        d++;
+                        //d++;
                     }
 
                     l++;

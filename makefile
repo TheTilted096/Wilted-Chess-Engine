@@ -1,4 +1,4 @@
-EXE := Wilted-0-8-1-1
+EXE := Wilted-0-8-2-0
 #no evalfile yet
 ARCH := native
 SOURCES := src/*.cpp

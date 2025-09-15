@@ -8,9 +8,11 @@ Performer::Performer(Position* pp){
 }
 
 template <bool output> uint64_t Performer::perft(const Depth& depth){
+    /*
     if (depth == 0){
         return 1ULL;
     }
+    */
 
     uint64_t nodes = 0ULL;
     MoveList mlist = {};
@@ -18,31 +20,29 @@ template <bool output> uint64_t Performer::perft(const Depth& depth){
     //gen.posptr->print();
 
     Count plegal = gen.generateMoves(mlist);
+
+    if (depth == 1){
+        return plegal;
+    }
+
     //std::cout << (int)plegal << " generated\n";
 
     for (Count i = 0; i < plegal; i++){
         posptr->makeMove(mlist[i]);
-        //std::cout << mlist[i].toString() << '\n';
-
-        if (posptr->illegal()){
-            //std::cout << "illegal prune\n";
-            posptr->unmakeMove();
-            continue;
-        }
 
         uint64_t next = perft<false>(depth - 1);
 
         posptr->unmakeMove();
 
         if constexpr (output){
-            std::cout << posptr->moveName(mlist[i]) << ": " << /*mlist[i].info << " : " << */next << '\n';
+            std::cout << posptr->moveName(mlist[i]) << ": " << /*mlist[i].info << " : " << */next << "\n";
         }
 
         nodes += next;
     }
 
     if constexpr (output){
-        std::cout << '\n' << nodes << " nodes\n";
+        std::cout << "\n" << nodes << " nodes\n";
     }
 
     return nodes;

@@ -78,7 +78,8 @@ bool Position::insufficient() const{
     return std::popcount<Bitboard>(pieces[Bishop] | pieces[Knight]) < 2;
 }
 
-bool Position::isAttacked(const Square& sq, const Color& c) const{
+/*
+Bitboard Position::isAttacked(const Square& sq, const Color& c) const{
     Bitboard checkers;
     
     checkers = Attacks::PawnAttacks[!c][sq] & those(c, Pawn);
@@ -98,13 +99,30 @@ bool Position::isAttacked(const Square& sq, const Color& c) const{
     checkers = Attacks::bishopAttacks(sq, occ) & diagonalPieces() & army;
     return !!checkers;
 }
+*/
 
-bool Position::isChecked(const Color& c) const{
+Bitboard Position::isAttacked(const Square& sq, const Color& c) const{
+    Bitboard checkers;
+    
+    checkers = Attacks::PawnAttacks[!c][sq] & those(c, Pawn);
+    checkers |= Attacks::KnightAttacks[sq] & those(c, Knight);
+    checkers |= Attacks::KingAttacks[sq] & those(c, King);
+
+    Bitboard occ = occupied();
+    Bitboard army = sides[c];
+    checkers |= Attacks::rookAttacks(sq, occ) & straightPieces() & army;
+    checkers |= Attacks::bishopAttacks(sq, occ) & diagonalPieces() & army;
+
+    return checkers;
+}
+
+Bitboard Position::isChecked(const Color& c) const{
     Square k = getLeastBit(those(c, King));
 
     return isAttacked(k, flip(c));
 }
 
+/*
 bool Position::illegal() const{
     Color us = flip(toMove); //easier to think about from nstm
 
@@ -141,6 +159,8 @@ bool Position::illegal() const{
 
     return isChecked(us);
 }
+*/
+
 
 /*
 bool Position::isLegal(const Move& m) const{

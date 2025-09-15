@@ -33,3 +33,4 @@ Changelog
 08-09-2025 ... 0.8.1.0 ... Introduce Tapered Eval
 08-18-2025 ... 0.8.1.1 ... Perftsuite, FRC Fixes, Specialize Search Functions, Start Datagen
 08-21-2025 ... 0.8.1.2 ... Data Generation
+09-15-2025 ... 0.8.2.0 ... Legal Move Generation ................ (5.6  +/- 9.6 ) , (8 + 0.08), (SPRT, 2850),(https://sscg13.pythonanywhere.com/test/1042/)

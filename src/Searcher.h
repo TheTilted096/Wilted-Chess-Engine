@@ -44,7 +44,7 @@ template <bool isMaster> class Searcher{
 
         void downloadPos(const Position& p){ pos = p; }
 
-        bool invokeMove(const Move& m);
+        void invokeMove(const Move& m);
         void revokeMove(const Move& m);
 
         void clearNodes(){ *nodesptr = 0ULL; }

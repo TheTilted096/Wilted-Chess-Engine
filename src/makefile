@@ -1,4 +1,4 @@
-EXE := Wilted-0-8-1-1
+EXE := Wilted-0-8-2-0
 #no evalfile yet
 ARCH := native
 SOURCES := Wilted.cpp Interface.cpp Engine.cpp History.cpp TeaTable.cpp Searcher.cpp Evaluator.cpp Performer.cpp Generator.cpp Position.cpp
