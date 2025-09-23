@@ -6,10 +6,7 @@ Base of future chess engine projects
 
 # To-Do's and Notes
 
-create uci handler
-clean some things (perhaps some functions overlaying the raw search function)
 support vanilla + bullet
-introduce (bad) tapered eval
 write datagen and tuner
 profit
 mald over search
@@ -22,25 +19,11 @@ rethink standard library include locations
 
 isLegal()
 
-investigate speed changes from TT
-
 inspect and slightly clean up smp code?
-
-only one delta for aspiration window?
 
 movelist/scoredmovelist wrapper
 
 pickmove instead of sort all at once
-
-switch to safer method of exiting search
-
-re organize, maybe a sub-folder
-
-investiate slowdowns, -(5-10%) perft, slower incremental psqt
-
-lazy updates...?
-
-perhaps neaten up deduceCastling() to remove some conditionals
 
 # Versioning Scheme
 
