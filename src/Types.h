@@ -11,6 +11,7 @@
 #include <condition_variable>
 #include <cstdint>
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <immintrin.h>
 #include <iostream>

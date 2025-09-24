@@ -8,6 +8,7 @@ class Match{
         Count workerCount;
 
         std::vector<std::string> book;
+        std::vector<std::thread> workers;
 
         static std::mutex matchMute;
 

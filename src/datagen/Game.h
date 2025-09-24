@@ -1,6 +1,6 @@
 // Class Definition for Game Object
 
-#include "../Interface.h"
+#include "../Engine.h"
 
 class Game{
     public:
@@ -9,14 +9,12 @@ class Game{
         std::vector<std::string> positions;
         std::vector<Score> scores;
 
-        std::string verdict;
+        std::string verdict, ending;
 
         uint32_t clock;
         Color turn;
 
         float result;
-
-        Interface host;
 
         void play(std::string);
         void report(uint32_t);

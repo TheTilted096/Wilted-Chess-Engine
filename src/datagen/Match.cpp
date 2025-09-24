@@ -2,9 +2,13 @@
 
 #include "Match.h"
 
+std::mutex Match::matchMute;
+
 Match::Match(uint32_t gl, Count wc){
     workerCount = wc;
     gameLimit = gl;
+
+    gamesFinished = 0;
 }
 
 std::string Match::getFRClayout(uint8_t& x, uint8_t& y){
@@ -76,5 +80,88 @@ std::string Match::getDFRClayout(){
 
 void Match::getBook(Depth od, Depth vd, Score vs){
     book.clear();
+
+    Engine e;
+    e.mainpos.setFRC();
+
+    MoveList ml;
+
+    Hash seed = std::chrono::steady_clock::now().time_since_epoch().count();
+
+    Score oev;
+
+    for (int i = 0; i < gameLimit; i++){
+        oev = SCORE_INF;
+        while (abs(oev) > vs){
+            e.newGame();
+            e.mainpos.readFen(getDFRClayout());
+
+            int j = 0, mi;  
+            while (j < od){
+                mi = randomize(seed) % e.maingen.generateMoves(ml);
+                e.mainpos.makeMove(ml[mi]);
+                if (e.maingen.countLegal() == 0){
+                    e.mainpos.unmakeMove();
+                    continue;
+                }
+                j++;
+            }
+
+            oev = e.goDepth(vd);
+            if (i % 1000 == 0){
+                std::cout << i << " of " << gameLimit << " openings collected.\n";
+            }
+        }
+
+        book.push_back(e.mainpos.makeFen());
+    }
+
+
 }
+
+void Match::runner(Count threadID){
+    Game g;
+    int gameNum;
+    std::string opener;
+
+    while (true){
+        matchMute.lock();
+
+        if (gamesFinished == gameLimit){
+            matchMute.unlock();
+            break;
+        } else {
+            gameNum = gamesFinished;
+            opener = book[gameNum];
+
+            std::cout << "(Thread " << (int)threadID << ") Started Game " << gameNum << '\n';
+
+            gamesFinished++;
+        }
+
+        matchMute.unlock();
+
+        g.play(opener);
+
+        matchMute.lock();
+        g.report(gameNum);
+
+        std::cout << "(Thread " << (int)threadID << ") Finished Game " << gameNum 
+                << "  (" << g.result << ", " << g.verdict << ")\n";
+
+        matchMute.unlock();        
+    }
+}
+
+void Match::run(){
+    for (int k = 0; k < workerCount; k++){
+        workers.emplace_back(&Match::runner, this, k);
+    }
+
+    for (int l = 0; l < workerCount; l++){
+        workers[l].join();
+    }
+}
+
+
 

@@ -26,5 +26,7 @@ class Generator{
         Count generateMoves(MoveList& ml){ return generate<false>(ml); }
         Count generateCaptures(MoveList& ml){ return generate<true>(ml); }
 
+        Count countLegal(){ MoveList m{}; return generate<false>(m); }
+        
         Move unalgebraic(std::string);
 };

@@ -1,4 +1,4 @@
-EXE := WiltedGen-0-0-0
+EXE := WiltedGen-1-0-0
 
 ARCH := native
 

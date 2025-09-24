@@ -3,7 +3,7 @@
 #include "Interface.h"
 
 void Interface::loop(Engine& e){
-    std::string versionStr = "Wilted 0.8.2.0";
+    std::string versionStr = "Wilted 0.8.2.1";
 
     std::cout << versionStr << " by TheTilted096\n";
 
