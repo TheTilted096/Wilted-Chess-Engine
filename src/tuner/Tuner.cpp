@@ -10,6 +10,7 @@ class Tuner{
         Table<float, 6, 64> midacc;
         Table<float, 6, 64> endacc;
         std::array<float, 6> matacc;
+        std::array<float, 6> endmatacc;
         float tempoacc;
         
         float sig(const float&);
@@ -35,6 +36,7 @@ void Tuner::clear(){
     std::fill(&midacc[0][0], &midacc[0][0] + 384, 0.0f);
     std::fill(&endacc[0][0], &endacc[0][0] + 384, 0.0f);
     matacc.fill(0.0);
+    endmatacc.fill(0.0);
     tempoacc = 0.0;
 }
 
@@ -46,7 +48,8 @@ void Tuner::updateOnPosition(const Bullet& b){
     float gp = g.gamePhase / 128.0;
 
     for (Piece i = Queen; i < None; i++){
-        matacc[i] += factor * g.pieceDiff[i];
+        matacc[i] += factor * g.pieceDiff[i] * gp;
+        endmatacc[i] += factor * g.pieceDiff[i] * (1.0 - gp);
     }
 
     for (int i = 0; i < g.numStm; i++){
@@ -69,6 +72,7 @@ void Tuner::updateOnPosition(const Bullet& b){
 void Tuner::step(const std::size_t& N, const float& n){
     for (int i = 0; i < 6; i++){
         g.material[i] -= (n * matacc[i] / N);
+        g.endmaterial[i] -= (n * endmatacc[i] / N);
 
         for (int j = 0; j < 64; j++){
             g.midpst[i][j] -= (n * midacc[i][j] / N);
@@ -81,7 +85,7 @@ void Tuner::step(const std::size_t& N, const float& n){
 
 int main(int argc, char* argv[]){   
     if (argc != 4){
-        std::cout << "Correct Use: ./WiltedTuna-1-0-0 datafile epochs learnRate";
+        std::cout << "Correct Use: ./WiltedTuna-1-1-0 datafile epochs learnRate";
         return 0;
     }
 
@@ -113,8 +117,9 @@ int main(int argc, char* argv[]){
     std::cout << "Beginning SGD...\n";
     std::cout << "Batch Size: " << BATCH_SIZE << '\n';
     std::cout << "Learning Rate: " << eta << '\n';
+    std::cout << "Dataset Size: " << numData << '\n';
 
-    float bestesum = 1.0;
+    //float bestesum = 1.0;
 
     for (int i = 0; i < epochs; i++){
         if ((i % 100) == 0){
@@ -140,6 +145,10 @@ int main(int argc, char* argv[]){
 
             bestesum = esum;
             */
+
+            if ((i % 100) == 0){
+                t.g.report(i); 
+            }
         }
 
 
@@ -158,9 +167,6 @@ int main(int argc, char* argv[]){
 
         if ((i % 25) == 0){
             std::cout << "Completed Epoch " << i << '\n';
-        }
-        if ((i % 100) == 0){
-            t.g.report(i); 
         }
     }
 

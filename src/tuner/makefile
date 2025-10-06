@@ -1,4 +1,4 @@
-EXE := WiltedTuna-1-0-0
+EXE := WiltedTuna-1-1-0
 
 ARCH := native
 

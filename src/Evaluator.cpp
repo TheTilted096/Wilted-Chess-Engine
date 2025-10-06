@@ -6,7 +6,7 @@ Evaluator::Evaluator(){
     for (Piece i = Queen; i < None; i++){
         for (Square j = a8; j < XX; j++){
             midpst[i][j] += material[i];
-            endpst[i][j] += material[i];
+            endpst[i][j] += endmaterial[i];
         }
     }
 }
@@ -15,7 +15,7 @@ Score Evaluator::judge() const{
     int m = (midScores[pos->toMove] - midScores[!pos->toMove]) * gamePhase;
     int e = (endScores[pos->toMove] - endScores[!pos->toMove]) * (totalPhase - gamePhase);
 
-    return (m + e) / totalPhase;
+    return (m + e) / totalPhase + tempo;
 }
 
 Score Evaluator::refresh(){

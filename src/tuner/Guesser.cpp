@@ -49,7 +49,8 @@ float Guesser::fromBullet(const Bullet& b){
 
     float s = (m * gamePhase + e * (totalPhase - gamePhase)) / totalPhase;
     for (int i = 1; i < 6; i++){
-        s += material[i] * pieceDiff[i];
+        s += material[i] * pieceDiff[i] * gamePhase / totalPhase;
+        s += endmaterial[i] * pieceDiff[i] * (totalPhase - gamePhase) / totalPhase;
     }
 
     s += tempo;
@@ -89,6 +90,12 @@ void Guesser::report(int iter){
         output << (int)material[i] << ", ";
     }
     output << (int)material[5] << "};\n";
+
+    output << "std::array<Score, 6> endmaterial = {";
+    for (int i = 0; i < 5; i++){
+        output << (int)endmaterial[i] << ", ";
+    }
+    output << (int)endmaterial[5] << "};\n";
 
     output << "Score tempo = " << (int)tempo << ";\n";
 

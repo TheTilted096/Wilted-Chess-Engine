@@ -6,8 +6,6 @@ Base of future chess engine projects
 
 # To-Do's and Notes
 
-support vanilla + bullet
-write datagen and tuner
 profit
 mald over search
 
