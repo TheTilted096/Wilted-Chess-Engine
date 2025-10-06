@@ -28,6 +28,15 @@ using AlignedAtomicU64 = AlignedAtomic<uint64_t>;
 
 template <typename T> using SharedArray = std::array<AlignedAtomic<T>, MAX_THREADS - 1>;
 
+struct __attribute__((packed)) Bullet{
+    Bitboard occ;
+    std::array<uint8_t, 16> pcs{};
+    Score score;
+    uint8_t result;
+    Square ksq;
+    Square opp_ksq;
+    std::array<uint8_t, 3> pad{};
+};
 
 constexpr Hash randomize(Hash &s){
     Hash x = s;

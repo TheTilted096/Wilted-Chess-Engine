@@ -9,9 +9,8 @@ class Game{
         std::vector<std::string> positions;
         std::vector<Score> scores;
 
-        std::string verdict, ending;
+        std::string verdict, ending, opens;
 
-        uint32_t clock;
         Color turn;
 
         float result;

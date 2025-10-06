@@ -291,6 +291,59 @@ std::string Position::makeFen() const{
     return result;
 }
 
+Bullet Position::makeBullet(const Score& s, const uint8_t& ff) const{
+    Bullet x; 
+
+    // stm = 0, nstm = 1
+    // king = 5 ... pawn = 0
+
+    std::array<Bitboard, 2> sds = sides;
+    std::array<Bitboard, 6> pcs = pieces;
+
+    if (toMove){
+        sds[0] = __builtin_bswap64(sds[0]);
+        sds[1] = __builtin_bswap64(sds[1]);
+
+        std::swap(sds[0], sds[1]);
+
+        for (int i = 0; i < 6; i++){
+            pcs[i] = __builtin_bswap64(pcs[i]);
+        }
+    }     
+
+    x.occ = sds[0] | sds[1];
+    Bitboard occ = x.occ;
+
+    Square f;
+    int d, e = 0;
+    Bitboard sqbb;
+
+    while (occ){
+        f = popLeastBit(occ);
+        sqbb = squareBitboard(f);
+
+        for (int i = 0;; i++){
+            if (sqbb & pcs[i]){
+                d = 5 - i;
+                break;
+            }
+        }
+
+        d |= (!!(sqbb & sds[1]) << 3);
+        x.pcs[e >> 1] |= (d << ((e & 1) << 2));
+
+        e++;
+    }
+
+    x.score = static_cast<uint16_t>(s * (2 * toMove - 1));
+    x.result = toMove ? ff : 2 - ff;
+
+    x.ksq = getLeastBit(sds[0] & pcs[0]);
+    x.opp_ksq = flip(getLeastBit(sds[1] & pcs[0]));
+
+    return x;
+}
+
 void Position::print() const{
     std::cout << "sides[0] (black)\tsides[1] (white)\n";
     for (int i = 0; i < 8; i++){

@@ -55,7 +55,7 @@ void Game::play(std::string opening){
     turn = static_cast<Color>(opening[i + 1] & 1);
     }
 
-    clock = 0;
+    opens = opening;
 
     positions.clear();
     scores.clear();
@@ -81,12 +81,12 @@ void Game::play(std::string opening){
         sc = players[turn].goSoftly(maxSoftNodes) * (2 * turn - 1);
         lastmove = players[turn].bestMove();
 
-        //if (!players[turn].mainpos.isChecked(turn) and !(lastmove.captured() or lastmove.promoted())
-        //        and (players[turn].mainpos.sinceReset() <= maxHalf)){
+        if (!players[turn].mainpos.isChecked(turn) and !(lastmove.captured() or lastmove.promoted())
+                and (players[turn].mainpos.sinceReset() <= maxHalf)){
             
             positions.push_back(players[turn].mainpos.makeFen());
             scores.push_back(sc);
-        //}
+        }
 
         players[Black].mainpos.makeMove(lastmove);
         players[White].mainpos.makeMove(lastmove);
@@ -94,8 +94,6 @@ void Game::play(std::string opening){
             players[Black].mainpos.forget();
             players[White].mainpos.forget();
         }
-
-        clock++;
 
         turn = flip(turn);
     }
@@ -105,8 +103,8 @@ void Game::report(uint32_t id){
     hofile << "GAME " << id << '\n';
     hofile << "RESULT: " << result << '\n';
     hofile << "REASON: " << verdict << '\n';
-    hofile << "START: " << positions[0] << '\n';
-    for (int i = openOffset; i < std::max(0, (int)(clock - endOffset)); i++){
+    hofile << "START: " << opens << '\n';
+    for (int i = openOffset; i < ((int)positions.size() - (int)endOffset); i++){
         hofile << "D: " << positions[i] << " | " << scores[i] << " | " << result << '\n';
         ofile << positions[i] << " | " << scores[i] << " | " << result << '\n';
     }

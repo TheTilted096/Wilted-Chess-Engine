@@ -1,23 +1,24 @@
-// Class Definition for Evaluation
+#include "../Helpers.h"
 
-#include "Position.h"
+class Guesser{
+    public: 
+        //std::array<Bitboard, 2> sides;
+        //std::array<Bitboard, 6> pieces;
 
-class Evaluator{
-    public:
-        Position* pos;
+        //std::array<float, 2> midScores;
+        //std::array<float, 2> endScores;
+        float gamePhase;
+        std::array<int, 6> pieceDiff;
 
-        std::array<Score, 2> midScores;
-        std::array<Score, 2> endScores;
-        int gamePhase;
+        static constexpr float totalPhase = 128.0;
+        static constexpr std::array<float, 6> phases = {0.0, 14.0, 8.0, 5.0, 4.0, 2.0};
 
-        static constexpr int totalPhase = 128;
-        static constexpr std::array<int, 6> phases = {0, 14, 8, 5, 4, 2};
+        /* Original
+        std::array<float, 6> material = {0.0, 900.0, 500.0, 350.0, 300.0, 100.0};
 
-        /*
-        std::array<Score, 6> material = {0, 900, 500, 350, 300, 100};
+        float tempo = 10.0;
 
-        // PSQT
-        Table<Score, 6, 64> midpst = 
+        Table<float, 6, 64> midpst = 
         {{{-1, -1, 1, 7, 1, 2, 3, 5, 
         3, -3, 0, -1, -4, -6, -3, -4, 
         -7, 6, 3, 0, -3, 5, 4, 1, 
@@ -72,7 +73,7 @@ class Evaluator{
         1, 1, 1, -2, -1, -1, -1, -1, 
         0, 0, 0, 0, 0, 0, 0, 0}}};
 
-        Table<Score, 6, 64> endpst = 
+        Table<float, 6, 64> endpst = 
         {{{5, 1, -8, 2, -8, -8, -4, 5, 
         -3, -3, 5, 3, 6, 6, -2, -6, 
         -4, 7, -4, -4, 4, 6, -2, -7, 
@@ -128,8 +129,9 @@ class Evaluator{
         0, 0, 0, 0, 0, 0, 0, 0}}}; 
         */
 
-        std::array<Score, 6> material = {0, 1128, 559, 368, 333, 156};
-        
+        std::array<float, 6> material = {0.0, 1128.0, 559.0, 368.0, 333.0, 156.0};
+        float tempo = 1.0;
+
         Table<float, 6, 64> midpst = 
         {{{-4, 0, 2, 7, 4, 2, 1, 6, 
         0, 4, 3, 3, -3, -2, 0, -3, 
@@ -240,15 +242,10 @@ class Evaluator{
         6, 7, 16, 9, 21, 19, 11, 36, 
         0, 0, 0, 0, 0, 0, 0, 0}}}; 
 
+        std::array<int, 16> stmactive;
+        std::array<int, 16> nstmactive;
+        Count numStm, numNstm;
 
-        Evaluator();
-
-        void assign(Position* pp){ pos = pp; }
-
-        Score judge() const;
-        Score refresh();
-
-        void doMove(const Move& m); //no lazy updates
-        void undoMove(const Move& m); 
-
+        float fromBullet(const Bullet&);
+        void report(int);
 };

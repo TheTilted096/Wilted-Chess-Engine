@@ -108,9 +108,10 @@ void Match::getBook(Depth od, Depth vd, Score vs){
             }
 
             oev = e.goDepth(vd);
-            if (i % 1000 == 0){
-                std::cout << i << " of " << gameLimit << " openings collected.\n";
-            }
+        }
+
+        if (i % 1000 == 0){
+            std::cout << i << " of " << gameLimit << " openings collected.\n";
         }
 
         book.push_back(e.mainpos.makeFen());

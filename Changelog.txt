@@ -34,3 +34,4 @@ Changelog
 08-18-2025 ... 0.8.1.1 ... Perftsuite, FRC Fixes, Specialize Search Functions, Start Datagen
 09-15-2025 ... 0.8.2.0 ... Legal Move Generation ................ (5.6  +/- 9.6 ) , (8 + 0.08), (SPRT, 2850),(https://sscg13.pythonanywhere.com/test/1042/)
 09-23-2025 ... 0.8.2.1 ... Data Generation
+10-06-2025 ... 0.9.0.0 ... PSQT Tuning .......................... (324.4 +/- 65.1), (8 + 0.08), (N = 200), (Local)

@@ -60,6 +60,7 @@ class Position{
 
         void readFen(std::string);
         std::string makeFen() const;
+        Bullet makeBullet(const Score&, const uint8_t&) const;
 
         void empty();
         void setStartPos();

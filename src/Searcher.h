@@ -71,7 +71,7 @@ template <bool isMaster> class Searcher{
 
         Score searchDepth(Depth d){ return searchSilent(d, ~0ULL, ~0ULL); } // bench
         Score searchInfinite(){ return searchDepth(MAX_PLY); } // worker thread
-        Score searchSoftly(uint64_t snl){ return searchSilent(MAX_PLY, ~0ULL, snl); } // datagen soft node limit
+        Score searchSoftly(uint64_t snl){ return searchSilent(MAX_PLY, snl << 10, snl); } // datagen soft node limit
         
 
         void maybeForceStop();
