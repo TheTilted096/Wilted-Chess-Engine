@@ -119,7 +119,7 @@ int main(int argc, char* argv[]){
     std::cout << "Learning Rate: " << eta << '\n';
     std::cout << "Dataset Size: " << numData << '\n';
 
-    //float bestesum = 1.0;
+    float lastesum = 1.0;
 
     for (int i = 0; i < epochs; i++){
         if ((i % 100) == 0){
@@ -135,16 +135,10 @@ int main(int argc, char* argv[]){
 
             esum /= numData;
 
-            std::cout << "Error Before Epoch " << i << ": " << esum << '\n';
+            std::cout << "Error Before Epoch " << i << ": " << esum;
+            std::cout << " (" << (esum - lastesum) / lastesum * 100.0 << "%)\n";
 
-            /*
-            if (esum > bestesum){
-                std::cout << i << " epochs run.\n";
-                break;
-            }
-
-            bestesum = esum;
-            */
+            lastesum = esum;           
 
             if ((i % 100) == 0){
                 t.g.report(i); 

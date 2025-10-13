@@ -3,7 +3,7 @@
 #include "Interface.h"
 
 void Interface::loop(Engine& e){
-    std::string versionStr = "Wilted 0.9.1.0";
+    std::string versionStr = "Wilted 0.9.2.0";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -169,6 +169,35 @@ void Interface::loop(Engine& e){
                     }
                     spam << "}, \n\n";
                 }                
+            }
+            if (param == "piecewheel"){ // randomly selects a piece type that can move
+                Generator gg;
+                gg.assign(&e.mainpos);
+                MoveList kk{};
+
+                int x = gg.generateMoves(kk);
+                std::vector<Piece> canmove{};
+
+                bool found;
+
+                for (int i = 0; i < x; i++){
+                    Piece jj = kk[i].moving();
+                    found = true;
+                    for (Piece& pp : canmove){
+                        if (jj == pp){
+                            found = false;
+                            break;
+                        }
+                    }
+                    if (found){
+                        canmove.push_back(jj);
+                    }
+                }
+
+                std::cout << x << '\n';
+
+                Hash seed = std::chrono::steady_clock::now().time_since_epoch().count();
+                std::cout << (int)canmove[randomize(seed) % canmove.size()] << '\n';
             }
         }
     }
