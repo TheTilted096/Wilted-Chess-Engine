@@ -63,6 +63,7 @@ template <bool isMaster> class Searcher{
         void scoreCaptures(MoveList&, MoveScoreList&, const Index&);
         void sortMoves(MoveList&, MoveScoreList&, const Index&);
 
+        bool see(const Move&, const Score&);
         Score quiesce(Score, Score); //Index by Ply? - Could be useful for searchstack
         template <bool> Score alphabeta(Score, Score, Depth, Index);
         template <bool> Score search(Depth, uint64_t, uint64_t, bool);
@@ -72,7 +73,6 @@ template <bool isMaster> class Searcher{
         Score searchDepth(Depth d){ return searchSilent(d, ~0ULL, ~0ULL); } // bench
         Score searchInfinite(){ return searchDepth(MAX_PLY); } // worker thread
         Score searchSoftly(uint64_t snl){ return searchSilent(MAX_PLY, snl << 10, snl); } // datagen soft node limit
-        
 
         void maybeForceStop();
         void disable(){ *stopSearch = true; }
@@ -95,6 +95,7 @@ template <bool isMaster> class Searcher{
         const double LMRbase = 0.4;
         const double LMRmult = 0.6;
         Table<Depth, MAX_PLY, 128> LMRtable;
+        const std::array<Score, 6> SEEvals = {10000, 900, 500, 300, 300, 100};
 };
 
 extern template class Searcher<true>;

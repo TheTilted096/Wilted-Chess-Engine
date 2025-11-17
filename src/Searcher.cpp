@@ -147,6 +147,136 @@ void Searcher<isMaster>::maybeForceStop(){
     }
 }
 
+template <bool isMaster>
+bool Searcher<isMaster>::see(const Move& m, const Score& bound){
+    Color insideToMove = pos.toMove; // start internal side to move
+
+    std::array<Score, 2> gains{}; // gains for each side. initialize bound below and add capture if any
+    gains[insideToMove] = !!m.captured() * SEEvals[m.captured()] - bound; // start with the capture
+
+    if (gains[insideToMove] >= SEEvals[m.moving()]){ // if gain of move is more than loss
+        return true; //it is at least an equal trade and so it passes
+    }
+
+    Square destination = m.to();
+    bool backrank = 0xFF000000000000FFULL & squareBitboard(destination); // for autoqueen purposes
+
+    gains[insideToMove] += m.promoted() * (SEEvals[m.ending()] - SEEvals[Pawn]); // if queening
+
+    // get all attackers
+
+    Bitboard occ = pos.occupied() ^ squareBitboard(m.from()); //remove attacker
+
+    Table<Count, 2, 8> attackers{}; // exact # of attackers for P, N, K, attacker square for B, R, Q
+    std::array<Hash, 2> attackerHash{}; // u64 cast of attackers[side]
+
+    // !insideToMove attackers
+    attackers[!insideToMove][Pawn] = std::popcount(Attacks::PawnAttacks[insideToMove][destination] & pos.those(flip(insideToMove), Pawn) & occ);
+
+    attackers[!insideToMove][Knight] = std::popcount(Attacks::KnightAttacks[destination] & pos.those(flip(insideToMove), Knight) & occ);
+
+    Bitboard bsb = Attacks::bishopAttacks(destination, occ);
+    Bitboard rsb = Attacks::rookAttacks(destination, occ);
+
+    std::array<Bitboard, 2> queenbb{}; // bitboard of all queens
+
+    attackers[!insideToMove][Bishop] = getLeastBit(bsb & pos.those(flip(insideToMove), Bishop) & occ) ^ 64;
+    attackers[!insideToMove][Rook] = getLeastBit(rsb & pos.those(flip(insideToMove), Rook) & occ) ^ 64;
+
+    queenbb[!insideToMove] = (bsb ^ rsb) & pos.those(flip(insideToMove), Queen) & occ;
+    attackers[!insideToMove][Queen] = getLeastBit(queenbb[!insideToMove]) ^ 64;
+
+    attackers[!insideToMove][King] = !!(Attacks::KingAttacks[destination] & pos.those(flip(insideToMove), King) & occ);
+
+    // no enemy attackers and positive gains (the piece was hanging)
+    attackerHash[!insideToMove] = *reinterpret_cast<const uint64_t*>(attackers[!insideToMove].data());
+    if (!attackerHash[!insideToMove] and (gains[insideToMove] >= 0)){
+        return true;
+    }
+
+    // insideToMove attackers
+    attackers[insideToMove][Pawn] = std::popcount(Attacks::PawnAttacks[!insideToMove][destination] & pos.those(insideToMove, Pawn) & occ);
+
+    attackers[insideToMove][Knight] = std::popcount(Attacks::KnightAttacks[destination] & pos.those(insideToMove, Knight) & occ);
+    
+    attackers[insideToMove][Bishop] = getLeastBit(bsb & pos.those(insideToMove, Bishop) & occ) ^ 64;
+    attackers[insideToMove][Rook] = getLeastBit(rsb & pos.those(insideToMove, Rook) & occ) ^ 64;
+
+    queenbb[insideToMove] = (bsb ^ rsb) & pos.those(insideToMove, Queen) & occ;
+    attackers[insideToMove][Queen] = getLeastBit(queenbb[insideToMove]) ^ 64;
+
+    attackers[insideToMove][King] = !!(Attacks::KingAttacks[destination] & pos.those(insideToMove, King) & occ);
+
+    attackerHash[insideToMove] = *reinterpret_cast<const uint64_t*>(attackers[insideToMove].data());
+
+    Piece standing = static_cast<Piece>(m.ending()); // piece standing on square
+    insideToMove = flip(insideToMove); // get ready for main loop
+    Piece lva;
+
+    Bitboard sqbb;
+
+    while (attackerHash[insideToMove]){ // while stm still has attackers
+        gains[insideToMove] += SEEvals[standing]; // piece standing on square is captured
+        
+        lva = static_cast<Piece>(getMostBit(attackerHash[insideToMove]) >> 3);
+
+        switch (lva){
+            case Bishop:
+                occ ^= squareBitboard(static_cast<Square>(attackers[insideToMove][Bishop] ^ 64)); // remove backup bit to convert to square
+                
+                bsb = Attacks::bishopAttacks(destination, occ);
+
+                // if there are none, getLeastBit returns 64, which is then xor'd to 0 
+                attackers[insideToMove][Bishop] = 64 ^ getLeastBit(bsb & pos.those(insideToMove, Bishop) & occ);
+
+                queenbb[insideToMove] |= (bsb & pos.those(insideToMove, Queen) & occ);
+                attackers[insideToMove][Queen] = 64 ^ getLeastBit(queenbb[insideToMove]);
+
+                break;
+            case Rook:
+                occ ^= squareBitboard(static_cast<Square>(attackers[insideToMove][Rook] ^ 64)); 
+
+                rsb = Attacks::rookAttacks(destination, occ);
+
+                attackers[insideToMove][Rook] = 64 ^ getLeastBit(rsb & pos.those(insideToMove, Rook) & occ);
+
+                queenbb[insideToMove] |= (rsb & pos.those(insideToMove, Queen) & occ);
+                attackers[insideToMove][Queen] = 64 ^ getLeastBit(queenbb[insideToMove]);
+
+                break;
+            case Queen:
+                sqbb = squareBitboard(static_cast<Square>(attackers[insideToMove][Queen] ^ 64));
+                occ ^= sqbb; // remove backup bit to convert to square
+                queenbb[insideToMove] ^= sqbb;
+
+                bsb = Attacks::bishopAttacks(destination, occ);
+                rsb = Attacks::rookAttacks(destination, occ);
+
+                queenbb[insideToMove] |= ((bsb | rsb) & pos.those(insideToMove, Queen) & occ);
+                attackers[insideToMove][Queen] = 64 ^ getLeastBit(queenbb[insideToMove]);
+
+                attackers[insideToMove][Rook] = 64 ^ getLeastBit(rsb & pos.those(insideToMove, Rook) & occ);
+                attackers[insideToMove][Bishop] = 64 ^ getLeastBit(bsb & pos.those(insideToMove, Bishop) & occ);
+
+                break;
+            default:
+                attackers[insideToMove][lva]--;
+        }
+
+        bool promote = (lva == 5) and backrank;
+        standing = static_cast<Piece>(lva - (promote << 2)); //Pawn - 4 = Queen
+
+        if (gains[insideToMove] - gains[!insideToMove] > SEEvals[standing] * !!attackerHash[!insideToMove]){
+            break;
+        }
+
+        attackerHash[insideToMove] = *reinterpret_cast<const uint64_t*>(attackers[insideToMove].data());
+        insideToMove = flip(insideToMove);
+    }
+
+    return (gains[pos.toMove] >= gains[!pos.toMove]);
+}
+
 template <bool isMaster> 
 Score Searcher<isMaster>::quiesce(Score alpha, Score beta){
     //insufficient material
@@ -175,8 +305,9 @@ Score Searcher<isMaster>::quiesce(Score alpha, Score beta){
 
         maybeForceStop(); //check if the thread should stop
 
-        //bool legal = invokeMove(captures[i]);
-        //if (!legal){ continue; }
+        if (!see(captures[i], 0)){ // QS SEE Pruning
+            continue;
+        }
 
         invokeMove(captures[i]);
 

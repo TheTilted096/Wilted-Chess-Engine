@@ -3,7 +3,7 @@
 #include "Interface.h"
 
 void Interface::loop(Engine& e){
-    std::string versionStr = "Wilted 0.9.2.0";
+    std::string versionStr = "Wilted 0.9.3.0";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -198,6 +198,63 @@ void Interface::loop(Engine& e){
 
                 Hash seed = std::chrono::steady_clock::now().time_since_epoch().count();
                 std::cout << (int)canmove[randomize(seed) % canmove.size()] << '\n';
+            }
+            if (param.substr(0, 8) == "seesuite"){
+                std::string filename = param.substr(9);
+                std::ifstream seeFile(filename);
+                std::string line;
+                int testCount = 0;
+                int passCount = 0;
+
+                while (std::getline(seeFile, line)){
+                    testCount++;
+
+                    // Parse the line
+                    size_t firstPipe = line.find('|');
+                    size_t secondPipe = line.find('|', firstPipe + 1);
+
+                    std::string fenPart = line.substr(0, firstPipe);
+                    std::string movePart = line.substr(firstPipe + 1, secondPipe - firstPipe - 1);
+                    std::string valuePart = line.substr(secondPipe + 1);
+
+                    // Trim whitespace
+                    fenPart.erase(0, fenPart.find_first_not_of(" \t"));
+                    fenPart.erase(fenPart.find_last_not_of(" \t") + 1);
+                    movePart.erase(0, movePart.find_first_not_of(" \t"));
+                    movePart.erase(movePart.find_last_not_of(" \t") + 1);
+                    valuePart.erase(0, valuePart.find_first_not_of(" \t"));
+
+                    // Extract integer value (ignore anything after it)
+                    size_t spacePos = valuePart.find(' ');
+                    std::string valueStr = valuePart.substr(0, spacePos);
+                    int expectedValue = std::stoi(valueStr);
+
+                    // Append " 0 1" to FEN
+                    std::string fullFen = fenPart + " 0 1";
+
+                    // Set up position
+                    e.master.pos.readFen(fullFen);
+
+                    // Convert move
+                    Move testMove = e.master.gen.unalgebraic(movePart);
+
+                    // Call SEE with bound 0
+                    bool seeResult = e.master.see(testMove, 0);
+
+                    // Expected result
+                    bool expectedResult = (expectedValue >= 0);
+
+                    // Compare
+                    if (seeResult == expectedResult){
+                        passCount++;
+                    } else {
+                        std::cout << "FAILED Test " << testCount << ": " << movePart
+                                  << " Expected: " << expectedResult << " Got: " << seeResult
+                                  << " (value: " << expectedValue << ")\n";
+                    }
+                }
+
+                std::cout << "SEE Suite: " << passCount << "/" << testCount << " passed\n";
             }
         }
     }
