@@ -539,7 +539,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t soft
     Score alpha = -SCORE_INF;
     Score beta = SCORE_INF;
     bool aspFail;
-    int prevScore;
+    int prevScore = 0;
 
     try {
         prevScore = alphabeta<true>(alpha, beta, 0, 0); // depth 0 to get an initial assessment

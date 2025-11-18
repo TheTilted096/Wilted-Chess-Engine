@@ -1,8 +1,7 @@
-EXE := Wilted-0-9-3-0
+EXE := Wilted-0-9-3-1
 #no evalfile yet
 ARCH := native
-SOURCES := Wilted.cpp Interface.cpp Engine.cpp History.cpp TeaTable.cpp Searcher.cpp Evaluator.cpp Performer.cpp Generator.cpp Position.cpp
-
+SOURCES := *.cpp
 CXX := clang++
 
 CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -static -Wall -g
@@ -16,7 +15,7 @@ endif
 
 OUT := $(EXE)$(SUFFIX)
 
-# One-Shot Compilation, for OpenBench
+# One-Shot Release Compilation
 
 $(EXE):
 	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)

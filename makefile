@@ -1,11 +1,11 @@
-EXE := Wilted-0-9-3-0
+EXE := Wilted-0-9-3-1
 #no evalfile yet
 ARCH := native
 SOURCES := src/*.cpp
 
 CXX := clang++
 
-CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -static -Wall -g
+CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -Wall -g
 #-fconstexpr-steps=...
 
 SUFFIX :=

@@ -6,9 +6,6 @@ Base of future chess engine projects
 
 # To-Do's and Notes
 
-profit
-mald over search
-
 remember to change the version no in FOUR places
 
 investigate infrequent time losses
