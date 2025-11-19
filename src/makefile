@@ -1,4 +1,4 @@
-EXE := Wilted-0-9-3-1
+EXE := Wilted-0-9-3-1-claude-movegen-speedup
 #no evalfile yet
 ARCH := native
 SOURCES := *.cpp
