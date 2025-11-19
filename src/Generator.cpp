@@ -2,17 +2,12 @@
 
 #include "Generator.h"
 
-// Optimization macros
-#define LIKELY(x) __builtin_expect(!!(x), 1)
-#define UNLIKELY(x) __builtin_expect(!!(x), 0)
-#define FORCE_INLINE __attribute__((always_inline)) inline
-
 Generator::Generator(){}
 
-template <Piece p, bool cf> FORCE_INLINE void Generator::spreadMoves(MoveList& ml, Count& tm, const Square& o, Bitboard& ds){
+template <Piece p, bool cf> [[gnu::always_inline]] inline void Generator::spreadMoves(MoveList& ml, Count& tm, const Square& o, Bitboard& ds){
     Square k;
 
-    while (LIKELY(ds)){
+    while (ds) [[likely]] {
         k = popLeastBit(ds);
 
         ml[tm].setFrom(o);
@@ -55,7 +50,7 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
 
         // Knight threats
         Bitboard knightPieces = pos->their(Knight);
-        while (LIKELY(knightPieces)){
+        while (knightPieces) [[likely]] {
             origin = popLeastBit(knightPieces);
             threats |= Attacks::KnightAttacks[origin];
         }
@@ -64,13 +59,13 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
         const Bitboard noKingOcc = occupancy ^ pos->our(King);
 
         Bitboard diagPieces = pos->diagonalPieces() & enemies;
-        while (LIKELY(diagPieces)){
+        while (diagPieces) [[likely]] {
             origin = popLeastBit(diagPieces);
             threats |= Attacks::bishopAttacks(origin, noKingOcc);
         }
 
         Bitboard straightPieces = pos->straightPieces() & enemies;
-        while (LIKELY(straightPieces)){
+        while (straightPieces) [[likely]] {
             origin = popLeastBit(straightPieces);
             threats |= Attacks::rookAttacks(origin, noKingOcc);
         }
@@ -101,12 +96,12 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
         pieces = (Attacks::bishopAttacks(kingsq, enemyDiag) & enemyDiag) |
                  (Attacks::rookAttacks(kingsq, enemyStraight) & enemyStraight);
 
-        while (LIKELY(pieces)){
+        while (pieces) [[likely]] {
             origin = popLeastBit(pieces);
             Bitboard between = occupancy & Attacks::RayBetween[origin][kingsq];
 
             // Check if exactly one piece between and it's ours
-            if (UNLIKELY(between && !(between & (between - 1)) && ((between & allies) == between))){
+            if (between && !(between & (between - 1)) && ((between & allies) == between)) [[unlikely]] {
                 pinned |= between;
             }
         }
@@ -121,7 +116,7 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
     Bitboard epcheckmask = checkmask;
 
     const Square epSquare = pos->thisPassant();
-    if (UNLIKELY(epSquare != XX)){
+    if (epSquare != XX) [[unlikely]] {
         captureSet |= squareBitboard(epSquare);
         epcheckmask |= (((checkers & pos->their(Pawn)) << 8) >> (stm << 4));
     }
@@ -150,7 +145,7 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
     right &= captureSet & epcheckmask;
 
     // Process right pawn captures
-    while (LIKELY(right)){
+    while (right) [[likely]] {
         destination = popLeastBit(right);
         origin = static_cast<Square>(destination - 9 + (stm << 4));
 
@@ -159,10 +154,10 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
         moveList[totalMoves].setMoving(Pawn);
 
         victimType = pos->pieceAt(destination);
-        if (UNLIKELY(victimType == None)){ // en passant
-            if (UNLIKELY(squareBitboard(kingsq) & (0xFF00000000ULL >> (stm << 3)))){
+        if (victimType == None) [[unlikely]] { // en passant
+            if (squareBitboard(kingsq) & (0xFF00000000ULL >> (stm << 3))) [[unlikely]] {
                 Bitboard postocc = occupancy ^ (0x3ULL << origin);
-                if (UNLIKELY(pos->straightPieces() & enemies & Attacks::rookAttacks(kingsq, postocc))){
+                if (pos->straightPieces() & enemies & Attacks::rookAttacks(kingsq, postocc)) [[unlikely]] {
                     continue;
                 }
             }
@@ -172,7 +167,7 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
 
         moveList[totalMoves].setCaptured(victimType);
 
-        if (UNLIKELY(squareBitboard(destination) & 0xFF000000000000FFULL)){
+        if (squareBitboard(destination) & 0xFF000000000000FFULL) [[unlikely]] {
             moveList[totalMoves].setPromote();
             Move temp = moveList[totalMoves];
 
@@ -197,7 +192,7 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
     }
 
     // Process left pawn captures
-    while (LIKELY(left)){
+    while (left) [[likely]] {
         destination = popLeastBit(left);
         origin = static_cast<Square>(destination - 7 + (stm << 4));
 
@@ -206,10 +201,10 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
         moveList[totalMoves].setMoving(Pawn);
 
         victimType = pos->pieceAt(destination);
-        if (UNLIKELY(victimType == None)){ // en passant
-            if (UNLIKELY(squareBitboard(kingsq) & (0xFF00000000ULL >> (stm << 3)))){
+        if (victimType == None) [[unlikely]] { // en passant
+            if (squareBitboard(kingsq) & (0xFF00000000ULL >> (stm << 3))) [[unlikely]] {
                 Bitboard postocc = occupancy ^ (0x3ULL << (origin - 1));
-                if (UNLIKELY(pos->straightPieces() & enemies & Attacks::rookAttacks(kingsq, postocc))){
+                if (pos->straightPieces() & enemies & Attacks::rookAttacks(kingsq, postocc)) [[unlikely]] {
                     continue;
                 }
             }
@@ -219,7 +214,7 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
 
         moveList[totalMoves].setCaptured(victimType);
 
-        if (UNLIKELY(squareBitboard(destination) & 0xFF000000000000FFULL)){
+        if (squareBitboard(destination) & 0xFF000000000000FFULL) [[unlikely]] {
             moveList[totalMoves].setPromote();
             Move temp = moveList[totalMoves];
 
@@ -252,14 +247,14 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
         pushes &= checkmask;
         doublePushes &= checkmask;
 
-        while (LIKELY(pushes)){
+        while (pushes) [[likely]] {
             destination = popLeastBit(pushes);
 
             moveList[totalMoves].setFrom(static_cast<Square>(destination - 8 + (stm << 4)));
             moveList[totalMoves].setTo(destination);
             moveList[totalMoves].setMoving(Pawn);
 
-            if (UNLIKELY(squareBitboard(destination) & 0xFF000000000000FFULL)){
+            if (squareBitboard(destination) & 0xFF000000000000FFULL) [[unlikely]] {
                 moveList[totalMoves].setPromote();
                 Move temp = moveList[totalMoves];
 
@@ -283,7 +278,7 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
             totalMoves++;
         }
 
-        while (LIKELY(doublePushes)){
+        while (doublePushes) [[likely]] {
             destination = popLeastBit(doublePushes);
 
             moveList[totalMoves].setFrom(static_cast<Square>(destination - 16 + (pos->toMove << 5)));
@@ -298,7 +293,7 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
 
     // Knights - unpinned only
     pieces = pos->our(Knight) & ~pinned;
-    while (LIKELY(pieces)){
+    while (pieces) [[likely]] {
         origin = popLeastBit(pieces);
 
         moveSet = Attacks::KnightAttacks[origin] & ~allies & checkmask;
@@ -314,11 +309,11 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
 
     // Bishops
     pieces = pos->our(Bishop);
-    while (LIKELY(pieces)){
+    while (pieces) [[likely]] {
         origin = popLeastBit(pieces);
 
         moveSet = Attacks::bishopAttacks(origin, occupancy) & ~allies & checkmask;
-        if (UNLIKELY((pinned >> origin) & 1)){
+        if ((pinned >> origin) & 1) [[unlikely]] {
             moveSet &= Attacks::RayIncluding[origin][kingsq];
         }
 
@@ -333,11 +328,11 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
 
     // Rooks
     pieces = pos->our(Rook);
-    while (LIKELY(pieces)){
+    while (pieces) [[likely]] {
         origin = popLeastBit(pieces);
 
         moveSet = Attacks::rookAttacks(origin, occupancy) & ~allies & checkmask;
-        if (UNLIKELY((pinned >> origin) & 1)){
+        if ((pinned >> origin) & 1) [[unlikely]] {
             moveSet &= Attacks::RayIncluding[origin][kingsq];
         }
 
@@ -352,11 +347,11 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
 
     // Queens
     pieces = pos->our(Queen);
-    while (LIKELY(pieces)){
+    while (pieces) [[likely]] {
         origin = popLeastBit(pieces);
 
         moveSet = Attacks::queenAttacks(origin, occupancy) & ~allies & checkmask;
-        if (UNLIKELY((pinned >> origin) & 1)){
+        if ((pinned >> origin) & 1) [[unlikely]] {
             moveSet &= Attacks::RayIncluding[origin][kingsq];
         }
 
@@ -383,8 +378,8 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
         if constexpr (numChecks == 0){
             const uint8_t rights = pos->ourRights();
 
-            if (UNLIKELY(rights)){
-                if (UNLIKELY(rights & 1)){ // Kingside
+            if (rights) [[unlikely]] {
+                if (rights & 1) [[unlikely]] { // Kingside
                     if (!(pos->kingOccMask[stm] & occupancy)){
                         if (!(pos->kingSafeMask[stm] & threats)){
                             if (!pos->isFRC || !((pinned >> pos->kingRookFrom[stm]) & 1)){
@@ -397,7 +392,7 @@ template <Color stm, bool captureOnly, Count numChecks> Count Generator::genChec
                     }
                 }
 
-                if (UNLIKELY(rights & 2)){ // Queenside
+                if (rights & 2) [[unlikely]] { // Queenside
                     if (!(pos->queenOccMask[stm] & occupancy)){
                         if (!(pos->queenSafeMask[stm] & threats)){
                             if (!pos->isFRC || !((pinned >> pos->queenRookFrom[stm]) & 1)){
