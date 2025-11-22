@@ -4,6 +4,8 @@
 
 int main(int argc, char* argv[]){
     Engine engine;
+    
+    Network::loadnet("wilted-net-1-0.bin");
 
     if ((argc == 2) and (std::string(argv[1]) == "bench")){
         engine.bench();

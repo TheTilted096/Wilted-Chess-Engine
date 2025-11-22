@@ -61,7 +61,7 @@ void Searcher<isMaster>::invokeMove(const Move& m){
 template <bool isMaster> 
 void Searcher<isMaster>::revokeMove(const Move& m){
     pos.unmakeMove();
-    eva.undoMove(m);
+    eva.undoMove();
 }
 
 template <bool isMaster> 
@@ -284,7 +284,8 @@ Score Searcher<isMaster>::quiesce(Score alpha, Score beta){
         return DRAW;
     }
 
-    Score score = eva.judge();
+    Score score = eva.inference();
+    //Score score = eva.refresh();
     Score bestScore = score;
 
     if (score >= beta){
@@ -387,7 +388,9 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
     bool inCheck = pos.isChecked(pos.toMove); //maybe clean up these functions
 
-    sta[ply].presentEval = eva.judge(); // static eval
+    //std::cout << "static eval for this node:\n";
+    sta[ply].presentEval = eva.inference(); // static eval
+    //sta[ply].presentEval = eva.refresh();
 
     if (!rootNode){
         Score margin = RFPbase + RFPmult * depth; //Reverse Futility Pruning
@@ -524,6 +527,7 @@ template Score Searcher<false>::alphabeta<false>(Score, Score, Depth, Index);
 template <bool isMaster>
 template <bool output>
 Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t softNodeLim, bool minPrint){
+    //std::cout << eva.refresh() << '\n';
     eva.refresh();
     his.empty();
     clearStack();
@@ -548,6 +552,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t soft
         for (Depth d = 1; d <= depthLim; d++){
             aspFail = true; 
             int aspAlpha = ASPbase, aspBeta = ASPbase;
+            //std::cout << "eval at depth " << (int)d << ": " << eva.inference() << '\n';
 
             while (aspFail){ // cast to integer to be sure of no overflow
                 alpha = std::max(prevScore - aspAlpha, (int)(-SCORE_INF));
