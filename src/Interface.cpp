@@ -22,7 +22,7 @@ void Interface::loop(Engine& e){
             std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "option name Minimal type check default false\n";
             std::cout << "option name Softnodes type check default value false\n";
-            std::cout << "option name EvalFile type string default " + evalfilestr + '\n';
+            std::cout << "option name EvalFile type string default <internal>\n";
             std::cout << "uciok" << std::endl;
         }
 
@@ -365,7 +365,9 @@ void Interface::setoption(Engine& e){
     }
     
     if (command.substr(15, 8) == "EvalFile"){
-        Network::loadnet(command.substr(30));
+        if (command.substr(30) != "<internal>"){
+            Network::loadnet(command.substr(30));
+        }
     }
 }
 

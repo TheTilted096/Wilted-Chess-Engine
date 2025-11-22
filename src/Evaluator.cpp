@@ -2,7 +2,11 @@
 
 #include "Evaluator.h"
 
-INCBIN(WiltedNet, "wilted-net-1-0.bin");
+#ifndef EVALFILE
+#define EVALFILE "wilted-net-1-0.bin"
+#endif
+
+INCBIN(WiltedNet, EVALFILE);
 
 Table<int16_t, 2, 6, 64, Network::L1_SIZE> Network::inputWeights;
 std::array<int16_t, Network::L1_SIZE> Network::inputBiases;
