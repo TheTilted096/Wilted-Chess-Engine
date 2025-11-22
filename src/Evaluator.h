@@ -2,6 +2,11 @@
 
 #include "Position.h"
 
+#define INCBIN_PREFIX g
+#include "../third_party/incbin.h"
+
+INCBIN_EXTERN(WiltedNet);
+
 class Network{
     public:
         static constexpr std::size_t L1_SIZE = 32;
@@ -23,7 +28,7 @@ class Network{
             return std::clamp(x, static_cast<int16_t>(0), QA);
         }
 
-        static void loadnet(std::string);
+        static void loadnet(const std::string& filename = "");
 
         using Accumulator = Table<int16_t, 2, L1_SIZE>;
 };

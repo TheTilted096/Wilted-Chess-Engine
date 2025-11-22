@@ -4,8 +4,8 @@
 
 int main(int argc, char* argv[]){
     Engine engine;
-    
-    Network::loadnet("wilted-net-1-0.bin");
+
+    Network::loadnet();
 
     if ((argc == 2) and (std::string(argv[1]) == "bench")){
         engine.bench();
@@ -14,6 +14,6 @@ int main(int argc, char* argv[]){
 
     Interface proto;
     proto.loop(engine);
-    
+
     return 0;
 }

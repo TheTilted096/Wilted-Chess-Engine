@@ -2,34 +2,57 @@
 
 #include "Evaluator.h"
 
+INCBIN(WiltedNet, "wilted-net-1-0.bin");
+
 Table<int16_t, 2, 6, 64, Network::L1_SIZE> Network::inputWeights;
 std::array<int16_t, Network::L1_SIZE> Network::inputBiases;
 
 Table<int16_t, 2, Network::L1_SIZE> Network::outputWeights;
 int16_t Network::outputBias;
 
-void Network::loadnet(std::string fn){
-    std::ifstream in(fn, std::ios::binary);
-
+template<typename Reader>
+static void loadWeightsFromReader(Reader& reader){
     int16_t w = 0;
 
     for (int i = 0; i < 2; i++){
         for (int j = 0; j < 6; j++){
             for (int k = 0; k < 64; k++){
-                for (int l = 0; l < L1_SIZE; l++){
-                    in.read(reinterpret_cast<char*>(&w), 2);
-                    inputWeights[!i][5 - j][56 ^ k][l] = w;
+                for (int l = 0; l < Network::L1_SIZE; l++){
+                    reader(&w, 2);
+                    Network::inputWeights[!i][5 - j][56 ^ k][l] = w;
                 }
             }
         }
     }
 
-    in.read(reinterpret_cast<char*>(&inputBiases), 2 * L1_SIZE);
+    reader(&Network::inputBiases, 2 * Network::L1_SIZE);
+    reader(&Network::outputWeights[1], 2 * Network::L1_SIZE);
+    reader(&Network::outputWeights[0], 2 * Network::L1_SIZE);
+    reader(&Network::outputBias, 2);
+}
 
-    in.read(reinterpret_cast<char*>(&outputWeights[1]), 2 * L1_SIZE);
-    in.read(reinterpret_cast<char*>(&outputWeights[0]), 2 * L1_SIZE);
+void Network::loadnet(const std::string& filename){
+    if (filename.empty()){
+        // Load from embedded binary data
+        const unsigned char* data = gWiltedNetData;
+        std::size_t offset = 0;
 
-    in.read(reinterpret_cast<char*>(&outputBias), 2);
+        auto memoryReader = [&data, &offset](void* dest, std::size_t size){
+            std::memcpy(dest, data + offset, size);
+            offset += size;
+        };
+
+        loadWeightsFromReader(memoryReader);
+    } else {
+        // Load from user-specified file
+        std::ifstream in(filename, std::ios::binary);
+
+        auto fileReader = [&in](void* dest, std::size_t size){
+            in.read(reinterpret_cast<char*>(dest), size);
+        };
+
+        loadWeightsFromReader(fileReader);
+    }
 }
 
 Evaluator::Evaluator(){}
