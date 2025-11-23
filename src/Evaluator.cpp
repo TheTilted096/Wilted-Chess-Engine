@@ -1,63 +1,146 @@
-// Evaluation Function Definitions
+// Function Implementations for Evaluation
 
 #include "Evaluator.h"
 
-Evaluator::Evaluator(){
-    for (Piece i = Queen; i < None; i++){
-        for (Square j = a8; j < XX; j++){
-            midpst[i][j] += material[i];
-            endpst[i][j] += endmaterial[i];
+#ifndef EVALFILE
+#define EVALFILE "wilted-net-1-0.bin"
+#endif
+
+INCBIN(WiltedNet, EVALFILE);
+
+Table<int16_t, 2, 6, 64, Network::L1_SIZE> Network::inputWeights;
+std::array<int16_t, Network::L1_SIZE> Network::inputBiases;
+
+Table<int16_t, 2, Network::L1_SIZE> Network::outputWeights;
+int16_t Network::outputBias;
+
+template<typename Reader>
+static void loadWeightsFromReader(Reader& reader){
+    int16_t w = 0;
+
+    for (int i = 0; i < 2; i++){
+        for (int j = 0; j < 6; j++){
+            for (int k = 0; k < 64; k++){
+                for (int l = 0; l < Network::L1_SIZE; l++){
+                    reader(&w, 2);
+                    Network::inputWeights[!i][5 - j][56 ^ k][l] = w;
+                }
+            }
         }
+    }
+
+    reader(&Network::inputBiases, 2 * Network::L1_SIZE);
+    reader(&Network::outputWeights[1], 2 * Network::L1_SIZE);
+    reader(&Network::outputWeights[0], 2 * Network::L1_SIZE);
+    reader(&Network::outputBias, 2);
+}
+
+void Network::loadnet(const std::string& filename){
+    if (filename.empty()){
+        // Load from embedded binary data
+        const unsigned char* data = gWiltedNetData;
+        std::size_t offset = 0;
+
+        auto memoryReader = [&data, &offset](void* dest, std::size_t size){
+            std::memcpy(dest, data + offset, size);
+            offset += size;
+        };
+
+        loadWeightsFromReader(memoryReader);
+    } else {
+        // Load from user-specified file
+        std::ifstream in(filename, std::ios::binary);
+
+        auto fileReader = [&in](void* dest, std::size_t size){
+            in.read(reinterpret_cast<char*>(dest), size);
+        };
+
+        loadWeightsFromReader(fileReader);
     }
 }
 
-Score Evaluator::judge() const{
-    int m = (midScores[pos->toMove] - midScores[!pos->toMove]) * gamePhase;
-    int e = (endScores[pos->toMove] - endScores[!pos->toMove]) * (totalPhase - gamePhase);
+Evaluator::Evaluator(){}
 
-    return (m + e) / totalPhase + tempo;
+Score Evaluator::inference() const{
+    const Network::Accumulator& acc = accStack[accIdx];
+
+    int eval = 0;
+    const Color& stm = pos->toMove;
+
+    for (int i = 0; i < Network::L1_SIZE; i++){
+        int16_t stmTerm = Network::crelu(acc[stm][i]);
+        int16_t nstmTerm = Network::crelu(acc[!stm][i]);
+
+        eval += static_cast<int16_t>(stmTerm * Network::outputWeights[1][i]) * stmTerm;
+        eval += static_cast<int16_t>(nstmTerm * Network::outputWeights[0][i]) * nstmTerm;
+    }
+
+    eval /= Network::QA;
+    eval += Network::outputBias;
+    eval *= Network::SCALE;
+    eval /= (Network::QA * Network::QB);
+
+    return eval;
 }
 
 Score Evaluator::refresh(){
-    midScores[White] = 0;
-    midScores[Black] = 0;
+    accIdx = 0;
+    Network::Accumulator& acc = accStack[accIdx];
 
-    endScores[White] = 0;
-    endScores[Black] = 0;
-
-    gamePhase = 0;
+    acc[0] = Network::inputBiases;
+    acc[1] = Network::inputBiases;
 
     Bitboard pcs;
-    Square sq;
+    Square p;
 
     for (Piece i = King; i < None; i++){
         pcs = pos->those(White, i);
-
         while (pcs){
-            sq = popLeastBit(pcs);
-            midScores[White] += midpst[i][sq];
-            endScores[White] += endpst[i][sq];
-            //std::cout << "Added White " << (int)i << " at " << (int)sq << '\n';
+            p = popLeastBit(pcs);
+            add(White, i, p);
         }
 
         pcs = pos->those(Black, i);
-
         while (pcs){
-            sq = popLeastBit(pcs);
-            midScores[Black] += midpst[i][flip(sq)]; // Black flips
-            endScores[Black] += endpst[i][flip(sq)];
-            //std::cout << "Added Black " << (int)i << " at " << (int)flip(sq) << '\n';
+            p = popLeastBit(pcs);
+            add(Black, i, p);
         }
     }
 
-    for (Piece p = Queen; p < None; p++){
-        gamePhase += phases[p] * std::popcount<Bitboard>(pos->any(p));
+    /*
+    for (int i = 0; i < Network::L1_SIZE; i++){
+        std::cout << acc[0][i] << ' ';
     }
+    std::cout << '\n';
+    for (int i = 0; i < Network::L1_SIZE; i++){
+        std::cout << acc[1][i] << ' ';
+    }
+    */
 
-    return judge();
+    return inference();
 }
 
-void Evaluator::doMove(const Move& m){ //called immediately after pos->makeMove(m)
+void Evaluator::add(const Color& c, const Piece& p, const Square& s){
+    Network::Accumulator& acc = accStack[accIdx];
+    for (int i = 0; i < Network::L1_SIZE; i++){
+        acc[c][i] += Network::inputWeights[1][p][s ^ (56 * !c)][i];
+        acc[!c][i] += Network::inputWeights[0][p][s ^ (56 * c)][i];
+    }
+}
+
+void Evaluator::sub(const Color& c, const Piece& p, const Square& s){
+    Network::Accumulator& acc = accStack[accIdx];
+    for (int i = 0; i < Network::L1_SIZE; i++){
+        acc[c][i] -= Network::inputWeights[1][p][s ^ (56 * !c)][i];
+        acc[!c][i] -= Network::inputWeights[0][p][s ^ (56 * c)][i];
+    }
+}
+
+void Evaluator::doMove(const Move& m){
+    accIdx++;
+
+    accStack[accIdx] = accStack[accIdx - 1]; //copy in previous values
+
     Square start = m.from();
     Square end = m.to();
     Piece typei = m.moving();
@@ -71,21 +154,11 @@ void Evaluator::doMove(const Move& m){ //called immediately after pos->makeMove(
         bool passant = m.epCapture();
 
         Square target = static_cast<Square>(end + passant * ((us << 4) - 8));
-        midScores[!us] -= midpst[victim][target ^ (56 * us)];
-        endScores[!us] -= endpst[victim][target ^ (56 * us)];
-        //std::cout << "Access midpst " << (int)victim << ' ' << (int)(target ^ (56 * us)) << '\n';
-
-        gamePhase -= phases[victim]; // subtract captured piece
+        sub(flip(us), victim, target);
     }
 
-    Square starte = static_cast<Square>(start ^ (56 * !us));
-    Square ende = static_cast<Square>(end ^ (56 * !us));
-
-    midScores[us] += (midpst[typef][ende] - midpst[typei][starte]);
-    endScores[us] += (endpst[typef][ende] - endpst[typei][starte]);
-    //std::cout << "Access midpst " << (int)typef << ' ' << (int)ende << " - then - midpst " << (int)typei << ' ' << (int)starte << '\n';
-
-    gamePhase += (phases[typef] - phases[typei]); // in case of promotion, add/sub the phases of the moving piece
+    add(us, typef, end);
+    sub(us, typei, start);
 
     if (m.castling()){
         if (m.kingCastle()){ //kingside castle 
@@ -96,64 +169,8 @@ void Evaluator::doMove(const Move& m){ //called immediately after pos->makeMove(
             end = pos->queenRookTo[us];
         }
 
-        starte = static_cast<Square>(start ^ (56 * !us));
-        ende = static_cast<Square>(end ^ (56 * !us));
-
-        midScores[us] += (midpst[Rook][ende] - midpst[Rook][starte]);
-        endScores[us] += (endpst[Rook][ende] - endpst[Rook][starte]);
-        //std::cout << "Access midpst " << (int)Rook << ' ' << (int)ende << " - then - midpst " << (int)Rook << ' ' << (int)starte << '\n';
+        add(us, Rook, end);
+        sub(us, Rook, start);
     }
 }
-
-void Evaluator::undoMove(const Move& m){
-    Square start = m.from();
-    Square end = m.to();
-    Piece typei = m.moving();
-    Piece typef = m.ending();
-
-    Piece victim = m.captured();
-
-    Color us = pos->toMove; //might be dangerous in lazy update
-    //here assumed undoMove is called immediately after pos->unmakeMove()
-
-    if (victim){
-        bool passant = m.epCapture();
-
-        Square target = static_cast<Square>(end + passant * ((us << 4) - 8));
-        midScores[!us] += midpst[victim][target ^ (56 * us)];
-        endScores[!us] += endpst[victim][target ^ (56 * us)];
-
-        gamePhase += phases[victim];
-    }
-
-    Square starte = static_cast<Square>(start ^ (56 * !us));
-    Square ende = static_cast<Square>(end ^ (56 * !us));
-
-    midScores[us] -= (midpst[typef][ende] - midpst[typei][starte]);
-    endScores[us] -= (endpst[typef][ende] - endpst[typei][starte]);
-
-    gamePhase -= (phases[typef] - phases[typei]); // in case of promotion, add/sub the phases of the moving piece
-
-    if (m.castling()){
-        if (m.kingCastle()){ //kingside castle 
-            start = pos->kingRookFrom[us];
-            end = pos->kingRookTo[us];
-        } else {
-            start = pos->queenRookFrom[us];
-            end = pos->queenRookTo[us];
-        }
-
-        starte = static_cast<Square>(start ^ (56 * !us));
-        ende = static_cast<Square>(end ^ (56 * !us));
-
-        midScores[us] -= (midpst[Rook][ende] - midpst[Rook][starte]);
-        endScores[us] -= (endpst[Rook][ende] - endpst[Rook][starte]);
-    }
-}
-
-
-
-
-
-
 

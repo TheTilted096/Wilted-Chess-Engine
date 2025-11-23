@@ -8,6 +8,7 @@ class Interface{
         std::string command, param;
         bool minPrint = false;
         bool asSoftNodes = false;
+        std::string evalfilestr = "wilted-net-1-0.bin";
 
         void loop(Engine&);
         void positionStartpos(Engine&);

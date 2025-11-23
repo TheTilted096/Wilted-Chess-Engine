@@ -3,7 +3,7 @@
 #include "Interface.h"
 
 void Interface::loop(Engine& e){
-    std::string versionStr = "Wilted 0.9.3.1";
+    std::string versionStr = "Wilted 1.0.0.0";
 
     std::cout << versionStr << " by TheTilted096\n";
 
@@ -22,6 +22,7 @@ void Interface::loop(Engine& e){
             std::cout << "option name UCI_Chess960 type check default false\n";
             std::cout << "option name Minimal type check default false\n";
             std::cout << "option name Softnodes type check default value false\n";
+            std::cout << "option name EvalFile type string default <internal>\n";
             std::cout << "uciok" << std::endl;
         }
 
@@ -257,6 +258,37 @@ void Interface::loop(Engine& e){
                 std::cout << "SEE Suite: " << passCount << "/" << testCount << " passed\n";
             }
         }
+
+        if (command == "testnnue"){
+            /*
+            //std::cout << e.master.eva.refresh() << '\n';
+            e.master.downloadPos(e.mainpos);
+            std::cout << "initial eval: " << e.master.eva.refresh() << '\n';
+
+            std::string kk;
+            std::cout << "Enter move: ";
+            std::cin >> kk;
+
+            Move m = e.maingen.unalgebraic(kk);
+
+            e.master.pos.makeMove(m);
+            e.master.eva.doMove(m);
+            std::cout << "updated eval: " << e.master.eva.inference() << '\n';
+
+            std::cout << "Enter move: ";
+            std::cin >> kk;
+
+            m = e.master.gen.unalgebraic(kk);
+
+            e.master.pos.makeMove(m);
+            e.master.eva.doMove(m);
+            std::cout << "updated eval: " << e.master.eva.inference() << '\n';
+
+            e.mainpos.readFen(e.master.pos.makeFen());
+            e.master.downloadPos(e.mainpos);
+            std::cout << "refreshed eval: " << e.master.eva.refresh() << '\n';
+            */
+        }
     }
 }
 
@@ -330,6 +362,12 @@ void Interface::setoption(Engine& e){
     if (command.substr(15, 7) == "Threads"){
         std::size_t s = std::stoi(command.substr(29));
         e.createPool(s);
+    }
+    
+    if (command.substr(15, 8) == "EvalFile"){
+        if (command.substr(30) != "<internal>"){
+            Network::loadnet(command.substr(30));
+        }
     }
 }
 

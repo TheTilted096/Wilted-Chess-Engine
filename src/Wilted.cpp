@@ -5,6 +5,8 @@
 int main(int argc, char* argv[]){
     Engine engine;
 
+    Network::loadnet();
+
     if ((argc == 2) and (std::string(argv[1]) == "bench")){
         engine.bench();
         return 0;
@@ -12,6 +14,6 @@ int main(int argc, char* argv[]){
 
     Interface proto;
     proto.loop(engine);
-    
+
     return 0;
 }
