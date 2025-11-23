@@ -3,7 +3,7 @@
 #include "Evaluator.h"
 
 #ifndef EVALFILE
-#define EVALFILE "wilted-net-1-0.bin"
+#define EVALFILE "wilted-net-1-1.bin"
 #endif
 
 INCBIN(WiltedNet, EVALFILE);

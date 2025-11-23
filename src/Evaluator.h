@@ -9,7 +9,7 @@ INCBIN_EXTERN(WiltedNet);
 
 class Network{
     public:
-        static constexpr std::size_t L1_SIZE = 32;
+        static constexpr std::size_t L1_SIZE = 64;
         static constexpr int16_t QA = 255;
         static constexpr int16_t QB = 64;
         static constexpr int16_t SCALE = 400;

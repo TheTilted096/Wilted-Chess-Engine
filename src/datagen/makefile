@@ -1,12 +1,12 @@
 EXE := WiltedGen-2-0-0
-EVALFILE ?= ../wilted-net-1-0.bin
+EVALFILE ?= ../wilted-net-1-1.bin
 ARCH := native
 
 SOURCES := Datagen.cpp Match.cpp Game.cpp ../Interface.cpp ../Engine.cpp ../History.cpp ../TeaTable.cpp ../Searcher.cpp ../Evaluator.cpp ../Performer.cpp ../Generator.cpp ../Position.cpp
 
 CXX := clang++
 
-CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -static -Wall -g -DEVALFILE=\"$(EVALFILE)\"
+CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -Wall -g -DEVALFILE=\"$(EVALFILE)\"
 
 SUFFIX :=
 
@@ -17,7 +17,7 @@ endif
 OUT := $(EXE)$(SUFFIX)
 
 $(EXE):
-	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
+	$(CXX) -static $(CXXFLAGS) -o $(OUT) $(SOURCES)
 
 # During Development, frequent compilation
 
