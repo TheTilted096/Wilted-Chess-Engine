@@ -100,7 +100,7 @@ void Match::getBookWorker(Count threadID, Depth od, Depth vd, Score vs){
 
     MoveList ml;
 
-    Hash seed = std::chrono::steady_clock::now().time_since_epoch().count();
+    Hash seed = std::chrono::steady_clock::now().time_since_epoch().count() ^ ((Hash)threadID << 32);
 
     Score oev;
     int entryNum;
