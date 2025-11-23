@@ -15,6 +15,8 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
+    Network::loadnet();
+
     Match m(std::stoi(std::string(argv[1])), std::stoi(std::string(argv[2])));
     m.getBook(10, 8, 150);
 

@@ -104,6 +104,10 @@ Each version has been rigorously tested using SPRT or fixed-game testing.
 
 Development versions use the format `x.x.x.x-dev`.
 
+## Special Thanks To
+
+The Stockfish Community. In particular, sscg13, Ciekce, fury, a_randomnoob, lily, kieren, toanth, matt
+
 ## License
 
 Copyright © TheTilted096
