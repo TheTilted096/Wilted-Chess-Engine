@@ -1,4 +1,4 @@
-EXE := Wilted-0-9-3-1-nnue
+EXE := Wilted-1-0-0-0
 EVALFILE ?= src/wilted-net-1-0.bin
 ARCH := native
 SOURCES := src/*.cpp
@@ -20,3 +20,6 @@ OUT := $(EXE)$(SUFFIX)
 
 $(EXE):
 	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
+
+release:
+	$(CXX) -static $(CXXFLAGS) -o $(OUT) $(SOURCES)
