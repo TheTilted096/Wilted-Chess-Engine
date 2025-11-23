@@ -9,6 +9,7 @@ Match::Match(uint32_t gl, Count wc){
     gameLimit = gl;
 
     gamesFinished = 0;
+    bookEntriesCollected = 0;
 }
 
 std::string Match::getFRClayout(uint8_t& x, uint8_t& y){
@@ -80,23 +81,50 @@ std::string Match::getDFRClayout(){
 
 void Match::getBook(Depth od, Depth vd, Score vs){
     book.clear();
+    bookEntriesCollected = 0;
 
+    for (int k = 0; k < workerCount; k++){
+        workers.emplace_back(&Match::getBookWorker, this, k, od, vd, vs);
+    }
+
+    for (int l = 0; l < workerCount; l++){
+        workers[l].join();
+    }
+
+    workers.clear();
+}
+
+void Match::getBookWorker(Count threadID, Depth od, Depth vd, Score vs){
     Engine e;
     e.mainpos.setFRC();
 
     MoveList ml;
 
-    Hash seed = std::chrono::steady_clock::now().time_since_epoch().count();
+    Hash seed = std::chrono::steady_clock::now().time_since_epoch().count() ^ ((Hash)threadID << 32);
 
     Score oev;
+    int entryNum;
+    std::string fenStr;
 
-    for (int i = 0; i < gameLimit; i++){
+    while (true){
+        matchMute.lock();
+
+        if (bookEntriesCollected == gameLimit){
+            matchMute.unlock();
+            break;
+        } else {
+            entryNum = bookEntriesCollected;
+            bookEntriesCollected++;
+        }
+
+        matchMute.unlock();
+
         oev = SCORE_INF;
         while (abs(oev) > vs){
             e.newGame();
             e.mainpos.readFen(getDFRClayout());
 
-            int j = 0, mi;  
+            int j = 0, mi;
             while (j < od){
                 mi = randomize(seed) % e.maingen.generateMoves(ml);
                 e.mainpos.makeMove(ml[mi]);
@@ -110,14 +138,18 @@ void Match::getBook(Depth od, Depth vd, Score vs){
             oev = e.goDepth(vd);
         }
 
-        if (i % 1000 == 0){
-            std::cout << i << " of " << gameLimit << " openings collected.\n";
+        fenStr = e.mainpos.makeFen();
+
+        matchMute.lock();
+
+        if (entryNum % 1000 == 0){
+            std::cout << "(Thread " << (int)threadID << ") " << entryNum << " of " << gameLimit << " openings collected.\n";
         }
 
-        book.push_back(e.mainpos.makeFen());
+        book.push_back(fenStr);
+
+        matchMute.unlock();
     }
-
-
 }
 
 void Match::runner(Count threadID){

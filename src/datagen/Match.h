@@ -4,7 +4,7 @@
 
 class Match{
     public:
-        uint32_t gameLimit, gamesFinished;
+        uint32_t gameLimit, gamesFinished, bookEntriesCollected;
         Count workerCount;
 
         std::vector<std::string> book;
@@ -15,6 +15,7 @@ class Match{
         Match(uint32_t, Count);
 
         void getBook(Depth, Depth, Score);
+        void getBookWorker(Count, Depth, Depth, Score);
         void run();
         void runner(Count);
 
