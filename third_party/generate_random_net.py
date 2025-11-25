@@ -2,7 +2,7 @@ import struct
 import random
 
 # Network dimensions
-L1_SIZE = 32
+L1_SIZE = 64
 
 # Set seed for reproducibility (optional - remove for truly random)
 random.seed(42)

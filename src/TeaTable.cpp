@@ -18,8 +18,12 @@ Score Teacup::eScore(Index ply){
     return sc;
 }
 
+uint8_t Teacup::eGen(){
+    return data >> 56;
+}
+
 NodeType Teacup::enType(){
-    return static_cast<NodeType>(data >> 54);
+    return static_cast<NodeType>((data >> 54) & 0x3ULL);
 }
 
 Depth Teacup::eDepth(){
@@ -39,7 +43,7 @@ void Teacup::reset(){
     hash = 0ULL;
 }
 
-void Teacup::update(Score s, NodeType nt, Depth d, Hash h, Move m, Index ply){
+void Teacup::update(Score s, NodeType nt, Depth d, Hash h, Move m, Index ply, uint8_t g){
     data = m.info;
     if (s > MIN_VICTORY){ s += ply; }
     if (s < MIN_DEFEAT){ s -= ply; }
@@ -47,6 +51,7 @@ void Teacup::update(Score s, NodeType nt, Depth d, Hash h, Move m, Index ply){
     data |= (static_cast<uint64_t>(static_cast<uint16_t>(s)) << 32); //do the mate score thing later
     data |= (static_cast<uint64_t>(d) << 48);
     data |= (static_cast<uint64_t>(nt) << 54);
+    data |= (static_cast<uint64_t>(g) << 56);
 
     hash = h;
 }
@@ -65,9 +70,7 @@ void TeaTable::resize(std::size_t c){
 }
 
 void TeaTable::clear(){
-    for (std::size_t i = 0; i < capacity; i++){
-        storage[i].reset();
-    }
+    generation++;
 }
 
 TeaTable::~TeaTable(){

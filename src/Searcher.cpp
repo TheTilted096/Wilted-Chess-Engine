@@ -371,7 +371,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     Teacup& probedEntry = ttref->probe(pos.thisHash());
     Move ttMove = Move::Invalid; //perhaps init with Move::Invalid
 
-    if (probedEntry.eHash() == pos.thisHash()){
+    if (probedEntry.eHash() == pos.thisHash() and probedEntry.eGen() == ttref->generation){
         score = probedEntry.eScore(ply);
         ttMove = probedEntry.eMove();
 
@@ -493,7 +493,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         }
 
         if (score >= beta){ //Cut Node
-            probedEntry.update(score, NodeType::Cut, depth, pos.thisHash(), moves[i], ply); //update TT in cut node
+            probedEntry.update(score, NodeType::Cut, depth, pos.thisHash(), moves[i], ply, ttref->generation); //update TT in cut node
 
             if (!noisy){
                 his.updateQuiet(moves[i], pos.toMove, static_cast<int16_t>(depth) * static_cast<int16_t>(depth)); //depth squared
@@ -511,7 +511,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         return DRAW; //if not in check but we had no moves, its a stalemate
     }
 
-    probedEntry.update(bestScore, nodeflag, depth, pos.thisHash(), localBestMove, ply);
+    probedEntry.update(bestScore, nodeflag, depth, pos.thisHash(), localBestMove, ply, ttref->generation);
 
     return bestScore;
 }

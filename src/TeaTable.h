@@ -8,7 +8,7 @@ enum class NodeType : uint8_t{ Exact = 1, Cut, All };
 
 class Teacup{ //TTentry
     public:
-        uint64_t data; //move 0-31, score 32-47, depth 48-53, nodetype 54-55
+        uint64_t data; //move 0-31, score 32-47, depth 48-53, nodetype 54-55, generation 56-63
         uint64_t hash; //use high multiplication trick later
 
         Score eScore(Index ply = 0);
@@ -16,9 +16,10 @@ class Teacup{ //TTentry
         Depth eDepth();
         Hash eHash();
         Move eMove();
+        uint8_t eGen();
 
         Teacup();
-        void update(Score, NodeType, Depth, Hash, Move, Index);
+        void update(Score, NodeType, Depth, Hash, Move, Index, uint8_t);
         void reset();
 };
 
@@ -29,6 +30,7 @@ class TeaTable{ //Transposition Table
 
         static constexpr std::size_t maxCapacity = 128 * 1024 * 1024 / sizeof(Teacup); //128 MiB
         static constexpr std::size_t minCapacity = 1 * 1024 * 1024 / sizeof(Teacup); //1 MiB;
+        uint8_t generation = 0;
 
         TeaTable();
         
