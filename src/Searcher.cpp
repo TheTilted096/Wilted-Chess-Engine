@@ -209,7 +209,7 @@ bool Searcher<isMaster>::see(const Move& m, const Score& bound){
 
     attackerHash[insideToMove] = *reinterpret_cast<const uint64_t*>(attackers[insideToMove].data());
 
-    Piece standing = static_cast<Piece>(m.ending()); // piece standing on square
+    Piece standing = m.ending(); // piece standing on square
     insideToMove = flip(insideToMove); // get ready for main loop
     Piece lva;
 
@@ -496,7 +496,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
             probedEntry.update(score, NodeType::Cut, depth, pos.thisHash(), moves[i], ply, ttref->generation); //update TT in cut node
 
             if (!noisy){
-                his.updateQuiet(moves[i], pos.toMove, static_cast<int16_t>(depth) * static_cast<int16_t>(depth)); //depth squared
+                int bonus = depth * depth * depth; //depth cubed, computed in int to avoid overflow
+                his.updateQuiet(moves[i], pos.toMove, bonus);
 
                 sta[ply].killer = moves[i];
             }
@@ -642,6 +643,20 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t soft
         std::cout << "info nodes " << pn << " nps " << nps << std::endl;
         //std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
     }
+
+    // Print quiet history values for all quiet moves
+    /*
+    MoveList allMoves;
+    Count moveCount = gen.generateMoves(allMoves);
+    std::cout << "\nQuiet History Values:\n";
+    for (Index i = 0; i < moveCount; i++){
+        if (!allMoves[i].captured()){ // only quiet moves
+            int16_t histScore = his.quietEntry(allMoves[i], pos.toMove);
+            std::cout << pos.moveName(allMoves[i]) << ": " << histScore << "\n";
+        }
+    }
+    std::cout << std::endl;
+    */
 
     return prevScore; // return score of last complete depth search
 }

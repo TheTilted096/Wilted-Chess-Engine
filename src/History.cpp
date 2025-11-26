@@ -15,10 +15,13 @@ void History::empty(){
     }
 }
 
-void History::updateQuiet(const Move& m, const Color& c, const int16_t& s){
+void History::updateQuiet(const Move& m, const Color& c, int t){
     Square sq = m.to();
     Piece p = m.moving();
-    
+
+    int16_t s = static_cast<int16_t>(std::clamp(t, static_cast<int>(-QUIET_HISTORY_LIM), 
+        static_cast<int>(QUIET_HISTORY_LIM)));
+
     quiet[c][p][sq] += (s - quiet[c][p][sq] * s / QUIET_HISTORY_LIM);
 }
 

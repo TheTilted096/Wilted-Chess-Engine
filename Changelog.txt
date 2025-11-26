@@ -42,4 +42,5 @@ Changelog
 11-22-2025 ... 1.0.0.0 ... NNUE ................................. (270.3 +/- 55.9), (8 + 0.08), (SPRT, 198), (https://sscg13.pythonanywhere.com/test/1571/)
 11-23-2025 ... 1.0.1.0 ... Multithread Bookgen, L1 = 64 ......... (165.6 +/- 37.5), (8 + 0.08), (SPRT, 230), (https://sscg13.pythonanywhere.com/test/1575/)
 11-24-2025 ... 1.0.1.1 ... Generation TT
+11-25-2025 ... 1.0.2.0 ... Cubic Quiet History Bonus ............ (6.2 +/- 5.0)   , (8 + 0.08), (SPRT, 7148),(https://sscg13.pythonanywhere.com/test/1592/)
 

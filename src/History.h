@@ -9,7 +9,7 @@ class History{
         History();
 
         void empty();
-        void updateQuiet(const Move&, const Color&, const int16_t&);
+        void updateQuiet(const Move&, const Color&, int);
         int16_t quietEntry(const Move&, const Color&);
 
 };
