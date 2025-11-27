@@ -434,6 +434,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     bool noisy;
     sta[ply + 1].killer = Move::Invalid;
 
+    Count numQuiet = 0;
+
     for (Index i = 0; i < moveCount; i++){
 
         maybeForceStop();
@@ -441,11 +443,24 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         //bool legal = invokeMove(moves[i]);
         //if (!legal){ continue; }
 
-        invokeMove(moves[i]);
+        //std::cout << "depth: " << (int)depth << " ply:" << (int)ply << " move:" << pos.moveName(moves[i]) << '\n';
 
         numLegal++;
 
         noisy = moves[i].captured();
+        numQuiet += !noisy;
+
+        if (!isPV and (bestScore > DEFEAT)){ // move loop pruning
+            //if (ply == 1){ std::cout << bestScore << '\n';}
+            //assert(localBestMove != Move::Invalid);
+            if (numQuiet > std::min(254, LMPbase + depth * (LMPlin + depth * LMPquad))){ // late move pruning
+                //std::cout << "hit lmp\n";
+                //std::cout << (int)numQuiet << " , " << (int)std::min(254, LMPbase + depth * depth * LMPnum / LMPden) << '\n';
+                continue;
+            }
+        }
+
+        invokeMove(moves[i]);
 
         if (numLegal == 1){
             score = -alphabeta<isPV>(-beta, -alpha, depth - 1, ply + 1);
@@ -473,6 +488,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         }
         
         revokeMove(moves[i]);
+
+        //std::cout << "score: " << score << '\n';
 
         if (score > bestScore){
             bestScore = score;

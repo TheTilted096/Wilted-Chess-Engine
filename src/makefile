@@ -1,10 +1,10 @@
-EXE := Wilted-1-0-3-0
+EXE := Wilted-1-0-4-0
 EVALFILE ?= wilted-net-1-1.bin
 ARCH := native
 SOURCES := *.cpp
 CXX := clang++
 
-CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -static -Wall -g -DEVALFILE=\"$(EVALFILE)\"
+CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -Wall -g -DEVALFILE=\"$(EVALFILE)\"
 #-fconstexpr-steps=...
 
 SUFFIX :=
@@ -55,7 +55,12 @@ Engine.o: Engine.h Engine.cpp
 Interface.o: Interface.h Interface.cpp
 	$(CXX) $(CXXFLAGS) -c Interface.cpp -o Interface.o
 
-clean: # Works on Windows
-	del *.o;
-	del *.exe;
-#del wiltest.exe;
+ifeq ($(OS), Windows_NT)
+clean:
+	-del *.o 2>nul
+	-del *.exe 2>nul
+else
+clean:
+	rm -f *.o
+	rm -f $(EXE)
+endif
