@@ -7,12 +7,8 @@ History::History(){
 }
 
 void History::empty(){
-    for (Piece p = King; p < None; p++){
-        for (Square sq = a8; sq < XX; sq++){
-            quiet[White][p][sq] = 0;
-            quiet[Black][p][sq] = 0;
-        }
-    }
+    std::memset(&quiet, 0, sizeof(quiet));
+    std::memset(&noisy, 0, sizeof(noisy));
 }
 
 void History::updateQuiet(const Move& m, const Color& c, int t){
@@ -25,6 +21,18 @@ void History::updateQuiet(const Move& m, const Color& c, int t){
     quiet[c][p][sq] += (s - quiet[c][p][sq] * s / QUIET_HISTORY_LIM);
 }
 
+void History::updateNoisy(const Move& m, const Color& c, int t){
+    int16_t s = static_cast<int16_t>(std::clamp(t, static_cast<int>(-QUIET_HISTORY_LIM), 
+        static_cast<int>(QUIET_HISTORY_LIM)));
+
+    noisy[c][m.moving()][m.captured()][m.to()] += 
+        (s - noisy[c][m.moving()][m.captured()][m.to()] * s / QUIET_HISTORY_LIM);
+}
+
 int16_t History::quietEntry(const Move& m, const Color& c){
     return quiet[c][m.moving()][m.to()];
+}
+
+int16_t History::noisyEntry(const Move&m, const Color& c){
+    return noisy[c][m.moving()][m.captured()][m.to()];
 }

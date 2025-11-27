@@ -73,7 +73,7 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
         }
 
         if (ml[i].captured()){ //capture
-            points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16); //MVV LVA
+            points[i] = (1U << 26) + his.noisyEntry(ml[i], pos.toMove) - (ml[i].captured() << 20); //MVV LVA
             continue;
         }
 
@@ -90,7 +90,7 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
 template <bool isMaster>
 void Searcher<isMaster>::scoreCaptures(MoveList& ml, MoveScoreList& points, const Index& len){
     for (Index i = 0; i < len; i++){
-        points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16);
+        points[i] = (1U << 26) + his.noisyEntry(ml[i], pos.toMove) - (ml[i].captured() << 20);
     }
 }
 
@@ -527,11 +527,14 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         if (score >= beta){ //Cut Node
             probedEntry.update(score, NodeType::Cut, depth, pos.thisHash(), moves[i], ply, ttref->generation); //update TT in cut node
 
+            int bonus = depth * depth * depth; //depth cubed, computed in int to avoid overflow
+            
             if (!noisy){
-                int bonus = depth * depth * depth; //depth cubed, computed in int to avoid overflow
                 his.updateQuiet(moves[i], pos.toMove, bonus);
 
                 sta[ply].killer = moves[i];
+            } else {
+                his.updateNoisy(moves[i], pos.toMove, bonus);
             }
 
             return score;
