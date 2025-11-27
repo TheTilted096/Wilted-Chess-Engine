@@ -369,7 +369,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     }
 
     Teacup& probedEntry = ttref->probe(pos.thisHash());
-    Move ttMove = Move::Invalid; //perhaps init with Move::Invalid
+    Move ttMove = Move::Null; //perhaps init with Move::Invalid
 
     if (probedEntry.eHash() == pos.thisHash() and probedEntry.eGen() == ttref->generation){
         score = probedEntry.eScore(ply);
@@ -391,6 +391,10 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     //std::cout << "static eval for this node:\n";
     sta[ply].presentEval = eva.inference(); // static eval
     //sta[ply].presentEval = eva.refresh();
+
+    if (ttMove == Move::Null and depth > minIIRdepth){
+        depth -= IIRbase;
+    }
 
     if (!rootNode){
         Score margin = RFPbase + RFPmult * depth; //Reverse Futility Pruning
