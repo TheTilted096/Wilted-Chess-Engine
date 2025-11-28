@@ -101,6 +101,9 @@ template <bool isMaster> class Searcher{
         const Count LMPbase = 3;
         const Count LMPlin = 1;
         const Count LMPquad = 1;
+        const Score FPbase = 200;
+        const Score FPmult = 100;
+        const Depth maxFPdepth = 5;
 };
 
 extern template class Searcher<true>;

@@ -54,13 +54,21 @@ void Engine::newGame(){
 }
 
 void Engine::bench(){
-    std::string marks[8] = {
+    std::string marks[16] = {
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "rnbqk2r/ppp2ppp/3b1n2/3p4/3P4/2NB1N2/PPP2PPP/R1BQK2R b KQkq - 3 6",
         "r1bqkb1r/2p2ppp/p1np1n2/1p2p3/4P3/1B3N2/PPPP1PPP/RNBQR1K1 b kq - 1 7",
+        "r2q2k1/p1nb1pp1/1p1b1n1p/2pp4/3P4/P1P2NN1/1PBB1PPP/R3Q1K1 w - - 0 16",
         "3r2k1/2pr2p1/p2bpn1p/Pp2p3/1Pq1P3/2PR1N1P/2Q2PP1/2B1R1K1 w - - 5 28",
+        "r3r1k1/2pb1qpn/3p1p1p/pp2p3/1P1PP2N/1P2B2P/2P1QPP1/3RR1K1 w - - 0 14",
+        "r1b2rk1/2p1qppn/p2p3p/1p2p3/4P3/1P1P1N2/1PPB1PPP/R2QR1K1 w - - 2 6",
+        "4r1k1/2pb1qpn/3p1p1p/rp2pN2/3PP3/1P2B2P/2P1QPP1/3RR1K1 b - - 1 15",
         "2r1qrk1/1b1n2p1/1p1ppn1p/p1p2p2/P1PP4/2PBPP2/2Q2NPP/2B1RRK1 b - - 1 10",
+        "2r5/pqn3k1/1p3p1p/6p1/3Pp1P1/P5P1/1P1B2P1/3R1QK1 w - - 0 28",
+        "3r1n2/2p3pk/3p1p1p/3q1P2/2PP1B2/3Q3P/6PK/4R3 b - - 0 24",
         "6k1/5pp1/4n3/3p4/r6Q/6P1/q4PBP/3R3K w - - 0 35",
         "6k1/6p1/5p1p/pR1b4/P1r5/4PN2/2P3PP/6K1 b - - 2 35",
+        "8/3k4/5p1p/Bp1n1Pp1/3Pp1P1/1P6/3K2P1/8 b - - 7 43",
         "8/8/5k2/8/8/6P1/6K1/8 w - - 0 57",
         "6k1/8/6p1/8/8/6P1/4qQKP/8 b - - 5 49"
     };
@@ -75,7 +83,7 @@ void Engine::bench(){
         newGame();
         
         mainpos.readFen(tester);
-        goDepth(14);
+        goDepth(16);
         lifeNodes += master.nodes();
     }
 

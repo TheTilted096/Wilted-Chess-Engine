@@ -2,7 +2,7 @@
 
 A UCI-compliant chess engine by TheTilted096 featuring NNUE evaluation and modern search techniques.
 
-**Current Version:** 1.0.4.0 (NNUE Release - November 2025)
+**Current Version:** 1.0.5.0 (NNUE Release - November 2025)
 
 ## Features
 
@@ -14,8 +14,9 @@ A UCI-compliant chess engine by TheTilted096 featuring NNUE evaluation and moder
 - **Late Move Reductions (LMR)**
 - **Internal Iterative Reductions (IIR)**
 - **Late Move Pruning (LMP)**
-- **Null Move Pruning**
-- **Reverse Futility Pruning**
+- **Futility Pruning (FP)**
+- **Null Move Pruning (NMP)**
+- **Reverse Futility Pruning (RFP)**
 - **Quiescence Search** with SEE pruning
 - **Transposition Table**
 - **Move Ordering:**

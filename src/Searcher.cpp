@@ -453,9 +453,13 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         if (!isPV and (bestScore > DEFEAT)){ // move loop pruning
             //if (ply == 1){ std::cout << bestScore << '\n';}
             //assert(localBestMove != Move::Invalid);
-            if (numQuiet > std::min(254, LMPbase + depth * (LMPlin + depth * LMPquad))){ // late move pruning
+            if (!noisy and (numQuiet > std::min(254, LMPbase + depth * (LMPlin + depth * LMPquad)))){ // late move pruning
                 //std::cout << "hit lmp\n";
                 //std::cout << (int)numQuiet << " , " << (int)std::min(254, LMPbase + depth * depth * LMPnum / LMPden) << '\n';
+                continue;
+            }
+
+            if (!noisy and depth < maxFPdepth and (sta[ply].presentEval + FPbase + FPmult * depth < alpha)){
                 continue;
             }
         }
