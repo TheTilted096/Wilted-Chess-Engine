@@ -104,6 +104,9 @@ template <bool isMaster> class Searcher{
         const Score FPbase = 200;
         const Score FPmult = 100;
         const Depth maxFPdepth = 5;
+        //const Score SEEbase = 50;
+        const Score SEElin = 80;
+        const Depth maxSEEdepth = 7;
 };
 
 extern template class Searcher<true>;
