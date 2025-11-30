@@ -90,7 +90,7 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
 template <bool isMaster>
 void Searcher<isMaster>::scoreCaptures(MoveList& ml, MoveScoreList& points, const Index& len){
     for (Index i = 0; i < len; i++){
-        points[i] = (1U << 26) + his.noisyEntry(ml[i], pos.toMove) - (ml[i].captured() << 20);
+        points[i] = (1U << 26) + his.noisyEntry(ml[i], pos.toMove) + (ml[i].moving() << 11) - (ml[i].captured() << 20);
     }
 }
 
@@ -687,6 +687,18 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t soft
     for (Index i = 0; i < moveCount; i++){
         if (!allMoves[i].captured()){ // only quiet moves
             int16_t histScore = his.quietEntry(allMoves[i], pos.toMove);
+            std::cout << pos.moveName(allMoves[i]) << ": " << histScore << "\n";
+        }
+    }
+    std::cout << std::endl;
+
+    // Print noisy history values for all captures
+    //MoveList allMoves;
+    moveCount = gen.generateMoves(allMoves);
+    std::cout << "\nNoisy History Values:\n";
+    for (Index i = 0; i < moveCount; i++){
+        if (allMoves[i].captured()){ // only captures
+            int16_t histScore = his.noisyEntry(allMoves[i], pos.toMove);
             std::cout << pos.moveName(allMoves[i]) << ": " << histScore << "\n";
         }
     }
