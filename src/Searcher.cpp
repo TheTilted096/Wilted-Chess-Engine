@@ -90,7 +90,7 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
 template <bool isMaster>
 void Searcher<isMaster>::scoreCaptures(MoveList& ml, MoveScoreList& points, const Index& len){
     for (Index i = 0; i < len; i++){
-        points[i] = (1U << 26) + his.noisyEntry(ml[i], pos.toMove) + (ml[i].moving() << 11) - (ml[i].captured() << 20);
+        points[i] = (1U << 26) + his.noisyEntry(ml[i], pos.toMove) + (ml[i].moving() << 12) - (ml[i].captured() << 20);
     }
 }
 
