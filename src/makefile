@@ -1,10 +1,10 @@
-EXE := Wilted-1-0-7-0
-EVALFILE ?= wilted-net-1-1.bin
+EXE := Wilted-1-0-8-0
+EVALFILE ?= wilted-net-1-2.bin
 ARCH := native
 SOURCES := *.cpp
 CXX := clang++
 
-CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -Wall -g -DEVALFILE=\"$(EVALFILE)\"
+CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -Wall -g
 #-fconstexpr-steps=...
 
 SUFFIX :=
@@ -38,7 +38,7 @@ Performer.o: Performer.h Performer.cpp
 	$(CXX) $(CXXFLAGS) -c Performer.cpp -o Performer.o
 
 Evaluator.o: Evaluator.h Evaluator.cpp
-	$(CXX) $(CXXFLAGS) -c Evaluator.cpp -o Evaluator.o
+	$(CXX) $(CXXFLAGS) -DEVALFILE=\"$(EVALFILE)\" -c Evaluator.cpp -o Evaluator.o
 
 Searcher.o: Searcher.h Timeman.h Princes.h Searcher.cpp
 	$(CXX) $(CXXFLAGS) -c Searcher.cpp -o Searcher.o
