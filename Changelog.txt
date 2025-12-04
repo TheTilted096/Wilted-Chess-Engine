@@ -50,4 +50,5 @@ Changelog
 12-01-2025 ... 1.0.7.0 ... Less LMR ............................. (29.4 +/- 14.8) , (8 + 0.08), (SPRT, 842) ,(https://sscg13.pythonanywhere.com/test/1631/)
 12-02-2025 ... 1.0.8.0 ... L1 = 128 ............................. (119.4 +/- 33.7), (8 + 0.08), (SPRT, 266) ,(https://sscg13.pythonanywhere.com/test/1640/)
 12-03-2025 ... 1.0.9.0 ... Quiet History Malus .................. (42.8 +/- 18.3) , (8 + 0.08), (SPRT, 596) ,(https://sscg13.pythonanywhere.com/test/1649/)
+12-03-2025 ... 1.1.0.0 ... SEE Capture Ordering ................. (49.7 +/- 19.3) , (8 + 0.08), (SPRT, 486) ,(https://sscg13.pythonanywhere.com/test/1653/)
 

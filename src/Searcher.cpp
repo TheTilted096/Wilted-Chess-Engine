@@ -74,6 +74,11 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
 
         if (ml[i].captured()){ //capture
             points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16); //MVV LVA
+
+            if (!see(ml[i], 0)){
+                points[i] -= (1U << 27);
+            }
+            
             continue;
         }
 
