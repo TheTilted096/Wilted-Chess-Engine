@@ -18,7 +18,7 @@ struct MultiArrayHelper<T, J>{
 template <typename T, std::size_t J, std::size_t... K> using Table = typename MultiArrayHelper<T, J, K...>::type;
 //"Table" might be changed later
 
-using MoveScoreList = std::array<uint32_t, MOVELIST_SIZE>;
+using MoveScoreList = std::array<int, MOVELIST_SIZE>;
 
 template <typename T> struct alignas(64) AlignedAtomic{
     std::atomic<T> value;

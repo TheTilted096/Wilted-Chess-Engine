@@ -96,7 +96,7 @@ void Searcher<isMaster>::scoreCaptures(MoveList& ml, MoveScoreList& points, cons
 
 template <bool isMaster> 
 void Searcher<isMaster>::sortMoves(MoveList& ml, MoveScoreList& points, const Index& len){
-    uint32_t keyPoints;
+    int keyPoints;
     Move keyMove;
 
     Index j;
@@ -434,7 +434,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     bool noisy;
     sta[ply + 1].killer = Move::Invalid;
 
-    Count numQuiet = 0;
+    int numQuiet = 0;
+    MoveList quietSeen{};
 
     for (Index i = 0; i < moveCount; i++){
 
@@ -448,7 +449,11 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         numLegal++;
 
         noisy = moves[i].captured();
-        numQuiet += !noisy;
+
+        if (!noisy){
+            quietSeen[numQuiet] = moves[i];
+            numQuiet++;
+        }
 
         if (!isPV and (bestScore > DEFEAT)){ // move loop pruning
             //if (ply == 1){ std::cout << bestScore << '\n';}
@@ -531,6 +536,11 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 int bonus = depth * depth * depth; //depth cubed, computed in int to avoid overflow
                 his.updateQuiet(moves[i], pos.toMove, bonus);
 
+                //int malus = depth;
+                for (int qc = 0; qc < numQuiet - 1; qc++){
+                    his.updateQuiet(quietSeen[qc], pos.toMove, -static_cast<int>(depth));
+                }
+
                 sta[ply].killer = moves[i];
             }
 
@@ -562,7 +572,7 @@ template <bool output>
 Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t softNodeLim, bool minPrint){
     //std::cout << eva.refresh() << '\n';
     eva.refresh();
-    his.empty();
+    //his.empty();
     clearStack();
 
     hardNodeMax = nodeLim;
