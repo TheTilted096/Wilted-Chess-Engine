@@ -393,6 +393,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
     bool inCheck = pos.isChecked(pos.toMove); //maybe clean up these functions
 
+    bool improving = (ply > 1) and !inCheck and (sta[ply].presentEval > sta[ply - 2].presentEval);
+
     //std::cout << "static eval for this node:\n";
     sta[ply].presentEval = eva.inference(); // static eval
     //sta[ply].presentEval = eva.refresh();
@@ -402,7 +404,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     }
 
     if (!rootNode){
-        Score margin = RFPbase + RFPmult * depth; //Reverse Futility Pruning
+        Score margin = RFPbase + RFPmult * (depth - improving); //Reverse Futility Pruning
         if ((depth < maxRFPdepth) and !inCheck and !isPV
                 and (sta[ply].presentEval - beta > margin)){
 
