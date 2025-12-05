@@ -9,10 +9,10 @@ INCBIN_EXTERN(WiltedNet);
 
 class Network{
     public:
-        static constexpr std::size_t L1_SIZE = 128;
+        static constexpr std::size_t L1_SIZE = 256;
         static constexpr int16_t QA = 255;
         static constexpr int16_t QB = 64;
-        static constexpr int16_t SCALE = 400;
+        static constexpr int16_t SCALE = 200;
 
         // stm = 1
         // pawn = 5, king = 0

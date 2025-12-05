@@ -1,5 +1,5 @@
 EXE := WiltedGen-2-0-0
-EVALFILE ?= ../wilted-net-1-2.bin
+EVALFILE ?= ../wilted-net-1-3.bin
 ARCH := native
 
 SOURCES := Datagen.cpp Match.cpp Game.cpp ../Interface.cpp ../Engine.cpp ../History.cpp ../TeaTable.cpp ../Searcher.cpp ../Evaluator.cpp ../Performer.cpp ../Generator.cpp ../Position.cpp
@@ -61,6 +61,12 @@ Match.o: Match.h Match.cpp
 	$(CXX) $(CXXFLAGS) -c Match.cpp -o Match.o
 
 
-clean: # Works on Windows
-	del *.o;
-	del *.exe;
+ifeq ($(OS), Windows_NT)
+clean:
+	-del *.o 2>nul
+	-del *.exe 2>nul
+else
+clean:
+	rm -f *.o
+	rm -f $(EXE)
+endif
