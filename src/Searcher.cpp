@@ -413,7 +413,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
         // Null Move Pruning
         sta[ply].nmp = !sta[ply - 1].nmp and (depth > minNMPdepth)
-                and !isPV and !inCheck and !pos.onlyPawns();
+                and !isPV and !inCheck and !pos.onlyPawns()
+                and (sta[ply].presentEval > beta + NMPevalBase - depth * NMPevalMult);
 
         if (sta[ply].nmp){
             pos.passMove();

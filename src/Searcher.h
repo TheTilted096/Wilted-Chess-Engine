@@ -89,6 +89,8 @@ template <bool isMaster> class Searcher{
         const Depth maxRFPdepth = 6;
         const Depth minNMPdepth = 3;
         const Depth NMPreduce = 3;
+        const Score NMPevalBase = 80;
+        const Score NMPevalMult = 15;
         const int ASPbase = 30; //use int32 to really avoid overflows
         const int ASPmult = 2;
         const Depth minLMRdepth = 2;
