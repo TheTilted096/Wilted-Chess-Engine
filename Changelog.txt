@@ -52,5 +52,6 @@ Changelog
 12-03-2025 ... 1.0.9.0 ... Quiet History Malus .................. (42.8 +/- 18.3) , (8 + 0.08), (SPRT, 596) ,(https://sscg13.pythonanywhere.com/test/1649/)
 12-03-2025 ... 1.1.0.0 ... SEE Capture Ordering ................. (49.7 +/- 19.3) , (8 + 0.08), (SPRT, 486) ,(https://sscg13.pythonanywhere.com/test/1653/)
 12-04-2025 ... 1.1.1.0 ... L1 = 256 ............................. (59.7 +/- 21.0) , (8 + 0.08), (SPRT, 470) ,(https://sscg13.pythonanywhere.com/test/1663/)
-12-02-2025 ... 1.1.1.1 ... Improving in RFP ..................... (8.8 +/- 6.6)   , (8 + 0.08), (SPRT, 3332),(https://sscg13.pythonanywhere.com/test/1664/)
+12-05-2025 ... 1.1.1.1 ... Improving in RFP ..................... (8.8 +/- 6.6)   , (8 + 0.08), (SPRT, 3332),(https://sscg13.pythonanywhere.com/test/1664/)
+12-05-2025 ... 1.1.1.2 ... NMP Margin ........................... (19.2 +/- 11.0) , (8 + 0.08), (SPRT, 1232),(https://sscg13.pythonanywhere.com/test/1665/)
 
