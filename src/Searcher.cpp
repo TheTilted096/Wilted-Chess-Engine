@@ -468,7 +468,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
             //assert(localBestMove != Move::Invalid);
             if (!noisy){
                 // late move pruning
-                if (numQuiet > std::min(254, LMPbase + depth * (LMPlin + depth * LMPquad))){
+                int lmpCount = (LMPbase + depth * LMPlin + depth * depth * LMPquad) / (2 - improving);
+                if (numQuiet > lmpCount){
                     continue;
                 }
 
