@@ -129,7 +129,7 @@ void Searcher<isMaster>::clearStack(){
 template <bool isMaster> 
 void Searcher<isMaster>::newGame(){
     //pos.setStartPos();
-    //his.empty();
+    his.empty();
     clearStack();
 }
 
