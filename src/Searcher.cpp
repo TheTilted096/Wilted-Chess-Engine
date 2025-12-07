@@ -493,6 +493,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
             Depth r = 0;
             if ((depth > minLMRdepth) and !noisy){
                 r = LMRtable[depth][numLegal];
+
+                r -= isPV;
             }
 
             // search at reduced depth and null window

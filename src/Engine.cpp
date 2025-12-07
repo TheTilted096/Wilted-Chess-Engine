@@ -140,7 +140,8 @@ template <bool out> Score Engine::go(Depth d, uint64_t nl, uint64_t snl, bool mp
         //assert(workerCount == workersReady);
     }
 
-    master.reportBest();
+    //master.reportBest();
+    std::cout << "bestmove " << mainpos.moveName(master.bestMove) << std::endl;
 
     return sc;
 }

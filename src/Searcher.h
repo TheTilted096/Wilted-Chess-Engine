@@ -82,7 +82,7 @@ template <bool isMaster> class Searcher{
         void newGame();
 
         Move getBest(){ return bestMove; }
-        void reportBest(){ std::cout << "bestmove " << pos.moveName(bestMove) << std::endl; }
+        //void reportBest(){ std::cout << "bestmove " << pos.moveName(bestMove) << std::endl; }
         
         const Score RFPbase = 40;
         const Score RFPmult = 60;
