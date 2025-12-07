@@ -54,4 +54,5 @@ Changelog
 12-04-2025 ... 1.1.1.0 ... L1 = 256 ............................. (59.7 +/- 21.0) , (8 + 0.08), (SPRT, 470) ,(https://sscg13.pythonanywhere.com/test/1663/)
 12-05-2025 ... 1.1.1.1 ... Improving in RFP ..................... (8.8 +/- 6.6)   , (8 + 0.08), (SPRT, 3332),(https://sscg13.pythonanywhere.com/test/1664/)
 12-05-2025 ... 1.1.1.2 ... NMP Margin ........................... (19.2 +/- 11.0) , (8 + 0.08), (SPRT, 1232),(https://sscg13.pythonanywhere.com/test/1665/)
+12-06-2025 ... 1.1.1.3 ... Improving in NMP Margin .............. (4.4 +/- 3.5)   , (8 + 0.08), (SPRT,11660),(https://sscg13.pythonanywhere.com/test/1675/)
 

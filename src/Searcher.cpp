@@ -414,7 +414,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         // Null Move Pruning
         sta[ply].nmp = !sta[ply - 1].nmp and (depth > minNMPdepth)
                 and !isPV and !inCheck and !pos.onlyPawns()
-                and (sta[ply].presentEval > beta + NMPevalBase - depth * NMPevalMult);
+                and (sta[ply].presentEval > beta + NMPevalBase - (depth + improving) * NMPevalMult);
 
         if (sta[ply].nmp){
             pos.passMove();
@@ -468,7 +468,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
             //assert(localBestMove != Move::Invalid);
             if (!noisy){
                 // late move pruning
-                if (numQuiet > std::min(254, LMPbase + depth * (LMPlin + depth * LMPquad))){
+                int lmpCount = (LMPbase + depth * LMPlin + depth * depth * LMPquad);
+                if (numQuiet > lmpCount){
                     continue;
                 }
 
