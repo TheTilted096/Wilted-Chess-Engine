@@ -4,7 +4,7 @@
 
 class History{
     public:
-        Table<int16_t, 2, 6, 64> quiet;
+        Table<int16_t, 2, 64, 64> quiet;
 
         History();
 
