@@ -96,6 +96,7 @@ template <bool isMaster> class Searcher{
         const Depth minLMRdepth = 2;
         const double LMRbase = 0.4;
         const double LMRmult = 0.5;
+        const int LMRhistDiv = 6144;
         Table<Depth, MAX_PLY, 128> LMRtable;
         const std::array<Score, 6> SEEvals = {10000, 900, 500, 300, 300, 100};
         const Depth minIIRdepth = 3;

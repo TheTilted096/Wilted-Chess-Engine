@@ -490,16 +490,20 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         if (numLegal == 1){
             score = -alphabeta<isPV>(-beta, -alpha, depth - 1, ply + 1);
         } else {
-            Depth r = 0;
+            int r = 0;
             if ((depth > minLMRdepth) and !noisy){
                 r = LMRtable[depth][numLegal];
 
                 r -= isPV;
+
+                r -= his.quietEntry(moves[i], pos.toMove) / LMRhistDiv;
             }
+            
+            int nextDepth = std::clamp(static_cast<int>(depth) - 1 - r, 0, depth - 1);
 
             // search at reduced depth and null window
             // cast to int and max(0) to avoid underflows.
-            score = -alphabeta<false>(-alpha - 1, -alpha, std::max(0, static_cast<int>(depth) - 1 - r), ply + 1);
+            score = -alphabeta<false>(-alpha - 1, -alpha, nextDepth, ply + 1);
 
             // if the move does better than expected and we actually reduced the move
             // search null window full depth
