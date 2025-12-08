@@ -83,7 +83,7 @@ void Engine::bench(){
         newGame();
         
         mainpos.readFen(tester);
-        goDepth(16);
+        goDepth(14);
         lifeNodes += master.nodes();
     }
 

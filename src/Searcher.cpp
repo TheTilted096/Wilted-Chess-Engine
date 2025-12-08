@@ -495,11 +495,14 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 r = LMRtable[depth][numLegal];
 
                 r -= isPV;
+                r -= improving;
             }
+
+            Depth nextDepth = std::clamp(static_cast<int>(depth) - 1 - r, 0, static_cast<int>(depth));
 
             // search at reduced depth and null window
             // cast to int and max(0) to avoid underflows.
-            score = -alphabeta<false>(-alpha - 1, -alpha, std::max(0, static_cast<int>(depth) - 1 - r), ply + 1);
+            score = -alphabeta<false>(-alpha - 1, -alpha, nextDepth, ply + 1);
 
             // if the move does better than expected and we actually reduced the move
             // search null window full depth
