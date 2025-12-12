@@ -2,7 +2,7 @@
 
 A UCI-compliant chess engine by TheTilted096 featuring NNUE evaluation and modern search techniques.
 
-**Current Version:** 1.1.1.5 (NNUE Release - November 2025)
+**Current Version:** 1.1.1.6 (NNUE Release - November 2025)
 
 ## Features
 
