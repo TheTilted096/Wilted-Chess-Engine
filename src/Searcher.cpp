@@ -73,7 +73,7 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
         }
 
         if (ml[i].captured()){ //capture
-            points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16); //MVV LVA
+            points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 13) + his.noisyEntry(ml[i], pos.toMove); //MVV LVA
 
             if (!see(ml[i], 0)){
                 points[i] -= (1U << 27);
@@ -95,7 +95,7 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
 template <bool isMaster>
 void Searcher<isMaster>::scoreCaptures(MoveList& ml, MoveScoreList& points, const Index& len){
     for (Index i = 0; i < len; i++){
-        points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 16);
+        points[i] = (1U << 26) + ml[i].moving() - (ml[i].captured() << 13) + his.noisyEntry(ml[i], pos.toMove);
     }
 }
 
@@ -445,6 +445,9 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
     int numQuiet = 0;
     MoveList quietSeen{};
 
+    int numNoisy = 0;
+    MoveList noisySeen{};
+
     for (Index i = 0; i < moveCount; i++){
 
         maybeForceStop();
@@ -458,7 +461,10 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
         noisy = moves[i].captured();
 
-        if (!noisy){
+        if (noisy){
+            noisySeen[numNoisy] = moves[i];
+            numNoisy++;
+        } else {
             quietSeen[numQuiet] = moves[i];
             numQuiet++;
         }
@@ -547,12 +553,23 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 int bonus = depth * depth * depth; //depth cubed, computed in int to avoid overflow
                 his.updateQuiet(moves[i], pos.toMove, bonus);
 
-                //int malus = depth;
+                int malus = depth;
                 for (int qc = 0; qc < numQuiet - 1; qc++){
-                    his.updateQuiet(quietSeen[qc], pos.toMove, -static_cast<int>(depth));
+                    his.updateQuiet(quietSeen[qc], pos.toMove, -malus);
+                }
+                for (int nc = 0; nc < numNoisy - 1; nc++){
+                    his.updateNoisy(noisySeen[nc], pos.toMove, -malus);
                 }
 
                 sta[ply].killer = moves[i];
+            } else {
+                int bonus = depth * depth * depth;
+                his.updateNoisy(moves[i], pos.toMove, bonus);
+
+                int malus = depth;
+                for (int nc = 0; nc < numNoisy - 1; nc++){
+                    his.updateNoisy(noisySeen[nc], pos.toMove, -malus);
+                }
             }
 
             return score;
