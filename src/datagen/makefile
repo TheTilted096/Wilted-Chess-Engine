@@ -6,7 +6,7 @@ SOURCES := Datagen.cpp Match.cpp Game.cpp ../Interface.cpp ../Engine.cpp ../Hist
 
 CXX := clang++
 
-CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -Wall -g -DEVALFILE=\"$(EVALFILE)\"
+CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -pthread -Wall -g -DEVALFILE=\"$(EVALFILE)\"
 
 SUFFIX :=
 
