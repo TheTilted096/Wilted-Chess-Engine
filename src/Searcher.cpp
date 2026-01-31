@@ -463,6 +463,8 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
             numQuiet++;
         }
 
+        int16_t moveHist = his.quietEntry(moves[i], pos.toMove);
+
         if (!isPV and (bestScore > DEFEAT)){ // move loop pruning
             //if (ply == 1){ std::cout << bestScore << '\n';}
             //assert(localBestMove != Move::Invalid);
@@ -475,6 +477,11 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
                 // futility pruning
                 if (depth < maxFPdepth and (sta[ply].presentEval + FPbase + FPmult * depth < alpha)){
+                    continue;
+                }
+
+                // history pruning
+                if (depth < histPruneDepth and moveHist < -histPruneFactor * depth){
                     continue;
                 }
 
@@ -547,9 +554,9 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 int bonus = depth * depth * depth; //depth cubed, computed in int to avoid overflow
                 his.updateQuiet(moves[i], pos.toMove, bonus);
 
-                //int malus = depth;
+                int malus = depth * depth;
                 for (int qc = 0; qc < numQuiet - 1; qc++){
-                    his.updateQuiet(quietSeen[qc], pos.toMove, -static_cast<int>(depth));
+                    his.updateQuiet(quietSeen[qc], pos.toMove, -malus);
                 }
 
                 sta[ply].killer = moves[i];
