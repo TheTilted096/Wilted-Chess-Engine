@@ -6,7 +6,7 @@ SOURCES := Guesser.cpp Tuner.cpp
 
 CXX := clang++
 
-CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -static -Wall -g
+CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -pthread -static -Wall -g
 
 ifeq ($(OS), Windows_NT)
 	SUFFIX := .exe

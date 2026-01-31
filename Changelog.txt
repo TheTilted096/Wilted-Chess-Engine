@@ -58,4 +58,4 @@ Changelog
 12-06-2025 ... 1.1.1.4 ... Less Aggressive LMR in PV Nodes ...... (5.4 +/- 4.4)   , (8 + 0.08), (SPRT, 7614),(https://sscg13.pythonanywhere.com/test/1679/)
 12-07-2025 ... 1.1.1.5 ... Index Quiet History by Squares ....... (8.7 +/- 6.4)   , (8 + 0.08), (SPRT, 3610),(https://sscg13.pythonanywhere.com/test/1691/)
 12-10-2025 ... 1.1.1.6 ... Network 1-4 .......................... (15.7 +/- 10.3) , (8 + 0.08), (SPRT, 1864),(https://sscg13.pythonanywhere.com/test/1717/)
-
+01-31-2026 ... 1.1.2.0 ... Quiet History Pruning ................ (32.8 +/- 14.6) , (8 + 0.08), (SPRT, 680) ,(https://sscg13.pythonanywhere.com/test/1867/)

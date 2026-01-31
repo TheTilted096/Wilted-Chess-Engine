@@ -1,11 +1,11 @@
-EXE := Wilted-1-1-1-6
+EXE := Wilted-1-1-2-0
 EVALFILE ?= src/wilted-net-1-4.bin
 ARCH := native
 SOURCES := src/*.cpp
 
 CXX := clang++
 
-CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -Wall -g -DEVALFILE=\"$(EVALFILE)\"
+CXXFLAGS := -std=c++20 -O3 -march=$(ARCH) -pthread -Wall -g -DEVALFILE=\"$(EVALFILE)\"
 #-fconstexpr-steps=...
 
 SUFFIX :=
