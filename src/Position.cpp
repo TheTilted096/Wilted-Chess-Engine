@@ -5,7 +5,7 @@
 Position::Position(){
     empty();
 
-    plays[0] = Move::Invalid; //must always stay this
+    plays[0] = Move::Null; //must always stay this
 }
 
 Position::Position(const Position& p){

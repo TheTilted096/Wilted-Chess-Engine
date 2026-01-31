@@ -45,17 +45,8 @@ template <bool isMaster>
 void Searcher<isMaster>::invokeMove(const Move& m){
     pos.makeMove(m);
 
-    /*
-    if (pos.illegal()){
-        pos.unmakeMove();
-        return false;
-    }
-    */
-
     eva.doMove(m);
     addNode();
-
-    //return true;
 }
 
 template <bool isMaster> 
@@ -89,6 +80,8 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
 
         //points[i] = ml[i].moving(); //LVA
         points[i] = his.quietEntry(ml[i], pos.toMove);
+        Move lp = pos.lastPlayed();
+        points[i] += !lp.isNull() * his.counterEntry(pos.toMove, lp, ml[i]);
     }
 }
 
@@ -463,7 +456,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
             numQuiet++;
         }
 
-        int16_t moveHist = his.quietEntry(moves[i], pos.toMove);
+        const int16_t moveHist = his.quietEntry(moves[i], pos.toMove);
 
         if (!isPV and (bestScore > DEFEAT)){ // move loop pruning
             //if (ply == 1){ std::cout << bestScore << '\n';}
@@ -554,9 +547,13 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 int bonus = depth * depth * depth; //depth cubed, computed in int to avoid overflow
                 his.updateQuiet(moves[i], pos.toMove, bonus);
 
+                Move lp = pos.lastPlayed(); // countermoves
+                his.updateCounter(pos.toMove, lp, moves[i], !lp.isNull() * bonus);
+
                 int malus = depth * depth;
                 for (int qc = 0; qc < numQuiet - 1; qc++){
                     his.updateQuiet(quietSeen[qc], pos.toMove, -malus);
+                    his.updateCounter(pos.toMove, lp, quietSeen[qc], !lp.isNull() * -malus);
                 }
 
                 sta[ply].killer = moves[i];

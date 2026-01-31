@@ -31,6 +31,7 @@ class Move{
         void operator=(const uint32_t m){ info = m; }
 
         bool bad() const{ return info == Invalid; }
+        bool isNull() const{ return info == Null; }
 
         Square from() const{ return static_cast<Square>(info & 63U); }
         void setFrom(const Square& s){ info = s; } //Move is cleared upon generation of start square
