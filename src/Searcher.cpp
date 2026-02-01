@@ -697,7 +697,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t soft
         dur = tim->elapsed();
         nps = 1000000 * pn / dur;
 
-        std::cout << "info nodes " << pn << " nps " << nps << std::endl;
+        std::cout << "info score cp " << prevScore << " nodes " << pn << " nps " << nps << std::endl;
         //std::cout << "bestmove " << pos.moveName(bestMove) << std::endl;
     }
 
