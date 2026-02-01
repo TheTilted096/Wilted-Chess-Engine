@@ -548,7 +548,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 his.updateQuiet(moves[i], pos.toMove, bonus);
 
                 Move lp = pos.lastPlayed(); // countermoves
-                int cbonus = depth * depth;
+                int cbonus = 8 * depth * depth;
                 if (!lp.isNull() and !lp.captured()){
                     his.updateCounter(pos.toMove, lp, moves[i], cbonus);
                 }
