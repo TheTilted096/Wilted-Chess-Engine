@@ -337,7 +337,7 @@ Score Searcher<isMaster>::quiesce(Score alpha, Score beta){
 
 template <bool isMaster>
 template <bool isPV> 
-Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index ply){
+Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index ply, bool cut){
     if constexpr (isMaster){ //master reports pv
         pvt->clearLine(ply);
     }
@@ -418,7 +418,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
 
         if (sta[ply].nmp){
             pos.passMove();
-            Score nullScore = -alphabeta<false>(-beta, -beta + 1, depth - NMPreduce, ply + 1);
+            Score nullScore = -alphabeta<false>(-beta, -beta + 1, depth - NMPreduce, ply + 1, !cut);
             pos.unpassMove();
 
             if (nullScore >= beta){
@@ -495,29 +495,31 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
         invokeMove(moves[i]);
 
         if (numLegal == 1){
-            score = -alphabeta<isPV>(-beta, -alpha, depth - 1, ply + 1);
+            score = -alphabeta<isPV>(-beta, -alpha, depth - 1, ply + 1, false);
         } else {
             Depth r = 0;
             if ((depth > minLMRdepth) and !noisy){
                 r = LMRtable[depth][numLegal];
 
                 r -= isPV;
+
+                r += cut;
             }
 
             // search at reduced depth and null window
             // cast to int and max(0) to avoid underflows.
-            score = -alphabeta<false>(-alpha - 1, -alpha, std::max(0, static_cast<int>(depth) - 1 - r), ply + 1);
+            score = -alphabeta<false>(-alpha - 1, -alpha, std::max(0, static_cast<int>(depth) - 1 - r), ply + 1, true);
 
             // if the move does better than expected and we actually reduced the move
             // search null window full depth
             if ((score > alpha) and (r > 0)){
-                score = -alphabeta<false>(-alpha - 1, -alpha, depth - 1, ply + 1);
+                score = -alphabeta<false>(-alpha - 1, -alpha, depth - 1, ply + 1, !cut);
             }
 
             // the move passes null window search at full depth
             // search the move at full depth and window. isPV must be true to have an actual full window.
             if ((score > alpha) and isPV){
-                score = -alphabeta<true>(-beta, -alpha, depth - 1, ply + 1);
+                score = -alphabeta<true>(-beta, -alpha, depth - 1, ply + 1, false);
             }
         }
         
@@ -607,7 +609,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t soft
     int prevScore = 0;
 
     try {
-        prevScore = alphabeta<true>(alpha, beta, 0, 0); // depth 0 to get an initial assessment
+        prevScore = alphabeta<true>(alpha, beta, 0, 0, false); // depth 0 to get an initial assessment
         // this could be depth 1, but I did not want to copy the rest of the loop body
 
         for (Depth d = 1; d <= depthLim; d++){
@@ -621,7 +623,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t soft
 
                 //std::cout << "\n[" << alpha << ", " << beta << "]\n";
 
-                searchScore = alphabeta<true>(alpha, beta, d, 0);
+                searchScore = alphabeta<true>(alpha, beta, d, 0, false);
 
                 //std::cout << "searchScore: " << searchScore << '\n';
 
