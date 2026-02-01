@@ -65,7 +65,7 @@ template <bool isMaster> class Searcher{
 
         bool see(const Move&, const Score&);
         Score quiesce(Score, Score); //Index by Ply? - Could be useful for searchstack
-        template <bool> Score alphabeta(Score, Score, Depth, Index);
+        template <bool> Score alphabeta(Score, Score, Depth, Index, bool);
         template <bool> Score search(Depth, uint64_t, uint64_t, bool);
         
         Score searchSilent(Depth d, uint64_t nl, uint64_t snl){ return search<false>(d, nl, snl, true); } // search with no output
