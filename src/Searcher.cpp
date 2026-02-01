@@ -548,12 +548,18 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 his.updateQuiet(moves[i], pos.toMove, bonus);
 
                 Move lp = pos.lastPlayed(); // countermoves
-                his.updateCounter(pos.toMove, lp, moves[i], !lp.isNull() * bonus);
+                int cbonus = depth * depth;
+                if (!lp.isNull()){
+                    his.updateCounter(pos.toMove, lp, moves[i], cbonus);
+                }
 
                 int malus = depth * depth;
                 for (int qc = 0; qc < numQuiet - 1; qc++){
                     his.updateQuiet(quietSeen[qc], pos.toMove, -malus);
-                    his.updateCounter(pos.toMove, lp, quietSeen[qc], !lp.isNull() * -malus);
+
+                    if (!lp.isNull()){
+                        his.updateCounter(pos.toMove, lp, quietSeen[qc], -malus);
+                    }
                 }
 
                 sta[ply].killer = moves[i];
