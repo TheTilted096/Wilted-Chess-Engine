@@ -45,17 +45,8 @@ template <bool isMaster>
 void Searcher<isMaster>::invokeMove(const Move& m){
     pos.makeMove(m);
 
-    /*
-    if (pos.illegal()){
-        pos.unmakeMove();
-        return false;
-    }
-    */
-
     eva.doMove(m);
     addNode();
-
-    //return true;
 }
 
 template <bool isMaster> 
@@ -89,6 +80,8 @@ void Searcher<isMaster>::scoreMoves(MoveList& ml, MoveScoreList& points, const I
 
         //points[i] = ml[i].moving(); //LVA
         points[i] = his.quietEntry(ml[i], pos.toMove);
+        Move lp = pos.lastPlayed();
+        points[i] += !lp.isNull() * his.counterEntry(pos.toMove, lp, ml[i]);
     }
 }
 
@@ -463,7 +456,7 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
             numQuiet++;
         }
 
-        int16_t moveHist = his.quietEntry(moves[i], pos.toMove);
+        const int16_t moveHist = his.quietEntry(moves[i], pos.toMove);
 
         if (!isPV and (bestScore > DEFEAT)){ // move loop pruning
             //if (ply == 1){ std::cout << bestScore << '\n';}
@@ -556,9 +549,20 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 int bonus = depth * depth * depth; //depth cubed, computed in int to avoid overflow
                 his.updateQuiet(moves[i], pos.toMove, bonus);
 
+                Move lp = pos.lastPlayed(); // countermoves
+                int cbonus = 4 * depth * depth;
+                if (!lp.isNull() and !lp.captured()){
+                    his.updateCounter(pos.toMove, lp, moves[i], cbonus);
+                }
+
                 int malus = depth * depth;
+                int cmalus = 4 * depth * depth;
                 for (int qc = 0; qc < numQuiet - 1; qc++){
                     his.updateQuiet(quietSeen[qc], pos.toMove, -malus);
+
+                    if (!lp.isNull() and !lp.captured()){
+                        his.updateCounter(pos.toMove, lp, quietSeen[qc], -cmalus);
+                    }
                 }
 
                 sta[ply].killer = moves[i];
@@ -712,14 +716,67 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t soft
 
     // Print quiet history values for all quiet moves
     /*
+    std::cout << "\n=== Quiet History Values ===\n";
     MoveList allMoves;
     Count moveCount = gen.generateMoves(allMoves);
-    std::cout << "\nQuiet History Values:\n";
+    MoveScoreList allMovePower;
+    scoreMoves(allMoves, allMovePower, moveCount, Move::Null, 0);
+    sortMoves(allMoves, allMovePower, moveCount);
+
     for (Index i = 0; i < moveCount; i++){
         if (!allMoves[i].captured()){ // only quiet moves
             int16_t histScore = his.quietEntry(allMoves[i], pos.toMove);
-            std::cout << pos.moveName(allMoves[i]) << ": " << histScore << "\n";
+            std::cout << "#" << (int)i << " " << pos.moveName(allMoves[i])
+                      << " (score: " << allMovePower[i] << "): "
+                      << histScore << "\n";
         }
+    }
+    std::cout << std::endl;
+
+    // Advanced Counter History Analysis - Sample moves and analyze responses
+    // Generate and sort moves from current position
+    MoveList currentMoves;
+    Count currentMoveCount = gen.generateMoves(currentMoves);
+    MoveScoreList currentMovePower;
+    scoreMoves(currentMoves, currentMovePower, currentMoveCount, Move::Null, 0);
+    sortMoves(currentMoves, currentMovePower, currentMoveCount);
+
+    // Sample two moves: first (best) and middle
+    std::array<Index, 3> sampleIndices = {0, 2, 4};
+
+    for (Index sampleIdx : sampleIndices){
+        if (sampleIdx >= currentMoveCount){ continue; }
+
+        Move sampledMove = currentMoves[sampleIdx];
+
+        std::cout << "\n=== Analysis after move #" << (int)sampleIdx
+                  << " (score: " << currentMovePower[sampleIdx] << "): "
+                  << pos.moveName(sampledMove) << " ===\n";
+
+        // Make the sampled move
+        invokeMove(sampledMove);
+
+        // Generate and sort moves from new position
+        MoveList responseMoves;
+        Count responseMoveCount = gen.generateMoves(responseMoves);
+        MoveScoreList responseMovePower;
+        scoreMoves(responseMoves, responseMovePower, responseMoveCount, Move::Null, 0);
+        sortMoves(responseMoves, responseMovePower, responseMoveCount);
+
+        std::cout << "Counter History Values (with " << pos.moveName(sampledMove) << " as context):\n";
+
+        // Print counter history for each quiet move
+        for (Index i = 0; i < responseMoveCount; i++){
+            if (!responseMoves[i].captured()){ // only quiet moves
+                int16_t counterScore = his.counterEntry(pos.toMove, sampledMove, responseMoves[i]);
+                std::cout << "#" << (int)i << " " << pos.moveName(responseMoves[i])
+                          << " (score: " << responseMovePower[i] << "): "
+                          << counterScore << "\n";
+            }
+        }
+
+        // Unmake the sampled move
+        revokeMove(sampledMove);
     }
     std::cout << std::endl;
     */

@@ -2,7 +2,7 @@
 
 A UCI-compliant chess engine by TheTilted096 featuring NNUE evaluation and modern search techniques.
 
-**Current Version:** 1.1.2.1 (NNUE Release - November 2025)
+**Current Version:** 1.1.2.2 (NNUE Release - November 2025)
 
 ## Features
 
@@ -27,6 +27,7 @@ A UCI-compliant chess engine by TheTilted096 featuring NNUE evaluation and moder
   - MVV-LVA (Most Valuable Victim - Least Valuable Attacker)
   - Killer move heuristic
   - Quiet history heuristic
+  - 1-Ply Continuation History
   - SEE Bad Captures
   - History Malus
 - **Iterative Deepening** with PV table

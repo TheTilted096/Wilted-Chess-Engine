@@ -1,4 +1,4 @@
-EXE := Wilted-1-1-2-1
+EXE := Wilted-1-1-2-2
 EVALFILE ?= wilted-net-1-4.bin
 ARCH := native
 SOURCES := *.cpp
