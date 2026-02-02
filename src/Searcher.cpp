@@ -715,6 +715,7 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t soft
     }
 
     // Print quiet history values for all quiet moves
+    /*
     std::cout << "\n=== Quiet History Values ===\n";
     MoveList allMoves;
     Count moveCount = gen.generateMoves(allMoves);
@@ -732,7 +733,6 @@ Score Searcher<isMaster>::search(Depth depthLim, uint64_t nodeLim, uint64_t soft
     }
     std::cout << std::endl;
 
-    /*
     // Advanced Counter History Analysis - Sample moves and analyze responses
     // Generate and sort moves from current position
     MoveList currentMoves;
