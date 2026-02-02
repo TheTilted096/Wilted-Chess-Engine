@@ -550,13 +550,13 @@ Score Searcher<isMaster>::alphabeta(Score alpha, Score beta, Depth depth, Index 
                 his.updateQuiet(moves[i], pos.toMove, bonus);
 
                 Move lp = pos.lastPlayed(); // countermoves
-                int cbonus = 8 * depth * depth;
+                int cbonus = 4 * depth * depth;
                 if (!lp.isNull() and !lp.captured()){
                     his.updateCounter(pos.toMove, lp, moves[i], cbonus);
                 }
 
                 int malus = depth * depth;
-                int cmalus = (1 + numQuiet / 6) * depth * depth;
+                int cmalus = 4 * depth * depth;
                 for (int qc = 0; qc < numQuiet - 1; qc++){
                     his.updateQuiet(quietSeen[qc], pos.toMove, -malus);
 
